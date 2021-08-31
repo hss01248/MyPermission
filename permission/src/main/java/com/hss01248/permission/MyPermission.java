@@ -20,15 +20,33 @@ import java.util.List;
 
 public class MyPermission {
 
-    public static void requestByMostEffort(String permission, IPermissionDialog dialogAfterDenied,PermissionUtils.FullCallback callback){
+    public static void requestByMostEffort(String permission, IPermissionDialog dialogBeforeRequest,
+                                           IPermissionDialog dialogAfterDenied,PermissionUtils.FullCallback callback){
         if(PermissionUtils.isGranted(permission)){
             List<String> permissions = new ArrayList<>();
             permissions.add(permission);
             callback.onGranted(permissions);
             return;
         }
+        if(dialogBeforeRequest != null ){
+            dialogBeforeRequest.show(new IPermissionDialogBtnClickListener() {
+                @Override
+                public void onPositive() {
+                    requestPermission(permission,dialogAfterDenied,true,callback);
+                }
 
-        requestPermission(permission,dialogAfterDenied,true,callback);
+                @Override
+                public void onNegtivite() {
+                    List<String> permissions = new ArrayList<>();
+                    permissions.add(permission);
+                    callback.onDenied(new ArrayList<>(),permissions);
+                }
+            });
+        }else {
+            requestPermission(permission,dialogAfterDenied,true,callback);
+        }
+
+
 
 
     }
