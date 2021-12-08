@@ -65,3 +65,7 @@ getLocation(Context context, int timeout, IPermissionDialog dialogBeforeRequest,
 
 # gradle
 
+```groovy
+com.github.hss01248.MyPermission:location:1.0.0
+com.github.hss01248.MyPermission:permission:1.0.0
+```
