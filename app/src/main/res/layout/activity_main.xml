@@ -28,4 +28,10 @@
        android:text="请求前拒绝后都弹窗"
        android:onClick="both"
        android:layout_height="wrap_content"/>
+
+   <Button
+       android:layout_width="match_parent"
+       android:text="获取定位"
+       android:onClick="getLocation"
+       android:layout_height="wrap_content"/>
 </LinearLayout>

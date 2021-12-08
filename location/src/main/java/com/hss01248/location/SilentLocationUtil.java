@@ -5,7 +5,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -139,10 +138,10 @@ public class SilentLocationUtil {
                     return;
                 }*/
                 try {
-                    requestGPS(LocationManager.NETWORK_PROVIDER, locationManager, map, countSet, finalListener1);
-                    requestGPS(LocationManager.GPS_PROVIDER, locationManager, map, countSet, finalListener1);
-                    requestGPS(LocationManager.PASSIVE_PROVIDER, locationManager, map, countSet, finalListener1);
-                    requestGPS("fused", locationManager, map, countSet, finalListener1);
+                    requestByType(LocationManager.NETWORK_PROVIDER, locationManager, map, countSet, finalListener1);
+                    requestByType(LocationManager.GPS_PROVIDER, locationManager, map, countSet, finalListener1);
+                    requestByType(LocationManager.PASSIVE_PROVIDER, locationManager, map, countSet, finalListener1);
+                    requestByType("fused", locationManager, map, countSet, finalListener1);
                     if (isGmsAvaiable(finalContext)) {
                         requestGmsLocation(finalContext, locationManager, map, countSet, finalListener1);
                         //return;
@@ -420,7 +419,7 @@ public class SilentLocationUtil {
     }
 
     @SuppressLint("MissingPermission")
-    private void requestGPS(String provider, LocationManager locationManager, Map<String, Location> map, Set<String> countSet, MyLocationCallback listener) {
+    private void requestByType(String provider, LocationManager locationManager, Map<String, Location> map, Set<String> countSet, MyLocationCallback listener) {
         if (locationManager.isProviderEnabled(provider)) {
             // locationManager.requestSingleUpdate(buildCriteria(context,locationManager),);
             try {
@@ -457,7 +456,7 @@ public class SilentLocationUtil {
         if (location != null) {
             map.put(location.getProvider(), location);
         }
-        LogUtils.d("silent", " gps count:" + count.size());
+        LogUtils.d("silent", "count:" + count.size());
         LogUtils.d(count);
 
         if (count.size() == 0) {

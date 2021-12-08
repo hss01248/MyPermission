@@ -7,6 +7,9 @@ import android.location.Location;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.blankj.utilcode.util.LogUtils;
+import com.blankj.utilcode.util.Utils;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,11 +30,7 @@ public class LocationSync {
     private static final String PARAMS_LAT = "latitudexx";
     private static final String PARAMS_LONG = "longitudexx";
 
-    @SuppressLint("StaticFieldLeak")
-    static Context context;
-    public static void init(Context context){
-        LocationSync.context = context;
-    }
+
     /**
      * 保存定位得到的经纬度
      *
@@ -39,7 +38,7 @@ public class LocationSync {
      * @param mLongitude 经度
      */
     public static void save(double mLatitude, double mLongitude) {
-        Log.w(TAG, "设置经纬度:" + mLatitude + ", " + mLongitude);
+        LogUtils.i(TAG, "设置:" + mLatitude + ", " + mLongitude);
         put(PARAMS_LAT, String.valueOf(mLatitude));
         put(PARAMS_LONG, String.valueOf(mLongitude));
     }
@@ -75,11 +74,11 @@ public class LocationSync {
     }
 
     private static void put(String paramsLat, String valueOf) {
-        context.getSharedPreferences("locationutil", Context.MODE_PRIVATE).edit().putString(paramsLat,valueOf).apply();
+        Utils.getApp().getSharedPreferences("locationutil", Context.MODE_PRIVATE).edit().putString(paramsLat,valueOf).apply();
     }
 
     private static String getString(String paramsLat) {
-        return context.getSharedPreferences("locationutil",Context.MODE_PRIVATE).getString(paramsLat,"");
+        return Utils.getApp().getSharedPreferences("locationutil",Context.MODE_PRIVATE).getString(paramsLat,"");
     }
 
     /**
