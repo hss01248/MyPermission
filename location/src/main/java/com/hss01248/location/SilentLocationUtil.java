@@ -46,7 +46,7 @@ import java.util.Set;
  * no cache+10s timeout 0.4k
  * 以上约占总上报量的10%
  */
-public class SilentLocationUtil {
+ public class SilentLocationUtil {
 
     public int getTimeOut() {
         return timeOut;
@@ -98,7 +98,7 @@ public class SilentLocationUtil {
             listener.onFailed(6, "locationManager is null");
             return;
         }
-        boolean locationEnabled = isLocationEnabled2(locationManager);
+        boolean locationEnabled = isLocationEnabled(locationManager);
 
         if (!locationEnabled) {
             listener.onFailed(2, "location switch off");
@@ -172,8 +172,12 @@ public class SilentLocationUtil {
         requestGPS(finalContext,locationManager, finalListener1);*/
     }
 
-    private boolean isLocationEnabled2(LocationManager locationManager) {
+    public static boolean isLocationEnabled(LocationManager locationManager) {
         try {
+            if(locationManager == null){
+                LogUtils.w("locationManager == null");
+                return false;
+            }
             boolean locationEnabled = LocationManagerCompat.isLocationEnabled(locationManager);
             if (locationEnabled) {
                 return locationEnabled;
@@ -195,13 +199,13 @@ public class SilentLocationUtil {
             }
             return false;
         } catch (Throwable throwable) {
-            LogUtils.w("gps", throwable);
+            LogUtils.w("isLocationEnabled", throwable);
             return false;
         }
 
     }
 
-    boolean isLocationEnabled3() {
+   static boolean isLocationEnabled3() {
         try {
             int locationMode = 0;
             String locationProviders;

@@ -38,4 +38,5 @@ dependencies {
     api("com.blankj:utilcodex:1.30.0")
 
     implementation group: 'com.google.android.gms', name: 'play-services-location', version: '16.0.0'
+    api project(path: ':permission')
 }

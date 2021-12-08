@@ -12,8 +12,8 @@ import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.PermissionUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.blankj.utilcode.util.Utils;
+import com.hss01248.location.LocationUtil;
 import com.hss01248.location.MyLocationCallback;
-import com.hss01248.location.SilentLocationUtil;
 import com.hss01248.permission.DefaultPermissionDialog;
 import com.hss01248.permission.MyPermission;
 
@@ -86,28 +86,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getLocation(View view) {
-        MyPermission.requestByMostEffort(Manifest.permission.ACCESS_FINE_LOCATION, null, null, new PermissionUtils.FullCallback() {
+        LocationUtil.getLocation(view.getContext(),new MyLocationCallback() {
             @Override
-            public void onGranted(@NonNull List<String> granted) {
-                new SilentLocationUtil().getLocation(MainActivity.this, new MyLocationCallback() {
-                    @Override
-                    public void onFailed(int type, String msg) {
-                        ToastUtils.showLong(type+","+msg);
-                        LogUtils.w(msg,type);
-                    }
-
-                    @Override
-                    public void onSuccess(Location location, String msg) {
-                        ToastUtils.showLong("success,"+msg+", location:"+location);
-                        LogUtils.i(msg,location);
-
-                    }
-                });
+            public void onFailed(int type, String msg) {
+                ToastUtils.showLong(type+","+msg);
+                LogUtils.w(msg,type);
             }
 
             @Override
-            public void onDenied(@NonNull List<String> deniedForever, @NonNull List<String> denied) {
-                ToastUtils.showShort("onDenied:"+Arrays.toString(deniedForever.toArray()) +"\n"+Arrays.toString(denied.toArray()));
+            public void onSuccess(Location location, String msg) {
+                ToastUtils.showLong("success,"+msg+", location:"+location);
+                LogUtils.i(msg,location);
+
             }
         });
     }
