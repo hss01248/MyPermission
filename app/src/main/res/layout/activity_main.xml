@@ -34,4 +34,10 @@
        android:text="获取定位"
        android:onClick="getLocation"
        android:layout_height="wrap_content"/>
+
+   <Button
+       android:layout_width="match_parent"
+       android:text="多个权限请求"
+       android:onClick="multiPermission"
+       android:layout_height="wrap_content"/>
 </LinearLayout>

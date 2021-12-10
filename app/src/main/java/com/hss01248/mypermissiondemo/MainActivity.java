@@ -16,6 +16,7 @@ import com.hss01248.location.LocationUtil;
 import com.hss01248.location.MyLocationCallback;
 import com.hss01248.permission.DefaultPermissionDialog;
 import com.hss01248.permission.MyPermission;
+import com.hss01248.permission.MyPermissions;
 
 import java.util.Arrays;
 import java.util.List;
@@ -30,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void normal(View view) {
-        MyPermission.requestByMostEffort(Manifest.permission.ACCESS_FINE_LOCATION, null, null, new PermissionUtils.FullCallback() {
+        MyPermissions.requestByMostEffort( null, null, new PermissionUtils.FullCallback() {
             @Override
             public void onGranted(@NonNull List<String> granted) {
                 ToastUtils.showShort("onGranted:"+Arrays.toString(granted.toArray()));
@@ -40,11 +41,11 @@ public class MainActivity extends AppCompatActivity {
             public void onDenied(@NonNull List<String> deniedForever, @NonNull List<String> denied) {
                 ToastUtils.showShort("onDenied:"+Arrays.toString(deniedForever.toArray()) +"\n"+Arrays.toString(denied.toArray()));
             }
-        });
+        },Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.READ_CONTACTS);
     }
 
     public void beforeRequest(View view) {
-        MyPermission.requestByMostEffort(Manifest.permission.READ_CONTACTS, new DefaultPermissionDialog(), null, new PermissionUtils.FullCallback() {
+        MyPermissions.requestByMostEffort(new DefaultPermissionDialog(), null, new PermissionUtils.FullCallback() {
             @Override
             public void onGranted(@NonNull List<String> granted) {
                 ToastUtils.showShort("onGranted:"+Arrays.toString(granted.toArray()));
@@ -54,11 +55,11 @@ public class MainActivity extends AppCompatActivity {
             public void onDenied(@NonNull List<String> deniedForever, @NonNull List<String> denied) {
                 ToastUtils.showShort("onDenied:"+Arrays.toString(deniedForever.toArray()) +"\n"+Arrays.toString(denied.toArray()));
             }
-        });
+        },Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.READ_CONTACTS);
     }
 
     public void afterDenied(View view) {
-        MyPermission.requestByMostEffort(Manifest.permission.READ_EXTERNAL_STORAGE, null, new DefaultPermissionDialog(), new PermissionUtils.FullCallback() {
+        MyPermissions.requestByMostEffort( null, new DefaultPermissionDialog(), new PermissionUtils.FullCallback() {
             @Override
             public void onGranted(@NonNull List<String> granted) {
                 ToastUtils.showShort("onGranted:"+Arrays.toString(granted.toArray()));
@@ -68,11 +69,11 @@ public class MainActivity extends AppCompatActivity {
             public void onDenied(@NonNull List<String> deniedForever, @NonNull List<String> denied) {
                 ToastUtils.showShort("onDenied:"+Arrays.toString(deniedForever.toArray()) +"\n"+Arrays.toString(denied.toArray()));
             }
-        });
+        },Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.CAMERA);
     }
 
     public void both(View view) {
-        MyPermission.requestByMostEffort(Manifest.permission.READ_EXTERNAL_STORAGE, new DefaultPermissionDialog(), new DefaultPermissionDialog(), new PermissionUtils.FullCallback() {
+        MyPermissions.requestByMostEffort( new DefaultPermissionDialog(), new DefaultPermissionDialog(), new PermissionUtils.FullCallback() {
             @Override
             public void onGranted(@NonNull List<String> granted) {
                 ToastUtils.showShort("onGranted:"+Arrays.toString(granted.toArray()));
@@ -82,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
             public void onDenied(@NonNull List<String> deniedForever, @NonNull List<String> denied) {
                 ToastUtils.showShort("onDenied:"+Arrays.toString(deniedForever.toArray()) +"\n"+Arrays.toString(denied.toArray()));
             }
-        });
+        },Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.READ_CONTACTS);
     }
 
     public void getLocation(View view) {
@@ -100,5 +101,9 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    public void multiPermission(View view) {
+       // MyPermissions.requestByMostEffort();
     }
 }
