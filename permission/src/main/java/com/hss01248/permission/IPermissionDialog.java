@@ -4,5 +4,5 @@ import java.util.List;
 
 public interface IPermissionDialog {
 
-    void show(List<String> permissions, IPermissionDialogBtnClickListener listener);
+    void show(boolean isGuideToSetting,List<String> permissions, IPermissionDialogBtnClickListener listener);
 }

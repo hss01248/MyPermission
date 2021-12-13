@@ -30,7 +30,7 @@ public class MyPermission {
             return;
         }
         if(dialogBeforeRequest != null ){
-            dialogBeforeRequest.show(permissions,new IPermissionDialogBtnClickListener() {
+            dialogBeforeRequest.show(false,permissions,new IPermissionDialogBtnClickListener() {
                 @Override
                 public void onPositive() {
                     requestPermission(permission,true,dialogAfterDenied,true,callback);
@@ -127,7 +127,7 @@ public class MyPermission {
         }
         List<String> permissions = new ArrayList<>();
         permissions.add(permission);
-        dialogAfterDenied.show(permissions,new IPermissionDialogBtnClickListener() {
+        dialogAfterDenied.show(false,permissions,new IPermissionDialogBtnClickListener() {
             @Override
             public void onPositive() {
                 if(deniedForever){

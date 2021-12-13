@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
             public void onDenied(@NonNull List<String> deniedForever, @NonNull List<String> denied) {
                 ToastUtils.showShort("onDenied:"+Arrays.toString(deniedForever.toArray()) +"\n"+Arrays.toString(denied.toArray()));
             }
-        },Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.READ_CONTACTS);
+        },Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.READ_CONTACTS,Manifest.permission.CALL_PHONE);
     }
 
     public void beforeRequest(View view) {
@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
             public void onDenied(@NonNull List<String> deniedForever, @NonNull List<String> denied) {
                 ToastUtils.showShort("onDenied:"+Arrays.toString(deniedForever.toArray()) +"\n"+Arrays.toString(denied.toArray()));
             }
-        },Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.READ_CONTACTS);
+        },Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.READ_CONTACTS,Manifest.permission.CALL_PHONE);
     }
 
     public void afterDenied(View view) {
@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
             public void onDenied(@NonNull List<String> deniedForever, @NonNull List<String> denied) {
                 ToastUtils.showShort("onDenied:"+Arrays.toString(deniedForever.toArray()) +"\n"+Arrays.toString(denied.toArray()));
             }
-        },Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.CAMERA);
+        },Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.CAMERA,Manifest.permission.CALL_PHONE);
     }
 
     public void both(View view) {
@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
             public void onDenied(@NonNull List<String> deniedForever, @NonNull List<String> denied) {
                 ToastUtils.showShort("onDenied:"+Arrays.toString(deniedForever.toArray()) +"\n"+Arrays.toString(denied.toArray()));
             }
-        },Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.READ_CONTACTS);
+        },Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.READ_CONTACTS,Manifest.permission.CALL_PHONE);
     }
 
     public void getLocation(View view) {
