@@ -32,7 +32,7 @@ public class DefaultPermissionDialog implements IPermissionDialog{
                         .replaceAll("android\\.permission\\.","")
                         .replaceAll("\\[","")
                         .replaceAll("\\]","")
-                        .replaceAll(",","\n"))
+                        .replaceAll(",","\n")+(isGuideToSetting?"\n请在应用信息->权限 里打开上述权限":""))
                 .setPositiveButton(R.string.mypermission_ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

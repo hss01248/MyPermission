@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void normal(View view) {
-        MyPermissions.requestByMostEffort( null, null, new PermissionUtils.FullCallback() {
+        MyPermissions.requestByMostEffort( false, false, new PermissionUtils.FullCallback() {
             @Override
             public void onGranted(@NonNull List<String> granted) {
                 ToastUtils.showShort("onGranted:"+Arrays.toString(granted.toArray()));
@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void beforeRequest(View view) {
-        MyPermissions.requestByMostEffort(new DefaultPermissionDialog(), null, new PermissionUtils.FullCallback() {
+        MyPermissions.requestByMostEffort(true, false, new PermissionUtils.FullCallback() {
             @Override
             public void onGranted(@NonNull List<String> granted) {
                 ToastUtils.showShort("onGranted:"+Arrays.toString(granted.toArray()));
@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void afterDenied(View view) {
-        MyPermissions.requestByMostEffort( null, new DefaultPermissionDialog(), new PermissionUtils.FullCallback() {
+        MyPermissions.requestByMostEffort( false, true, new PermissionUtils.FullCallback() {
             @Override
             public void onGranted(@NonNull List<String> granted) {
                 ToastUtils.showShort("onGranted:"+Arrays.toString(granted.toArray()));
@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void both(View view) {
-        MyPermissions.requestByMostEffort( new DefaultPermissionDialog(), new DefaultPermissionDialog(), new PermissionUtils.FullCallback() {
+        MyPermissions.requestByMostEffort( true, true, new PermissionUtils.FullCallback() {
             @Override
             public void onGranted(@NonNull List<String> granted) {
                 ToastUtils.showShort("onGranted:"+Arrays.toString(granted.toArray()));

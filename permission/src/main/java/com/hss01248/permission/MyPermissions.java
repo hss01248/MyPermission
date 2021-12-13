@@ -20,6 +20,13 @@ import java.util.List;
 
 public class MyPermissions {
 
+
+    public static void requestByMostEffort(boolean showBeforeRequest,boolean showAfterRequest,
+                                           PermissionUtils.FullCallback callback,
+                                           String... permission){
+        new MyPermissions().requestByMostEffort(null,showBeforeRequest,showAfterRequest,callback,permission);
+    }
+
      IPermissionDialog dialog =  new DefaultPermissionDialog();
     boolean showBeforeRequest;
     boolean showAfterRequest;
@@ -54,10 +61,10 @@ public class MyPermissions {
 
 
         if (showBeforeRequest) {
-            dialog.show(getDeniedForeverList(permission).isEmpty(),permissionsList, new IPermissionDialogBtnClickListener() {
+            dialog.show(!deniedForeverList.isEmpty(),permissionsList, new IPermissionDialogBtnClickListener() {
                 @Override
                 public void onPositive() {
-                    requestPermissionFirstTime(dialog,true,   callback, permissionsList, permission);
+                    requestPermissionFirstTime();
                 }
 
                 @Override
@@ -66,7 +73,7 @@ public class MyPermissions {
                 }
             });
         } else {
-            requestPermissionFirstTime(dialog,false, callback, permissionsList, permission);
+            requestPermissionFirstTime();
         }
 
 
@@ -76,6 +83,7 @@ public class MyPermissions {
         List<String> deniedForever = new ArrayList<>();
         for (String per : permission) {
             if(!PermissionUtils.isGranted(per) && !ActivityCompat.shouldShowRequestPermissionRationale(ActivityUtils.getTopActivity(), per)){
+                //todo 没有请求过,也会走这里,还是蛋疼
                 deniedForever.add(per);
             }
         }
@@ -103,7 +111,7 @@ public class MyPermissions {
         List<String> deniedTemporary = getDeniedTemporary(permission);
         if(deniedTemporary.isEmpty()){
             LogUtils.i("第一次_全部都是永久拒绝_直接gosetting");
-            goSettingFirstTimeWrapper(dialogBeforeRequest,hasShowBeforeDialog,  callback, permissionsList, deniedForeverList, permission);
+            goSettingFirstTimeWrapper( showBeforeRequest,deniedForeverList);
         }else {
             LogUtils.i("第一次_有暂时拒绝的,先弹系统弹窗,然后看是否goSetting");
             long sysPermissionDialogShowTime = System.currentTimeMillis();
@@ -123,7 +131,7 @@ public class MyPermissions {
                                     callback.onGranted(granted);
                                 }else {
                                     LogUtils.d("第一次_请求的权限均已允许,但有初始永久拒绝的权限,继续去设置页面",deniedForeverList);
-                                    goSettingFirstTimeWrapper(dialogBeforeRequest,false, dialogAfterDenied, callback, permissionsList, deniedForeverList, permission);
+                                    goSettingFirstTimeWrapper(false, deniedForeverList);
                                 }
                             }
                         }
@@ -134,16 +142,7 @@ public class MyPermissions {
                             //如果是部分允许,部分拒绝,那么最终回调这里
                             //小于1s,说明没有显示系统权限弹窗,直接调用了denied,且全部是deniedForever,或者没有在manifest里声明权限
                             LogUtils.d("onDenied", deniedForever, denied);
-                            if(deniedForeverList.isEmpty()){
-                                LogUtils.d("第一次_请求的权限被拒绝了一些,此时没有初始被永久被拒绝的权限,那么开始后处理",permission);
-                                checkIfRetryAfterFirstTimeRequest(false,
-                                        dialogAfterDenied, deniedForever, denied, callback, permissionsList, permission);
-                            }else {
-                                LogUtils.d("第一次_请求的权限被拒绝了一些,但还有初始永久拒绝的权限,开始后处理",deniedForeverList);
-                                checkIfRetryAfterFirstTimeRequest(false,
-                                        dialogAfterDenied, deniedForever, denied, callback, permissionsList, permission);
-                                //goSettingFirstTimeWrapper(dialogBeforeRequest,false, dialogAfterDenied, callback, permissionsList, deniedForeverList, permission);
-                            }
+                            checkIfRetryAfterFirstTimeRequest();
 
 
                         }
@@ -154,19 +153,14 @@ public class MyPermissions {
 
     }
 
-    private static void goSettingFirstTimeWrapper(IPermissionDialog dialogBeforeRequest,boolean hasShowBeforeDialog,
-                                                  IPermissionDialog dialogAfterDenied, PermissionUtils.FullCallback callback,
-                                                  List<String> permissionsList, List<String> deniedForeverList, String[] permission) {
+    private  void goSettingFirstTimeWrapper(boolean hasShowBeforeDialog,
+                                                  List<String> deniedForeverList) {
         if (!hasShowBeforeDialog) {
             LogUtils.i("第一次_需要gosettings_没有弹出前置弹窗,那么就试着弹出拒绝后弹窗, 用来引导:");
-            if(dialogBeforeRequest == null){
-                dialogBeforeRequest = dialogAfterDenied;
-            }
-            if (dialogBeforeRequest != null) {
-                dialogBeforeRequest.show(true,permissionsList, new IPermissionDialogBtnClickListener() {
+                dialog.show(true,permissionsList, new IPermissionDialogBtnClickListener() {
                     @Override
                     public void onPositive() {
-                        goSettingsFirstTime(deniedForeverList, permission, callback, permissionsList, true, dialogAfterDenied);
+                        goSettingsFirstTime();
                     }
 
                     @Override
@@ -174,13 +168,9 @@ public class MyPermissions {
                         callback.onDenied(deniedForeverList, new ArrayList<>());
                     }
                 });
-            } else {
-                LogUtils.w("第一次_需要gosettings_没有弹出过前置弹窗,也没有配置后置弹窗,那么直接去settings,弹个吐司意思一下");
-                goSettingsFirstTime(deniedForeverList, permission, callback, permissionsList, false, dialogAfterDenied);
-            }
         } else {
             LogUtils.w("第一次_需要gosettings_已经显示过前置弹窗,且是第一次请求,那么直接去settings");
-            goSettingsFirstTime(deniedForeverList, permission, callback, permissionsList, hasShowBeforeDialog, dialogAfterDenied);
+            goSettingsFirstTime();
         }
     }
 
@@ -206,9 +196,7 @@ public class MyPermissions {
         return hasShowSysDialog;
     }
 
-    private static void goSettingsFirstTime(@NonNull List<String> denied, String[] permission,
-                                            PermissionUtils.FullCallback callback, List<String> permissionsList,
-                                            boolean hasShowBeforeDialog, IPermissionDialog dialogAfterDenied) {
+    private  void goSettingsFirstTime() {
         Intent intent = IntentUtils.getLaunchAppDetailsSettingsIntent(Utils.getApp().getPackageName(), false);
         StartActivityUtil.goOutAppForResult(ActivityUtils.getTopActivity(), intent, new ActivityResultListener() {
             @Override
@@ -222,8 +210,7 @@ public class MyPermissions {
                     List<String> deniedTemporary = getDeniedTemporary(permission);
                     LogUtils.i("还有这些没有被允许:",deniedForeverList,deniedTemporary);
                     //相当于显示了系统权限弹窗
-                    checkIfRetryAfterFirstTimeRequest(hasShowBeforeDialog,
-                            dialogAfterDenied, deniedForeverList, deniedTemporary, callback, permissionsList, permission);
+                    checkIfRetryAfterFirstTimeRequest();
                 }
             }
 
@@ -266,22 +253,15 @@ public class MyPermissions {
         });
     }
 
-    private static void checkIfRetryAfterFirstTimeRequest(
-            boolean hasShowBeforeDialog,
-            IPermissionDialog dialogAfterDenied,
-            List<String> deniedForever,
-            List<String> denied,
-            PermissionUtils.FullCallback callback,
-            List<String> permissionsList,
-            String... permission) {
+    private  void checkIfRetryAfterFirstTimeRequest() {
         //准备重试
         List<String> deniedForeverList = getDeniedForeverList(permission);
         List<String> deniedTemporary = getDeniedTemporary(permission);
-        if (dialogAfterDenied == null) {
+        if (!showAfterRequest) {
             LogUtils.w("没有配置dialogAfterDenied,直接返回拒绝,流程结束",deniedForeverList,deniedTemporary);
             callback.onDenied(deniedForeverList, deniedTemporary);
         } else {
-            dialogAfterDenied.show(deniedForeverList.isEmpty(),permissionsList, new IPermissionDialogBtnClickListener() {
+            dialog.show(deniedForeverList.isEmpty(),permissionsList, new IPermissionDialogBtnClickListener() {
                 @Override
                 public void onPositive() {
                     if(deniedTemporary.isEmpty()){
@@ -289,23 +269,20 @@ public class MyPermissions {
                         goSettingsSecondTime(deniedForeverList,permission,callback,permissionsList);
                     }else {
                         LogUtils.i("有暂时拒绝的,那么先申请暂时拒绝的(requestPermission),再申请永久拒绝的(go setting)");
-                        requstPermissionSencondTime(deniedTemporary, permission, callback, permissionsList, deniedForeverList,dialogAfterDenied);
+                        requstPermissionSencondTime(deniedTemporary,  deniedForeverList);
                     }
                 }
 
                 @Override
                 public void onNegtivite() {
-                    LogUtils.w("dialogAfterDenied,点击了取消,流程结束",deniedForever,denied);
+                    LogUtils.w("dialogAfterDenied,点击了取消,流程结束",deniedForeverList,deniedTemporary);
                     callback.onDenied(deniedForeverList, deniedTemporary);
                 }
             });
         }
     }
 
-    private static void requstPermissionSencondTime(List<String> denied, String[] permission,
-                                                    PermissionUtils.FullCallback callback,
-                                                    List<String> permissionsList, List<String> deniedForever,
-                                                    IPermissionDialog dialogAfterDenied) {
+    private  void requstPermissionSencondTime(List<String> denied, List<String> deniedForever) {
 
         String[] theDenied = new String[denied.size()];
         for (int i = 0; i < denied.size(); i++) {
@@ -327,9 +304,7 @@ public class MyPermissions {
                                 }
                                 return;
                             }
-
-                            if(dialogAfterDenied != null){
-                                dialogAfterDenied.show(true, permissionsList, new IPermissionDialogBtnClickListener() {
+                                dialog.show(true, permissionsList, new IPermissionDialogBtnClickListener() {
                                     @Override
                                     public void onPositive() {
                                         goSettingsSecondTime(deniedForever,permission,callback,permissionsList);
@@ -340,9 +315,6 @@ public class MyPermissions {
                                         callback.onDenied(deniedForever, new ArrayList<>());
                                     }
                                 });
-                            }else {
-                                goSettingsSecondTime(deniedForever,permission,callback,permissionsList);
-                            }
                         }else {
                             LogUtils.w("2 第二次_非全部允许");
                         }
