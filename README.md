@@ -35,6 +35,8 @@ MyPermission.requestByMostEffort(Manifest.permission.READ_EXTERNAL_STORAGE, null
 
 ## 获取定位: LocationUtil
 
+> 饱和式救援
+
 ```java
 //简易api 默认10s超时. 拒绝后有一次挽回弹窗
 getLocation(Context context, MyLocationCallback callback)
@@ -61,7 +63,13 @@ getLocation(Context context, int timeout, IPermissionDialog dialogBeforeRequest,
         });
 ```
 
+耗时:
 
+![image-20211214192158731](https://cdn.jsdelivr.net/gh/hss01248/picbed@master/pic/1639480923963-image-20211214192158731.jpg)
+
+
+
+![image-20211214192410958](https://cdn.jsdelivr.net/gh/hss01248/picbed@master/pic/1639481051011-image-20211214192410958.jpg)
 
 # gradle
 

@@ -46,13 +46,13 @@ import java.util.Set;
  * no cache+10s timeout 0.4k
  * 以上约占总上报量的10%
  */
- public class SilentLocationUtil {
+ public class QuietLocationUtil {
 
     public int getTimeOut() {
         return timeOut;
     }
 
-    public SilentLocationUtil setTimeOut(int timeOut) {
+    public QuietLocationUtil setTimeOut(int timeOut) {
         this.timeOut = timeOut;
         return this;
     }
@@ -69,19 +69,33 @@ import java.util.Set;
     }
 
 
-    public void getLocation(Context context, int timeoutMills, MyLocationCallback listener) {
+    public void getLocation(Context context, int timeoutMills, MyLocationCallback listener0) {
         timeOut = timeoutMills;
         /*if (executors == null) {
             executors = Executors.newCachedThreadPool();
         }*/
         context = context.getApplicationContext();
 
-        MyLocationCallback finalListener = listener;
+        MyLocationCallback finalListener = listener0;
 
-        listener = new MyLocationCallback() {
+        MyLocationCallback listener = new MyLocationCallback() {
             @Override
             public void onFailed(int type, String msg) {
-                finalListener.onFailed(type, msg);
+                Location cache = LocationSync.getLocation();
+                if (cache == null) {
+                    double lon = LocationSync.getLongitude();
+                    double lat = LocationSync.getLatitude();
+                    if (lon == 0 && lat == 0) {
+                        finalListener.onFailed(type, msg);
+                    } else {
+                        cache = new Location(LocationManager.PASSIVE_PROVIDER);
+                        cache.setLongitude(LocationSync.getLongitude());
+                        cache.setLatitude(LocationSync.getLatitude());
+                        finalListener.onSuccess(cache, "from disk cache");
+                    }
+                } else {
+                    finalListener.onSuccess(cache, "from memory cache");
+                }
             }
 
             @Override
@@ -428,16 +442,18 @@ import java.util.Set;
             // locationManager.requestSingleUpdate(buildCriteria(context,locationManager),);
             try {
                 countSet.add(provider);
-                LogUtils.d(countSet);
+                LogUtils.d("start request "+ provider);
+                long start = System.currentTimeMillis();
                 @SuppressLint("MissingPermission") Location lastKnownLocation = locationManager.getLastKnownLocation(provider);
                 if (lastKnownLocation != null) {
                     //LogUtils.d(lastKnownLocation);
+                    LogUtils.d("lastKnownLocation", lastKnownLocation,provider,"耗时(ms):",(System.currentTimeMillis() - start));
                     map.put(lastKnownLocation.getProvider(), lastKnownLocation);
                 }
                 locationManager.requestSingleUpdate(provider, new android.location.LocationListener() {
                     @Override
                     public void onLocationChanged(@NonNull Location location) {
-                        LogUtils.d("onLocationChanged", location);
+                        LogUtils.d("onLocationChanged", location,provider,"耗时(ms):",(System.currentTimeMillis() - start));
                         countSet.remove(provider);
                         onEnd(location, map, countSet, listener);
                     }
@@ -460,7 +476,6 @@ import java.util.Set;
         if (location != null) {
             map.put(location.getProvider(), location);
         }
-        LogUtils.d("silent", "count:" + count.size());
         LogUtils.d(count);
 
         if (count.size() == 0) {
@@ -491,7 +506,7 @@ import java.util.Set;
     }
 
     private void callback(Map<String, Location> map, String msg, MyLocationCallback listener) {
-        LogUtils.d(map);
+        LogUtils.d(map,msg);
         if (hasEnd) {
             LogUtils.w("callback when has end");
             return;
@@ -508,21 +523,7 @@ import java.util.Set;
             }
 
         } else {
-            Location cache = LocationSync.getLocation();
-            if (cache == null) {
-                double lon = LocationSync.getLongitude();
-                double lat = LocationSync.getLatitude();
-                if (lon == 0 && lat == 0) {
-                    listener.onFailed(5, "no cache and " + msg);
-                } else {
-                    cache = new Location(LocationManager.PASSIVE_PROVIDER);
-                    cache.setLongitude(LocationSync.getLongitude());
-                    cache.setLatitude(LocationSync.getLatitude());
-                    listener.onSuccess(location, "from disk cache");
-                }
-            } else {
-                listener.onSuccess(location, "from memory cache");
-            }
+            listener.onFailed(77,"no location get when api request end");
         }
         try {
             if (Looper.getMainLooper() != Looper.myLooper()) {

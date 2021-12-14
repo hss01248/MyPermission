@@ -54,12 +54,12 @@ public class LocationUtil {
 
 
         if(silent){
-            new SilentLocationUtil().getLocation(context,timeout, callback);
+            new QuietLocationUtil().getLocation(context,timeout, callback);
             return;
         }
         LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
-        if (SilentLocationUtil.isLocationEnabled(locationManager)) {
+        if (QuietLocationUtil.isLocationEnabled(locationManager)) {
             checkPermission(context,timeout,dialogBeforeRequest,dialogAfterDenied, callback);
             return;
         }
@@ -74,7 +74,7 @@ public class LocationUtil {
                         StartActivityUtil.goOutAppForResult(ActivityUtils.getTopActivity(), locationIntent, new ActivityResultListener() {
                             @Override
                             public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-                                if (!SilentLocationUtil.isLocationEnabled(locationManager)) {
+                                if (!QuietLocationUtil.isLocationEnabled(locationManager)) {
                                     callback.onFailed(2, "location switch off");
                                     return;
                                 }
@@ -126,6 +126,6 @@ public class LocationUtil {
     }
 
     private static void doRequestLocation(Context context,int timeout, MyLocationCallback callback) {
-        new SilentLocationUtil().getLocation(context,timeout, callback);
+        new QuietLocationUtil().getLocation(context,timeout, callback);
     }
 }
