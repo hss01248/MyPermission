@@ -17,7 +17,8 @@ import com.hss01248.activityresult.ActivityResultListener;
 import com.hss01248.activityresult.StartActivityUtil;
 import com.hss01248.permission.DefaultPermissionDialog;
 import com.hss01248.permission.IPermissionDialog;
-import com.hss01248.permission.MyPermission;
+import com.hss01248.permission.MyPermissions;
+
 
 import java.util.List;
 
@@ -100,9 +101,9 @@ public class LocationUtil {
         if (PermissionUtils.isGranted(Manifest.permission.ACCESS_COARSE_LOCATION) && PermissionUtils.isGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
             doRequestLocation(context,timeout, callback);
         } else {
-            MyPermission.requestByMostEffort(Manifest.permission.ACCESS_FINE_LOCATION,
-                    dialogBeforeRequest,
-                    dialogAfterDenied,
+            MyPermissions.requestByMostEffort(
+                    true,
+                    false,
                     new PermissionUtils.FullCallback() {
                         @Override
                         public void onGranted(@NonNull List<String> granted) {
@@ -113,7 +114,7 @@ public class LocationUtil {
                         public void onDenied(@NonNull List<String> deniedForever, @NonNull List<String> denied) {
                             callback.onFailed(1, "no permission");
                         }
-                    });
+                    },Manifest.permission.ACCESS_FINE_LOCATION);
         }
     }
 

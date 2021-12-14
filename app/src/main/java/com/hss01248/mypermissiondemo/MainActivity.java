@@ -14,8 +14,6 @@ import com.blankj.utilcode.util.ToastUtils;
 import com.blankj.utilcode.util.Utils;
 import com.hss01248.location.LocationUtil;
 import com.hss01248.location.MyLocationCallback;
-import com.hss01248.permission.DefaultPermissionDialog;
-import com.hss01248.permission.MyPermission;
 import com.hss01248.permission.MyPermissions;
 
 import java.util.Arrays;

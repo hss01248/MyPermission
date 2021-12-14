@@ -27,6 +27,11 @@ public class MyPermissions {
 
     public static IPermissionDialog defaultPermissionDialog = new DefaultPermissionDialog();
 
+    public static void request(PermissionUtils.FullCallback callback,
+                                           String... permission){
+        requestByMostEffort(false,false,callback,permission);
+
+    }
     public static void requestByMostEffort(boolean showBeforeRequest, boolean showAfterRequest,
                                            PermissionUtils.FullCallback callback,
                                            String... permission) {
