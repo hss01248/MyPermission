@@ -19,7 +19,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class MyPermission {
+@Deprecated
+ class MyPermission {
 
     public static void requestByMostEffort(String permission, IPermissionDialog dialogBeforeRequest,
                                            IPermissionDialog dialogAfterDenied,PermissionUtils.FullCallback callback){
