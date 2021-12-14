@@ -37,7 +37,7 @@ public class LocationUtil {
      * @param callback
      */
     public static void getLocation(Context context, MyLocationCallback callback){
-        getLocation(context,10000,null,
+        getLocation(context,false,10000,null,
                 new DefaultPermissionDialog(),callback);
     }
 
@@ -49,8 +49,14 @@ public class LocationUtil {
      * @param dialogAfterDenied
      * @param callback
      */
-    public static void getLocation(Context context, int timeout, IPermissionDialog dialogBeforeRequest,
+    public static void getLocation(Context context,boolean silent, int timeout, IPermissionDialog dialogBeforeRequest,
                                    IPermissionDialog dialogAfterDenied, MyLocationCallback callback) {
+
+
+        if(silent){
+            new SilentLocationUtil().getLocation(context,timeout, callback);
+            return;
+        }
         LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
         if (SilentLocationUtil.isLocationEnabled(locationManager)) {
@@ -98,7 +104,8 @@ public class LocationUtil {
 
     private static void checkPermission(Context context,int timeout, IPermissionDialog dialogBeforeRequest,
                                         IPermissionDialog dialogAfterDenied,  MyLocationCallback callback) {
-        if (PermissionUtils.isGranted(Manifest.permission.ACCESS_COARSE_LOCATION) && PermissionUtils.isGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
+        if (PermissionUtils.isGranted(Manifest.permission.ACCESS_COARSE_LOCATION)
+                && PermissionUtils.isGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
             doRequestLocation(context,timeout, callback);
         } else {
             MyPermissions.requestByMostEffort(
