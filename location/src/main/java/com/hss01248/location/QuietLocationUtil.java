@@ -247,6 +247,19 @@ import java.util.Set;
         if (map.isEmpty()) {
             return null;
         }
+       /* Location location = null;
+        for (Map.Entry<String, Location> entry : map.entrySet()) {
+            if(entry.getValue() == null){
+                continue;
+            }
+            if(location == null){
+                location = entry.getValue();
+            }else {
+                if(location.getAccuracy() < entry.getValue().getAccuracy()){
+                    location = entry.getValue();
+                }
+            }
+        }*/
         if (map.containsKey(LocationManager.GPS_PROVIDER) && map.get(LocationManager.GPS_PROVIDER) != null) {
             return map.get(LocationManager.GPS_PROVIDER);
         }
