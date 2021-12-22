@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.location.Location;
 import android.location.LocationManager;
 import android.provider.Settings;
 
@@ -39,6 +40,19 @@ public class LocationUtil {
     public static void getLocation(Context context, MyLocationCallback callback){
         getLocation(context,false,10000,null,
                 new DefaultPermissionDialog(),callback);
+    }
+
+    public static Location getLocation(){
+        if(LocationSync.getLocation() != null){
+            return LocationSync.getLocation();
+        }
+        if(LocationSync.getLatitude() != 0 && LocationSync.getLongitude() != 0){
+            Location location = new Location(LocationManager.PASSIVE_PROVIDER);
+            location.setLongitude(LocationSync.getLongitude());
+            location.setLatitude(LocationSync.getLatitude());
+            return location;
+        }
+        return null;
     }
 
     /**
