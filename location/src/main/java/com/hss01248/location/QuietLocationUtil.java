@@ -81,20 +81,13 @@ import java.util.Set;
         MyLocationCallback listener = new MyLocationCallback() {
             @Override
             public void onFailed(int type, String msg) {
-                Location cache = LocationSync.getLocation();
+                Map<String,String> ext = new HashMap<>();
+                ext.put("msg",msg);
+                Location cache = getFromCache(ext,msg);
                 if (cache == null) {
-                    double lon = LocationSync.getLongitude();
-                    double lat = LocationSync.getLatitude();
-                    if (lon == 0 && lat == 0) {
-                        finalListener.onFailed(type, msg);
-                    } else {
-                        cache = new Location(LocationManager.PASSIVE_PROVIDER);
-                        cache.setLongitude(LocationSync.getLongitude());
-                        cache.setLatitude(LocationSync.getLatitude());
-                        finalListener.onSuccess(cache, "from disk cache");
-                    }
+                    finalListener.onFailed(type,ext.get("msg"));
                 } else {
-                    finalListener.onSuccess(cache, "from memory cache");
+                    finalListener.onSuccess(cache, ext.get("msg"));
                 }
             }
 
@@ -142,7 +135,7 @@ import java.util.Set;
                 timeoutRun = new Runnable() {
                     @Override
                     public void run() {
-                        callback(map, timeOut + "s timeout", finalListener3);
+                        callback(map, timeOut + "s timeout",true, finalListener3);
                     }
                 };
                 handler.postDelayed(timeoutRun, timeOut);
@@ -492,12 +485,12 @@ import java.util.Set;
         LogUtils.d(count);
 
         if (count.size() == 0) {
-            callback(map, "complete normal", listener);
+            callback(map, "complete normal",false, listener);
         }
 
     }
 
-    public static Location getFromCache(Map ext, String msg) {
+     static Location getFromCache(Map ext, String msg) {
         Location cache = LocationSync.getLocation();
         if (cache == null) {
             double lon = LocationSync.getLongitude();
@@ -518,10 +511,24 @@ import java.util.Set;
 
     }
 
-    private void callback(Map<String, Location> map, String msg, MyLocationCallback listener) {
-        LogUtils.d(map,msg);
+    private void callback(Map<String, Location> map, String msg,boolean isTimeout, MyLocationCallback listener) {
+        LogUtils.i(map,msg,"是否超时:"+ isTimeout);
         if (hasEnd) {
-            LogUtils.w("callback when has end");
+            LogUtils.w("callback when has end,是否超时:"+isTimeout);
+            Location location = getMostAcurLocation(map);
+            if(location != null){
+                if(!isTimeout){
+                    LogUtils.w("超时后保存定位:",location);
+                }
+                LocationSync.save(location.getLatitude(),location.getLongitude());
+                LocationSync.saveLocation(location);
+
+                if(!isTimeout){
+                    LogUtils.w("超时后looper继续回调,写缓存,然后移除looper");
+                    endLooper();
+                }
+            }
+
             return;
         }
         hasEnd = true;
@@ -538,14 +545,28 @@ import java.util.Set;
         } else {
             listener.onFailed(77,"no location get when api request end");
         }
+        if(!isTimeout){
+            LogUtils.i("正常结束,去掉调那些timeoutRunnable");
+            if (handler != null) {
+                handler.removeCallbacks(timeoutRun);
+                if (gmsRunnable != null) {
+                    handler.removeCallbacks(gmsRunnable);
+                }
+            }
+        }
+
+        if(!isTimeout){
+            endLooper();
+        }
+
+
+
+    }
+
+    private void endLooper() {
         try {
             if (Looper.getMainLooper() != Looper.myLooper()) {
-                if (handler != null) {
-                    handler.removeCallbacks(timeoutRun);
-                    if (gmsRunnable != null) {
-                        handler.removeCallbacks(gmsRunnable);
-                    }
-                }
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                     Looper.myLooper().quitSafely();
                 } else {
@@ -555,8 +576,6 @@ import java.util.Set;
         } catch (Throwable throwable) {
             throwable.printStackTrace();
         }
-
-
     }
 
     private static boolean onlyCoarsePermission(Context context) {

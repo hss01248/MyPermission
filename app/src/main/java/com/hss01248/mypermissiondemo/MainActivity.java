@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getLocation(View view) {
-        LocationUtil.getLocation(view.getContext(),new MyLocationCallback() {
+        LocationUtil.getLocation(view.getContext(),false,5000,false,false,new MyLocationCallback() {
             @Override
             public void onFailed(int type, String msg) {
                 ToastUtils.showLong(type+","+msg);

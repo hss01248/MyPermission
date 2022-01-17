@@ -38,8 +38,8 @@ public class LocationUtil {
      * @param callback
      */
     public static void getLocation(Context context, MyLocationCallback callback){
-        getLocation(context,false,10000,null,
-                new DefaultPermissionDialog(),callback);
+        getLocation(context,false,10000,false,
+                true,callback);
     }
 
     public static Location getLocation(){
@@ -59,12 +59,9 @@ public class LocationUtil {
      * 完全配置版
      * @param context
      * @param timeout
-     * @param dialogBeforeRequest
-     * @param dialogAfterDenied
      * @param callback
      */
-    public static void getLocation(Context context,boolean silent, int timeout, IPermissionDialog dialogBeforeRequest,
-                                   IPermissionDialog dialogAfterDenied, MyLocationCallback callback) {
+    public static void getLocation(Context context,boolean silent, int timeout, boolean showBeforeRequest, boolean showAfterRequest, MyLocationCallback callback) {
 
 
         if(silent){
@@ -74,7 +71,7 @@ public class LocationUtil {
         LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
         if (QuietLocationUtil.isLocationEnabled(locationManager)) {
-            checkPermission(context,timeout,dialogBeforeRequest,dialogAfterDenied, callback);
+            checkPermission(context,timeout,showBeforeRequest,showAfterRequest, callback);
             return;
         }
 
@@ -92,7 +89,7 @@ public class LocationUtil {
                                     callback.onFailed(2, "location switch off");
                                     return;
                                 }
-                                checkPermission(context,timeout,dialogBeforeRequest,dialogAfterDenied, callback);
+                                checkPermission(context,timeout,showBeforeRequest,showAfterRequest, callback);
                             }
 
                             @Override
@@ -116,15 +113,14 @@ public class LocationUtil {
 
     }
 
-    private static void checkPermission(Context context,int timeout, IPermissionDialog dialogBeforeRequest,
-                                        IPermissionDialog dialogAfterDenied,  MyLocationCallback callback) {
+    private static void checkPermission(Context context,int timeout,boolean showBeforeRequest, boolean showAfterRequest,  MyLocationCallback callback) {
         if (PermissionUtils.isGranted(Manifest.permission.ACCESS_COARSE_LOCATION)
                 && PermissionUtils.isGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
             doRequestLocation(context,timeout, callback);
         } else {
             MyPermissions.requestByMostEffort(
-                    true,
-                    false,
+                    showBeforeRequest,
+                    showAfterRequest,
                     new PermissionUtils.FullCallback() {
                         @Override
                         public void onGranted(@NonNull List<String> granted) {
