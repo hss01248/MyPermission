@@ -24,9 +24,10 @@ public class MyPermissionsExt {
         if(havePermission){
             callback.onGranted(permissionImpl.name());
         }else {
-            Uri packageURI = Uri.parse("package:" + AppUtils.getAppPackageName());
+            //Uri packageURI = Uri.parse("package:" + AppUtils.getAppPackageName());
             Intent intent = permissionImpl.intentToRequestPermission(activity);
-            intent.setData(packageURI);
+            //intent.setData(packageURI);
+            //intent.setPackage(AppUtils.getAppPackageName());
             StartActivityUtil.goOutAppForResult(activity, intent, new ActivityResultListener() {
                 @Override
                 public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {

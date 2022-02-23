@@ -9,6 +9,39 @@
 
    <Button
        android:layout_width="match_parent"
+       android:text="权限是否声明在manifest里"
+       android:onClick="isInManifest"
+       android:layout_height="wrap_content"/>
+
+   <Button
+       android:layout_width="match_parent"
+       android:text="申请apk安装权限"
+       android:onClick="askExtPermissions"
+       android:layout_height="wrap_content"/>
+   <Button
+       android:layout_width="match_parent"
+       android:text="申请通知权限"
+       android:onClick="askNotification"
+       android:layout_height="wrap_content"/>
+   <Button
+       android:layout_width="match_parent"
+       android:text="申请管理所有存储权限"
+       android:onClick="askManagerAllStorage"
+       android:layout_height="wrap_content"/>
+
+   <Button
+       android:layout_width="match_parent"
+       android:text="监听通知栏权限"
+       android:onClick="askNotificationListener"
+       android:layout_height="wrap_content"/>
+
+   <Button
+       android:layout_width="match_parent"
+       android:text="获取所有应用使用状态"
+       android:onClick="useageStatus"
+       android:layout_height="wrap_content"/>
+   <Button
+       android:layout_width="match_parent"
        android:text="普通模式-无任何自定义弹窗"
        android:onClick="normal"
        android:layout_height="wrap_content"/>

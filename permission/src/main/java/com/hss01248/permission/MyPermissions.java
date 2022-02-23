@@ -1,12 +1,16 @@
 package com.hss01248.permission;
 
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 
 import com.blankj.utilcode.util.ActivityUtils;
+import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.CollectionUtils;
 import com.blankj.utilcode.util.IntentUtils;
 import com.blankj.utilcode.util.LogUtils;
@@ -20,6 +24,27 @@ import java.util.Collection;
 import java.util.List;
 
 public class MyPermissions {
+
+    public static  boolean isStateInManifest(String permission){
+        try {
+            if(TextUtils.isEmpty(permission)){
+                return false;
+            }
+            PackageInfo packageInfo = Utils.getApp().getPackageManager().getPackageInfo(AppUtils.getAppPackageName(), PackageManager.GET_PERMISSIONS);
+            //Utils.getApp().getPackageManager()
+            LogUtils.i("permissioninfo",packageInfo.permissions,packageInfo.requestedPermissions);
+            if(packageInfo.requestedPermissions != null){
+                for (String requestedPermission : packageInfo.requestedPermissions) {
+                    if(permission.equals(requestedPermission)){
+                        return true;
+                    }
+                }
+            }
+        } catch (Throwable e) {
+            LogUtils.w(e);
+        }
+        return false;
+    }
 
     public static void setDefaultPermissionDialog(IPermissionDialog defaultPermissionDialog) {
         MyPermissions.defaultPermissionDialog = defaultPermissionDialog;
