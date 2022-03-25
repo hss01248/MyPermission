@@ -87,10 +87,10 @@ public class LocationUtil {
         LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
         //如果谷歌服务可用,则直接申请谷歌:
-        if(QuietLocationUtil.isGmsAvaiable(context)){
+        /*if(QuietLocationUtil.isGmsAvaiable(context)){
             checkSwitchByGms(context,silent,timeout,showBeforeRequest,showAfterRequest,callback,true);
             return;
-        }
+        }*/
         if (QuietLocationUtil.isLocationEnabled(locationManager)) {
             checkPermission(context,timeout,showBeforeRequest,showAfterRequest, callback);
             return;
@@ -169,8 +169,6 @@ public class LocationUtil {
                             }else {
                                 callback.onFailed(2, "location switch off-gms");
                             }
-
-                                //去弹窗请求权限
                             break;
                         case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
                             //Location settings are inadequate, and cannot be fixed here. Dialog not created.
