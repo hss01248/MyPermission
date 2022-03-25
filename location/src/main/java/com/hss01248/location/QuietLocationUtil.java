@@ -436,7 +436,7 @@ import java.util.Set;
 
     }
 
-    private boolean isGmsAvaiable(Context context) {
+    static boolean isGmsAvaiable(Context context) {
         return GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS;
         /*;
         return client.;*/
