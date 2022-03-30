@@ -33,6 +33,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -46,7 +47,7 @@ import java.util.Set;
  * no cache+10s timeout 0.4k
  * 以上约占总上报量的10%
  */
- public class QuietLocationUtil {
+public class QuietLocationUtil {
 
     public int getTimeOut() {
         return timeOut;
@@ -81,11 +82,11 @@ import java.util.Set;
         MyLocationCallback listener = new MyLocationCallback() {
             @Override
             public void onFailed(int type, String msg) {
-                Map<String,String> ext = new HashMap<>();
-                ext.put("msg",msg);
-                Location cache = getFromCache(ext,msg);
+                Map<String, String> ext = new HashMap<>();
+                ext.put("msg", msg);
+                Location cache = getFromCache(ext, msg);
                 if (cache == null) {
-                    finalListener.onFailed(type,ext.get("msg"));
+                    finalListener.onFailed(type, ext.get("msg"));
                 } else {
                     finalListener.onSuccess(cache, ext.get("msg"));
                 }
@@ -111,7 +112,8 @@ import java.util.Set;
             listener.onFailed(2, "location switch off");
             return;
         }
-        //LogUtils.w("getAllProviders:" + ObjParser.parseObj(locationManager.getAllProviders()));
+
+        LogUtils.i("getAllProviders:", locationManager.getAllProviders());
 
         Context finalContext = context;
         MyLocationCallback finalListener1 = listener;
@@ -135,7 +137,7 @@ import java.util.Set;
                 timeoutRun = new Runnable() {
                     @Override
                     public void run() {
-                        callback(map, timeOut + "s timeout",true, finalListener3);
+                        callback(map, timeOut + "s timeout", true, finalListener3);
                     }
                 };
                 handler.postDelayed(timeoutRun, timeOut);
@@ -181,14 +183,15 @@ import java.util.Set;
 
     public static boolean isLocationEnabled(LocationManager locationManager) {
         try {
-            if(locationManager == null){
+            if (locationManager == null) {
                 LogUtils.w("locationManager == null");
                 return false;
             }
-            boolean locationEnabled = LocationManagerCompat.isLocationEnabled(locationManager);
+            //todo tm的不准,靠!!! Compat个寂寞
+          /*  boolean locationEnabled = LocationManagerCompat.isLocationEnabled(locationManager);
             if (locationEnabled) {
                 return locationEnabled;
-            }
+            }*/
             boolean locationEnabled3 = isLocationEnabled3();
             if (locationEnabled3) {
                 return true;
@@ -212,7 +215,7 @@ import java.util.Set;
 
     }
 
-   static boolean isLocationEnabled3() {
+    static boolean isLocationEnabled3() {
         try {
             int locationMode = 0;
             String locationProviders;
@@ -339,11 +342,8 @@ import java.util.Set;
                                                        LogUtils.w("gms", throwable);
                                                        countSet.remove("gms");
                                                    }
-
-
                                                }
                                            }
-
                     );
         } catch (Throwable throwable) {
             countSet.remove("gms");
@@ -361,10 +361,11 @@ import java.util.Set;
         }
         return null;
     }
+
     @SuppressLint("MissingPermission")
     private void onGmsConnected2(GoogleApiClient finalClient, Context context, Set<String> countSet, LocationManager locationManager, Map<String, Location> map, MyLocationCallback listener) {
         try {
-             Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(finalClient);
+            Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(finalClient);
             if (lastLocation != null) {
                 map.put(lastLocation.getProvider(), lastLocation);
             }
@@ -375,13 +376,13 @@ import java.util.Set;
                     locationRequest.setExpirationDuration(timeOut)
                             .setMaxWaitTime(timeOut),
                     new com.google.android.gms.location.LocationListener() {
-                @Override
-                public void onLocationChanged(Location location) {
-                    LogUtils.i("gms", "onLocationChanged:" + location);
-                    countSet.remove("gms");
-                    onEnd(location, map, countSet, listener);
-                }
-            });
+                        @Override
+                        public void onLocationChanged(Location location) {
+                            LogUtils.i("gms", "onLocationChanged:" + location);
+                            countSet.remove("gms");
+                            onEnd(location, map, countSet, listener);
+                        }
+                    });
         } catch (Throwable throwable) {
             countSet.remove("gms");
             throwable.printStackTrace();
@@ -448,18 +449,18 @@ import java.util.Set;
             // locationManager.requestSingleUpdate(buildCriteria(context,locationManager),);
             try {
                 countSet.add(provider);
-                LogUtils.d("start request "+ provider);
+                LogUtils.d("start request " + provider);
                 long start = System.currentTimeMillis();
                 @SuppressLint("MissingPermission") Location lastKnownLocation = locationManager.getLastKnownLocation(provider);
                 if (lastKnownLocation != null) {
                     //LogUtils.d(lastKnownLocation);
-                    LogUtils.d("lastKnownLocation", lastKnownLocation,provider,"耗时(ms):",(System.currentTimeMillis() - start));
+                    LogUtils.d("lastKnownLocation", lastKnownLocation, provider, "耗时(ms):", (System.currentTimeMillis() - start));
                     map.put(lastKnownLocation.getProvider(), lastKnownLocation);
                 }
                 locationManager.requestSingleUpdate(provider, new android.location.LocationListener() {
                     @Override
                     public void onLocationChanged(@NonNull Location location) {
-                        LogUtils.d("onLocationChanged", location,provider,"耗时(ms):",(System.currentTimeMillis() - start));
+                        LogUtils.d("onLocationChanged", location, provider, "耗时(ms):", (System.currentTimeMillis() - start));
                         countSet.remove(provider);
                         onEnd(location, map, countSet, listener);
                     }
@@ -485,12 +486,12 @@ import java.util.Set;
         LogUtils.d(count);
 
         if (count.size() == 0) {
-            callback(map, "complete normal",false, listener);
+            callback(map, "complete normal", false, listener);
         }
 
     }
 
-     static Location getFromCache(Map ext, String msg) {
+    static Location getFromCache(Map ext, String msg) {
         Location cache = LocationSync.getLocation();
         if (cache == null) {
             double lon = LocationSync.getLongitude();
@@ -511,19 +512,19 @@ import java.util.Set;
 
     }
 
-    private void callback(Map<String, Location> map, String msg,boolean isTimeout, MyLocationCallback listener) {
-        LogUtils.i(map,msg,"是否超时:"+ isTimeout);
+    private void callback(Map<String, Location> map, String msg, boolean isTimeout, MyLocationCallback listener) {
+        LogUtils.i(map, msg, "是否超时:" + isTimeout);
         if (hasEnd) {
-            LogUtils.w("callback when has end,是否超时:"+isTimeout);
+            LogUtils.w("callback when has end,是否超时:" + isTimeout);
             Location location = getMostAcurLocation(map);
-            if(location != null){
-                if(!isTimeout){
-                    LogUtils.w("超时后保存定位:",location);
+            if (location != null) {
+                if (!isTimeout) {
+                    LogUtils.w("超时后保存定位:", location);
                 }
-                LocationSync.save(location.getLatitude(),location.getLongitude());
+                LocationSync.save(location.getLatitude(), location.getLongitude());
                 LocationSync.saveLocation(location);
 
-                if(!isTimeout){
+                if (!isTimeout) {
                     LogUtils.w("超时后looper继续回调,写缓存,然后移除looper");
                     endLooper();
                 }
@@ -543,9 +544,9 @@ import java.util.Set;
             }
 
         } else {
-            listener.onFailed(77,"no location get when api request end");
+            listener.onFailed(77, "no location get when api request end");
         }
-        if(!isTimeout){
+        if (!isTimeout) {
             LogUtils.i("正常结束,去掉调那些timeoutRunnable");
             if (handler != null) {
                 handler.removeCallbacks(timeoutRun);
@@ -555,10 +556,9 @@ import java.util.Set;
             }
         }
 
-        if(!isTimeout){
+        if (!isTimeout) {
             endLooper();
         }
-
 
 
     }
