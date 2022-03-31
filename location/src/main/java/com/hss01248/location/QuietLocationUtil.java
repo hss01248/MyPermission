@@ -46,6 +46,16 @@ import java.util.Set;
  * no permission        2.8k
  * no cache+10s timeout 0.4k
  * 以上约占总上报量的10%
+ *
+ * 饱和式定位工具类: 同时发起gps,network,passive定位
+ *
+ * gms管理的蛋疼之处:
+ * 当手机有gms时,需要定位开关+gms详细位置开关 同时开启,才能定位,如果gms详细位置开关关闭,则定位必失败,onlocationChanged无回调
+ * 但同样一台手机上谷歌,高德能定位成功,是什么原理?
+ *
+ *
+ *
+ * https://juejin.cn/post/7016937919533285407
  */
 public class QuietLocationUtil {
 
@@ -113,7 +123,7 @@ public class QuietLocationUtil {
             return;
         }
 
-        LogUtils.i("getAllProviders:", locationManager.getAllProviders());
+        LogUtils.i("getAllProviders-enabled:", locationManager.getProviders(true));
 
         Context finalContext = context;
         MyLocationCallback finalListener1 = listener;
@@ -150,7 +160,7 @@ public class QuietLocationUtil {
                     requestByType(LocationManager.NETWORK_PROVIDER, locationManager, map, countSet, finalListener1);
                     requestByType(LocationManager.GPS_PROVIDER, locationManager, map, countSet, finalListener1);
                     requestByType(LocationManager.PASSIVE_PROVIDER, locationManager, map, countSet, finalListener1);
-                    requestByType("fused", locationManager, map, countSet, finalListener1);
+                    //requestByType("fused", locationManager, map, countSet, finalListener1);
                     if (isGmsAvaiable(finalContext)) {
                         requestGmsLocation(finalContext, locationManager, map, countSet, finalListener1);
                         //return;
@@ -197,7 +207,7 @@ public class QuietLocationUtil {
                 return true;
             }
 
-            List<String> allProviders = locationManager.getAllProviders();
+            List<String> allProviders = locationManager.getProviders(true);
             LogUtils.d("providers:", allProviders);
             if (allProviders != null && !allProviders.isEmpty()) {
                 for (String provider : allProviders) {
@@ -445,8 +455,10 @@ public class QuietLocationUtil {
 
     @SuppressLint("MissingPermission")
     private void requestByType(String provider, LocationManager locationManager, Map<String, Location> map, Set<String> countSet, MyLocationCallback listener) {
+        //不要相信系统的LocationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))的返回值，被改过的系统中isProviderEnabled用于判断GPS还是可以的，判断其他定位方式就算了。
+        //作者：一步三回头
+        //链接：https://juejin.cn/post/7016937919533285407。
         if (locationManager.isProviderEnabled(provider)) {
-            // locationManager.requestSingleUpdate(buildCriteria(context,locationManager),);
             try {
                 countSet.add(provider);
                 LogUtils.d("start request " + provider);
@@ -463,17 +475,30 @@ public class QuietLocationUtil {
                         LogUtils.d("onLocationChanged", location, provider, "耗时(ms):", (System.currentTimeMillis() - start));
                         countSet.remove(provider);
                         onEnd(location, map, countSet, listener);
+                        locationManager.removeUpdates(this);
                     }
 
                     @Override
                     public void onStatusChanged(String provider, int status, Bundle extras) {
                         LogUtils.d("onStatusChanged", provider, status, extras);
                     }
+
+                    @Override
+                    public void onProviderDisabled(@NonNull String provider) {
+                        LogUtils.w("onProviderDisabled", provider);
+                    }
+
+                    @Override
+                    public void onProviderEnabled(@NonNull String provider) {
+                        LogUtils.d("onProviderEnabled", provider);
+                    }
                 }, Looper.myLooper());
             } catch (Throwable throwable) {
                 countSet.remove(provider);
                 throwable.printStackTrace();
             }
+        }else {
+            LogUtils.w("locationManager.isProviderEnabled",provider,false,map);
         }
     }
 
@@ -527,6 +552,14 @@ public class QuietLocationUtil {
                 if (!isTimeout) {
                     LogUtils.w("超时后looper继续回调,写缓存,然后移除looper");
                     endLooper();
+                }else {
+                    //再延时30s关闭
+                   new Handler(Looper.myLooper()).postDelayed(new Runnable() {
+                       @Override
+                       public void run() {
+                           endLooper();
+                       }
+                   },30000);
                 }
             }
 
@@ -558,6 +591,14 @@ public class QuietLocationUtil {
 
         if (!isTimeout) {
             endLooper();
+        }else {
+            //再延时30s关闭
+            new Handler(Looper.myLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    endLooper();
+                }
+            },30000);
         }
 
 
@@ -566,12 +607,14 @@ public class QuietLocationUtil {
     private void endLooper() {
         try {
             if (Looper.getMainLooper() != Looper.myLooper()) {
-
+                LogUtils.d("quit loop.myLooper");
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                     Looper.myLooper().quitSafely();
                 } else {
                     Looper.myLooper().quit();
                 }
+               // LocationManager locationManager = (LocationManager) Utils.getApp().getSystemService(Context.LOCATION_SERVICE);
+                //locationManager.removeUpdates();
             }
         } catch (Throwable throwable) {
             throwable.printStackTrace();
