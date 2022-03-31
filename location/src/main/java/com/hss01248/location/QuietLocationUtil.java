@@ -308,13 +308,14 @@ public class QuietLocationUtil {
                             }
                         }
                     });
+                    LogUtils.i("start request gms");
                     fusedLocationProviderClient.requestLocationUpdates(new LocationRequest()
                             .setExpirationDuration(timeOut)
                             .setNumUpdates(1)
                             .setMaxWaitTime(timeOut), new LocationCallback() {
                         @Override
                         public void onLocationResult(LocationResult result) {
-                            LogUtils.d("gmsresult", result);
+                            LogUtils.i("gms result", result);
                             if (result != null && result.getLocations() != null && !result.getLocations().isEmpty()) {
                                 Location location = result.getLocations().get(0);
                                 countSet.remove("gms");
