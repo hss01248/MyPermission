@@ -301,12 +301,13 @@ public class QuietLocationUtil {
                             //com.google.android.gms.tasks.zzj.run (zzj.java:4)
                             //com.android.internal.os.ZygoteInit.main (ZygoteInit.java:873)
                             if (lastLocation1 != null) {
-                                LogUtils.w("gms", "get last location:" + lastLocation1);
+                                LogUtils.i("gms", "get last location:" + lastLocation1);
                                 map.put(lastLocation1.getProvider(), lastLocation1);
+                            }else {
+                                LogUtils.w("gms", "get last location:" + lastLocation1);
                             }
                         }
                     });
-
                     fusedLocationProviderClient.requestLocationUpdates(new LocationRequest()
                             .setExpirationDuration(timeOut)
                             .setNumUpdates(1)
@@ -343,9 +344,11 @@ public class QuietLocationUtil {
                                                        }
                                                        boolean locationAvailable = task.getResult().isLocationAvailable();
                                                        if (!locationAvailable) {
-                                                           LogUtils.w("gms location not available");
-                                                           countSet.remove("gms");
-                                                           return;
+                                                           LogUtils.e("gms location not available--> 这个辣鸡api不准, " +
+                                                                   "第一次打开定位开关,但关闭谷歌定位精准度时,这个返回false,但实际可以发起定位,且能很快定位成功." +
+                                                                   "而gps和passive大概率超时,所以不要在这里拦截,不管能不能用都发起定位,反正有超时机制,不怕没有callback");
+                                                          // countSet.remove("gms");
+                                                           //return;
                                                        }
                                                        handler.post(gmsRunnable);
                                                    } catch (Throwable throwable) {
@@ -486,6 +489,9 @@ public class QuietLocationUtil {
                     @Override
                     public void onProviderDisabled(@NonNull String provider) {
                         LogUtils.w("onProviderDisabled", provider);
+                        countSet.remove(provider);
+                        onEnd(null, map, countSet, listener);
+                        locationManager.removeUpdates(this);
                     }
 
                     @Override

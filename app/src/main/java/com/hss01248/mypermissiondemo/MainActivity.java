@@ -27,6 +27,13 @@ import com.hss01248.permission.ext.permissions.NotificationListenerPermissionImp
 import com.hss01248.permission.ext.permissions.NotificationPermission;
 import com.hss01248.permission.ext.permissions.StorageManagerPermissionImpl;
 import com.hss01248.permission.ext.permissions.UsageAccessPermissionImpl;
+import com.yayandroid.locationmanager.LocationManager;
+import com.yayandroid.locationmanager.configuration.DefaultProviderConfiguration;
+import com.yayandroid.locationmanager.configuration.GooglePlayServicesConfiguration;
+import com.yayandroid.locationmanager.configuration.LocationConfiguration;
+import com.yayandroid.locationmanager.configuration.PermissionConfiguration;
+import com.yayandroid.locationmanager.constants.ProviderType;
+import com.yayandroid.locationmanager.listener.LocationListener;
 
 import java.util.Arrays;
 import java.util.List;
@@ -159,5 +166,46 @@ public class MainActivity extends AppCompatActivity {
 
     public void useageStatus(View view) {
         ask(new UsageAccessPermissionImpl());
+    }
+
+    public void getLocationByLocationManager(View view) {
+        /*LocationConfiguration awesomeConfiguration = new LocationConfiguration.Builder()
+                .keepTracking(false)
+                .askForPermission(new PermissionConfiguration.Builder()
+                        .permissionProvider(new YourCustomPermissionProvider())
+                        .rationaleMessage("Gimme the permission!")
+                        .rationaleDialogProvider(new YourCustomDialogProvider())
+                        .requiredPermissions(new String[] { permission.ACCESS_FINE_LOCATION })
+                        .build())
+                .useGooglePlayServices(new GooglePlayServicesConfiguration.Builder()
+                        .locationRequest(YOUR_CUSTOM_LOCATION_REQUEST_OBJECT)
+                        .fallbackToDefault(true)
+                        .askForGooglePlayServices(false)
+                        .askForSettingsApi(true)
+                        .failOnConnectionSuspended(true)
+                        .failOnSettingsApiSuspended(false)
+                        .ignoreLastKnowLocation(false)
+                        .setWaitPeriod(20 * 1000)
+                        .build())
+                .useDefaultProviders(new DefaultProviderConfiguration.Builder()
+                        .requiredTimeInterval(5 * 60 * 1000)
+                        .requiredDistanceInterval(0)
+                        .acceptableAccuracy(5.0f)
+                        .acceptableTimePeriod(5 * 60 * 1000)
+                        .gpsMessage("Turn on GPS?")
+                        .gpsDialogProvider(new YourCustomDialogProvider())
+                        .setWaitPeriod(ProviderType.GPS, 20 * 1000)
+                        .setWaitPeriod(ProviderType.NETWORK, 20 * 1000)
+                        .build())
+                .build();
+
+        LocationManager awesomeLocationManager = new LocationManager.Builder(getApplicationContext())
+                .activity(activityInstance) // Only required to ask permission and/or GoogleApi - SettingsApi
+                .fragment(fragmentInstance) // Only required to ask permission and/or GoogleApi - SettingsApi
+                .configuration(awesomeConfiguration)
+                .locationProvider(new YourCustomLocationProvider())
+                .notify(new LocationListener() {  })
+                .build();
+        awesomeLocationManager.get();*/
     }
 }
