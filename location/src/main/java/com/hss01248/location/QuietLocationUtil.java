@@ -303,6 +303,10 @@ public class QuietLocationUtil {
                             if (lastLocation1 != null) {
                                 LogUtils.i("gms", "get last location:" + lastLocation1);
                                 map.put(lastLocation1.getProvider(), lastLocation1);
+                                if(LocationSync.getLongitude() ==0){
+                                    LocationSync.save(lastLocation1.getLatitude(), lastLocation1.getLongitude());
+                                    LocationSync.saveLocation(lastLocation1);
+                                }
                             }else {
                                 LogUtils.w("gms", "get last location:" + lastLocation1);
                             }
@@ -319,6 +323,8 @@ public class QuietLocationUtil {
                             if (result != null && result.getLocations() != null && !result.getLocations().isEmpty()) {
                                 Location location = result.getLocations().get(0);
                                 countSet.remove("gms");
+                                LocationSync.save(location.getLatitude(), location.getLongitude());
+                                LocationSync.saveLocation(location);
                                 onEnd(location, map, countSet, listener);
                             } else {
                                 countSet.remove("gms");
@@ -472,11 +478,20 @@ public class QuietLocationUtil {
                     //LogUtils.d(lastKnownLocation);
                     LogUtils.d("lastKnownLocation", lastKnownLocation, provider, "耗时(ms):", (System.currentTimeMillis() - start));
                     map.put(lastKnownLocation.getProvider(), lastKnownLocation);
+                    //如果本地缓存没有,就更新一次
+                    if(LocationSync.getLongitude() ==0){
+                        LocationSync.save(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
+                        LocationSync.saveLocation(lastKnownLocation);
+                    }
                 }
                 locationManager.requestSingleUpdate(provider, new android.location.LocationListener() {
                     @Override
                     public void onLocationChanged(@NonNull Location location) {
                         LogUtils.d("onLocationChanged", location, provider, "耗时(ms):", (System.currentTimeMillis() - start));
+                        if(location != null){
+                            LocationSync.save(location.getLatitude(), location.getLongitude());
+                            LocationSync.saveLocation(location);
+                        }
                         countSet.remove(provider);
                         onEnd(location, map, countSet, listener);
                         locationManager.removeUpdates(this);

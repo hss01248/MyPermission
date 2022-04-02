@@ -48,6 +48,8 @@ import java.util.List;
 public class LocationUtil {
 
 
+
+    LocationRequestConfig config;
     /**
      * 默认版 拒绝权限后有一次挽回行为
      *
@@ -73,7 +75,7 @@ public class LocationUtil {
     }
 
     public static void getLocation(Context context, boolean silent, int timeout, boolean showBeforeRequest, boolean showAfterRequest, MyLocationCallback callback) {
-        getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, true, callback);
+        getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, true,false,false, callback);
     }
 
     /**
@@ -83,7 +85,8 @@ public class LocationUtil {
      * @param timeout
      * @param callback
      */
-    private static void getLocation(Context context, boolean silent, int timeout, boolean showBeforeRequest, boolean showAfterRequest, boolean requestGmsDialog, MyLocationCallback callback) {
+    private static void getLocation(Context context, boolean silent, int timeout, boolean showBeforeRequest,
+                                    boolean showAfterRequest, boolean requestGmsDialog, boolean asQuickAsPossible,boolean useLastKnownLocation,MyLocationCallback callback) {
 
 
         if (silent) {
