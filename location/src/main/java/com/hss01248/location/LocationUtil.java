@@ -119,7 +119,7 @@ public class LocationUtil {
                             public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
                                 if (!QuietLocationUtil.isLocationEnabled(locationManager)) {
                                     callback.onGmsDialogCancelClicked();
-                                    callback.onFailed(2, "location switch off",true);
+                                    callback.onFailed(2, "location switch off-2",true);
                                     return;
                                 }
                                 callback.onGmsDialogOkClicked();
@@ -136,6 +136,7 @@ public class LocationUtil {
                 }).setNegativeButton(com.hss01248.permission.R.string.mypermission_cancel, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        callback.onGmsDialogCancelClicked();
                         callback.onFailed(2, "location switch off",true);
 
                     }
