@@ -105,6 +105,7 @@ public class LocationUtil {
             checkPermission(context, timeout, showBeforeRequest, showAfterRequest, callback);
             return;
         }
+        callback.onGmsSwitchDialogShow();
         //开关关闭,就去申请打开开关
         AlertDialog alertDialog = new AlertDialog.Builder(ActivityUtils.getTopActivity())
                 .setTitle(com.hss01248.permission.R.string.mypermission_location_title)
@@ -117,9 +118,11 @@ public class LocationUtil {
                             @Override
                             public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
                                 if (!QuietLocationUtil.isLocationEnabled(locationManager)) {
+                                    callback.onGmsDialogCancelClicked();
                                     callback.onFailed(2, "location switch off",true);
                                     return;
                                 }
+                                callback.onGmsDialogOkClicked();
                                 checkPermission(context, timeout, showBeforeRequest, showAfterRequest, callback);
                             }
 
