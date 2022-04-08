@@ -106,6 +106,11 @@ public class QuietLocationUtil {
             public void onSuccess(Location location, String msg) {
                 finalListener.onSuccess(location, msg);
             }
+
+            @Override
+            public void onEachLocationChanged(Location location, String provider) {
+                listener0.onEachLocationChanged(location, provider);
+            }
         };
         if (noPermission(context)) {
             listener.onFailed(1, "no permission");
@@ -322,6 +327,7 @@ public class QuietLocationUtil {
                             LogUtils.i("gms result", result);
                             if (result != null && result.getLocations() != null && !result.getLocations().isEmpty()) {
                                 Location location = result.getLocations().get(0);
+                                listener.onEachLocationChanged(location,"gms");
                                 countSet.remove("gms");
                                 LocationSync.save(location.getLatitude(), location.getLongitude());
                                 LocationSync.saveLocation(location);
@@ -382,42 +388,11 @@ public class QuietLocationUtil {
         return null;
     }
 
-    @SuppressLint("MissingPermission")
-    private void onGmsConnected2(GoogleApiClient finalClient, Context context, Set<String> countSet, LocationManager locationManager, Map<String, Location> map, MyLocationCallback listener) {
-        try {
-            Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(finalClient);
-            if (lastLocation != null) {
-                map.put(lastLocation.getProvider(), lastLocation);
-            }
-            LocationRequest locationRequest = LocationRequest.create();
-            //new android.location.LocationRequest()
-
-            LocationServices.FusedLocationApi.requestLocationUpdates(finalClient,
-                    locationRequest.setExpirationDuration(timeOut)
-                            .setMaxWaitTime(timeOut),
-                    new com.google.android.gms.location.LocationListener() {
-                        @Override
-                        public void onLocationChanged(Location location) {
-                            LogUtils.i("gms", "onLocationChanged:" + location);
-                            countSet.remove("gms");
-                            onEnd(location, map, countSet, listener);
-                        }
-                    });
-        } catch (Throwable throwable) {
-            countSet.remove("gms");
-            throwable.printStackTrace();
-        }
-
-
-    }
 
 
     private void requestGmsLocation(Context context, LocationManager locationManager, Map<String, Location> map, Set<String> countSet, MyLocationCallback listener) {
         try {
-
-
             //LocationServices.getFusedLocationProviderClient(context).getLastLocation().addOnCompleteListener()
-
             GoogleApiClient client = null;
             client = new GoogleApiClient.Builder(context)
                     .addApi(LocationServices.API)
@@ -491,6 +466,7 @@ public class QuietLocationUtil {
                         if(location != null){
                             LocationSync.save(location.getLatitude(), location.getLongitude());
                             LocationSync.saveLocation(location);
+                            listener.onEachLocationChanged(location,provider);
                         }
                         countSet.remove(provider);
                         onEnd(location, map, countSet, listener);
