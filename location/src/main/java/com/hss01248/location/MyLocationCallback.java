@@ -7,5 +7,11 @@ public interface MyLocationCallback {
 
     void onSuccess(Location location,String msg);
 
+    default void onGmsSwitchDialogShow(){}
+
+    default void onGmsDialogOkClicked(){}
+
+    default void onGmsDialogCancelClicked(){}
+
 
 }
