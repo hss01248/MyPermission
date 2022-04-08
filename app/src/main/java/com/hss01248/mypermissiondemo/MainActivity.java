@@ -105,17 +105,18 @@ public class MainActivity extends AppCompatActivity {
 
     public void getLocation(View view) {
         LocationUtil.getLocation(view.getContext(),false,10000,false,false,LogProxy.getProxy(new MyLocationCallback() {
-            @Override
-            public void onFailed(int type, String msg) {
-                ToastUtils.showLong(type+","+msg);
-                LogUtils.w(msg,type);
-            }
 
             @Override
             public void onSuccess(Location location, String msg) {
                 ToastUtils.showLong("success,"+msg+", location:"+location);
                 LogUtils.i(msg,location);
 
+            }
+
+            @Override
+            public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
+                ToastUtils.showLong(type+","+msg);
+                LogUtils.w(msg,type);
             }
         }));
     }

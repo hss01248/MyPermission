@@ -91,7 +91,7 @@ public class QuietLocationUtil {
 
         MyLocationCallback listener = new MyLocationCallback() {
             @Override
-            public void onFailed(int type, String msg) {
+            public void onFailed(int type, String msg,boolean isFailBeforeReallyRequest) {
                 Map<String, String> ext = new HashMap<>();
                 ext.put("msg", msg);
                 Location cache = getFromCache(ext, msg);

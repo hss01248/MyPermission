@@ -3,7 +3,9 @@ package com.hss01248.location;
 import android.location.Location;
 
 public interface MyLocationCallback {
-    void onFailed(int type,String msg);
+    default void onFailed(int type,String msg){
+        onFailed(type, msg,false);
+    }
 
     void onSuccess(Location location,String msg);
 
@@ -17,9 +19,7 @@ public interface MyLocationCallback {
 
     default void onBeforeReallyRequest(){}
 
-    default void onFailed(int type,String msg,boolean isFailBeforeReallyRequest){
-        onFailed(type, msg);
-    }
+     void onFailed(int type,String msg,boolean isFailBeforeReallyRequest);
 
 
 }
