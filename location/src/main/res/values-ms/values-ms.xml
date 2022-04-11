@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location_cancel">Tidak</string>
+    <string name="location_ok">Benarkan</string>
+    <string name="location_msg_gps">Untuk meningkatkan ketepatan lokasi dan memberi perkhidmatan yang lebih baik, sila buka GPS?</string>
+    <string name="location_msg_permission">Sila izinkan untuk mendapatkan maklumat lokasi anda?</string>
+    <string name="location_tip">Tips:</string>
+</resources>

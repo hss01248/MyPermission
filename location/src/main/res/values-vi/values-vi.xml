@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location_cancel">Hủy</string>
+    <string name="location_ok">Cho phép</string>
+    <string name="location_msg_gps">Để nâng cao độ chính xác khi định vị và phục vụ bạn tốt hơn, vui lòng mở GPS?</string>
+    <string name="location_msg_permission">Cho phép chúng tôi lấy thông tin định vị của bạn?</string>
+    <string name="location_tip">Lời nhắc:</string>
+</resources>

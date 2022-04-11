@@ -108,9 +108,9 @@ public class LocationUtil {
         callback.onGmsSwitchDialogShow();
         //开关关闭,就去申请打开开关
         AlertDialog alertDialog = new AlertDialog.Builder(ActivityUtils.getTopActivity())
-                .setTitle(com.hss01248.permission.R.string.mypermission_location_title)
-                .setMessage(com.hss01248.permission.R.string.mypermission_location_switch)
-                .setPositiveButton(com.hss01248.permission.R.string.mypermission_ok, new DialogInterface.OnClickListener() {
+                .setTitle(R.string.location_tip)
+                .setMessage(R.string.location_msg_gps)
+                .setPositiveButton(R.string.location_ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         Intent locationIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
@@ -133,12 +133,11 @@ public class LocationUtil {
                         });
 
                     }
-                }).setNegativeButton(com.hss01248.permission.R.string.mypermission_cancel, new DialogInterface.OnClickListener() {
+                }).setNegativeButton(R.string.location_cancel, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         callback.onGmsDialogCancelClicked();
                         callback.onFailed(2, "location switch off",true);
-
                     }
                 }).create();
         alertDialog.setCanceledOnTouchOutside(false);

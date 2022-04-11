@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location_cancel">Cancel</string>
+    <string name="location_ok">OK</string>
+    <string name="location_msg_gps">In order to improve the accuracy of positioning and serve you better, please open gps?</string>
+    <string name="location_msg_permission">Please give me the permission to locate?</string>
+    <string name="location_tip">Tips</string>
+</resources>
