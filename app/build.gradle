@@ -41,6 +41,10 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
+    //api 'com.github.hss01248.flipperUtil:aop:1.4.2'
+
     //https://github.com/yayaa/LocationManager
     implementation 'com.yayandroid:LocationManager:2.4.1'
+
+    //api 'com.github.hss01248.aop-android:logforaop:1.0.1'
 }

@@ -80,4 +80,9 @@
        android:text="多个权限请求"
        android:onClick="multiPermission"
        android:layout_height="wrap_content"/>
+   <Button
+       android:layout_width="match_parent"
+       android:text="rx_location"
+       android:onClick="rxLocation"
+       android:layout_height="wrap_content"/>
 </LinearLayout>

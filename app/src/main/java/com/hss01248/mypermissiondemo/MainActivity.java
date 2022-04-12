@@ -18,6 +18,7 @@ import com.blankj.utilcode.util.ToastUtils;
 import com.blankj.utilcode.util.Utils;
 import com.hss01248.location.LocationUtil;
 import com.hss01248.location.MyLocationCallback;
+import com.hss01248.location.rx.RxQuietLocationUtil;
 import com.hss01248.permission.MyPermissions;
 import com.hss01248.permission.ext.IExtPermission;
 import com.hss01248.permission.ext.IExtPermissionCallback;
@@ -208,5 +209,19 @@ public class MainActivity extends AppCompatActivity {
                 .notify(new LocationListener() {  })
                 .build();
         awesomeLocationManager.get();*/
+    }
+
+    public void rxLocation(View view) {
+        new RxQuietLocationUtil().getLocation(this, new MyLocationCallback() {
+            @Override
+            public void onSuccess(Location location, String msg) {
+                ToastUtils.showShort(location+msg);
+            }
+
+            @Override
+            public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
+                ToastUtils.showShort(msg);
+            }
+        });
     }
 }
