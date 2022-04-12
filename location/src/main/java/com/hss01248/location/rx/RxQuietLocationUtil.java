@@ -169,8 +169,16 @@ public class RxQuietLocationUtil {
         //stringObservable.do
 
 
-        Observable<Location> providersObservable = Observable.fromIterable(providers)
-                .subscribeOn(Schedulers.io())
+
+
+
+
+        //1. complete不调用
+        //2 主线程卡顿,等待
+        Observable<Location> [] finalObservable = new Observable[]{null};
+        Observable<String> stringObservable = Observable.fromIterable(providers);
+        stringObservable = stringObservable.subscribeOn(Schedulers.io());
+        Observable<Location> providersObservable = stringObservable
                 //.observeOn(AndroidSchedulers.mainThread())
                 .flatMap(new Function<String, ObservableSource<Location>>() {
                     @Override
@@ -180,18 +188,22 @@ public class RxQuietLocationUtil {
                             @SuppressLint("MissingPermission")
                             public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<Location> emitter) throws Exception {
 
+                                LogUtils.i("flatMap-create","requestSingleUpdate");
                                 //locationManager.getCurrentLocation(provider,);
                                 locationManager.requestSingleUpdate(provider, new LocationListener() {
                                     @Override
                                     public void onLocationChanged(@NonNull Location location) {
                                         LogUtils.d("onLocationChanged", location, provider, "耗时(ms):", (System.currentTimeMillis() - start));
                                         emitter.onNext(location);
+                                        locationManager.removeUpdates(this);
                                         int i = count.decrementAndGet();
                                         LogUtils.i("count.decrementAndGet()",i);
                                         if(i <=0){
-                                            emitter.onComplete();
+                                           // emitter.onComplete();
+                                            //ObservableFlatMap.InnerObserver.onComplete(),并不会导致最后onComplete的调用
+                                           // finalObservable[0].onc
+
                                         }
-                                        locationManager.removeUpdates(this);
                                     }
 
                                     @Override
@@ -205,6 +217,7 @@ public class RxQuietLocationUtil {
                                         locationManager.removeUpdates(this);
                                         //用着用着突然关掉了
                                         int i = count.decrementAndGet();
+                                        LogUtils.i("count.decrementAndGet()",i);
                                         if(i <=0){
                                             emitter.onComplete();
                                         }
@@ -243,6 +256,7 @@ public class RxQuietLocationUtil {
                                 emitter.onNext(location);
                             }
                             int i = count.decrementAndGet();
+                            LogUtils.i("count.decrementAndGet()",i);
                             if(i <=0){
                                 emitter.onComplete();
                             }
@@ -252,16 +266,16 @@ public class RxQuietLocationUtil {
                 }
             });
         }
-        Observable<Location> finalObservable = providersObservable;
+        finalObservable[0] = providersObservable;
         if(gmsObservable != null){
             //zip、concat 、merge区别: https://blog.csdn.net/mwthe/article/details/82780193   concat有顺序,而merge不限制先后顺序
             //flatMap,zip,Merge区别 https://blog.csdn.net/wds1181977/article/details/90041686
-            finalObservable = Observable.merge(providersObservable,gmsObservable);
+            finalObservable[0] = Observable.merge(providersObservable,gmsObservable);
         }
 
-        finalObservable.timeout(15, TimeUnit.SECONDS)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<Location>() {
+        finalObservable[0] = finalObservable[0].timeout(15, TimeUnit.SECONDS)
+                .observeOn(AndroidSchedulers.mainThread());
+        finalObservable[0].subscribe(new Observer<Location>() {
                     @Override
                     public void onSubscribe(@io.reactivex.annotations.NonNull Disposable d) {
 
@@ -271,6 +285,11 @@ public class RxQuietLocationUtil {
                     public void onNext(@io.reactivex.annotations.NonNull Location location) {
                         LogUtils.i("onNext",location);
                         listener.onEachLocationChanged(location,"");
+                        /*int i = count.decrementAndGet();
+                        LogUtils.i("count.decrementAndGet()",i);
+                        if(i <=0){
+                           onComplete();
+                        }*/
 
                     }
 
