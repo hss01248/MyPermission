@@ -36,8 +36,21 @@ import com.yayandroid.locationmanager.configuration.PermissionConfiguration;
 import com.yayandroid.locationmanager.constants.ProviderType;
 import com.yayandroid.locationmanager.listener.LocationListener;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.ObservableSource;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -223,5 +236,296 @@ public class MainActivity extends AppCompatActivity {
                 ToastUtils.showShort(msg);
             }
         });
+    }
+
+    public void rxFlatMapNormal(View view) {
+        List<Integer> nums = new ArrayList<>();
+        nums.add(1);
+        nums.add(9);
+
+        Observable.fromIterable(nums)
+                .subscribeOn(Schedulers.io())
+                .map(new Function<Integer, String>() {
+                    @Override
+                    public String apply(@io.reactivex.annotations.NonNull Integer integer) throws Exception {
+                        return integer+"+map";
+                    }
+                })
+               .observeOn(AndroidSchedulers.mainThread())
+               // .timeout(4000, TimeUnit.MICROSECONDS)
+                .subscribe(new Observer<String>() {
+                    @Override
+                    public void onSubscribe(@io.reactivex.annotations.NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(@io.reactivex.annotations.NonNull String s) {
+                        LogUtils.w("onNext",s);
+                    }
+
+                    @Override
+                    public void onError(@io.reactivex.annotations.NonNull Throwable e) {
+                        LogUtils.w("onError",e);
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        LogUtils.i("oncomplete");
+
+                    }
+                });
+    }
+
+    public void rxFlatMapNormalTimeout(View view) {
+        List<Integer> nums = new ArrayList<>();
+        nums.add(1);
+        nums.add(9);
+
+        Observable.fromIterable(nums)
+                .subscribeOn(Schedulers.io())
+                .map(new Function<Integer, String>() {
+                    @Override
+                    public String apply(@io.reactivex.annotations.NonNull Integer integer) throws Exception {
+                        Thread.sleep(1500);
+                        return integer+"+map";
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .timeout(4000, TimeUnit.MICROSECONDS)
+                .subscribe(new Observer<String>() {
+                    @Override
+                    public void onSubscribe(@io.reactivex.annotations.NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(@io.reactivex.annotations.NonNull String s) {
+                        LogUtils.w("onNext",s);
+                    }
+
+                    @Override
+                    public void onError(@io.reactivex.annotations.NonNull Throwable e) {
+                        LogUtils.w("onError",e);
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        LogUtils.i("oncomplete");
+
+                    }
+                });
+    }
+
+    public void rxFlatMapCreate(View view) {
+        List<Integer> nums = new ArrayList<>();
+        nums.add(1);
+        nums.add(9);
+
+        Observable.fromIterable(nums)
+                //.subscribeOn(Schedulers.io())
+                .flatMap(new Function<Integer, ObservableSource<String>>() {
+                    @Override
+                    public ObservableSource<String> apply(@io.reactivex.annotations.NonNull Integer integer) throws Exception {
+                        return Observable.create(new ObservableOnSubscribe<String>() {
+                            @Override
+                            public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<String> emitter) throws Exception {
+                                Thread.sleep(1500);
+                                emitter.onNext(integer+"+flatMap(Observable.create)");
+                            }
+                        }).subscribeOn(Schedulers.io());
+                    }
+                }).observeOn(AndroidSchedulers.mainThread())
+                //.timeout(4000, TimeUnit.MICROSECONDS)
+                .subscribe(new Observer<String>() {
+                    @Override
+                    public void onSubscribe(@io.reactivex.annotations.NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(@io.reactivex.annotations.NonNull String s) {
+                        LogUtils.w("onNext",s);
+                    }
+
+                    @Override
+                    public void onError(@io.reactivex.annotations.NonNull Throwable e) {
+                        LogUtils.w("onError",e);
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        LogUtils.i("oncomplete");
+
+                    }
+                });
+    }
+
+    public void rxFlatMapCreateTimeout(View view) {
+        List<Integer> nums = new ArrayList<>();
+        nums.add(1);
+        nums.add(9);
+        AtomicInteger atomicInteger = new AtomicInteger(2);
+
+        final ObservableEmitter<Integer>[] emitterOut = new ObservableEmitter[1];
+
+       // Observable.fromIterable(nums)
+        Observable.create(new ObservableOnSubscribe<Integer>() {
+            @Override
+            public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<Integer> emitter) throws Exception {
+                emitterOut[0] = emitter;
+                emitter.onNext(1);
+                emitter.onNext(9);
+
+                emitter.onComplete();
+               /* int i = atomicInteger.decrementAndGet();
+                if(i ==0){
+                    LogUtils.i("Observable.create-emitter.onComplete()");
+                    emitter.onComplete();
+                }*/
+            }
+        })
+                .subscribeOn(Schedulers.io())
+                .flatMap(new Function<Integer, ObservableSource<String>>() {
+                    @Override
+                    public ObservableSource<String> apply(@io.reactivex.annotations.NonNull Integer integer) throws Exception {
+                        return Observable.create(new ObservableOnSubscribe<String>() {
+                            @Override
+                            public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<String> emitter) throws Exception {
+                                //Thread.sleep(1500);
+                                emitter.onNext(integer+"+flatMap(Observable.create)");
+                                int i = atomicInteger.decrementAndGet();
+                                if(i ==0){
+                                    LogUtils.i("flatMap-emitter.onComplete()");
+                                    emitter.onComplete();
+                                    //emitterOut[0].onComplete();
+                                }
+                            }
+                        }).observeOn(Schedulers.io());//.observeOn(Schedulers.io()
+                    }
+                }).observeOn(AndroidSchedulers.mainThread())
+                .timeout(10, TimeUnit.SECONDS)
+                .subscribe(new Observer<String>() {
+                    @Override
+                    public void onSubscribe(@io.reactivex.annotations.NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(@io.reactivex.annotations.NonNull String s) {
+                        LogUtils.w("onNext",s);
+                    }
+
+                    @Override
+                    public void onError(@io.reactivex.annotations.NonNull Throwable e) {
+                        LogUtils.w("onError",e);
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        LogUtils.i("oncomplete");
+
+                    }
+                });
+    }
+
+    public void merge(View view) {
+        List<Integer> nums = new ArrayList<>();
+        nums.add(1);
+        nums.add(9);
+
+        Observable<Integer> observable1 = Observable.just(1).subscribeOn(Schedulers.io());
+        Observable<Integer> observable2 = Observable.just(2).subscribeOn(Schedulers.io());
+        Observable<Integer> merge = Observable.merge(observable1,observable2);
+
+        merge.map(new Function<Integer, String>() {
+            @Override
+            public String apply(@io.reactivex.annotations.NonNull Integer integer) throws Exception {
+                return integer+"--> map";
+            }
+        }).timeout(10,TimeUnit.SECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<String>() {
+                    @Override
+                    public void onSubscribe(@io.reactivex.annotations.NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(@io.reactivex.annotations.NonNull String s) {
+                        LogUtils.w("onNext",s);
+                    }
+
+                    @Override
+                    public void onError(@io.reactivex.annotations.NonNull Throwable e) {
+                        LogUtils.w("onError",e);
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        LogUtils.i("oncomplete");
+
+                    }
+                });
+
+
+    }
+
+    /**
+     *https://blog.csdn.net/shuxiangxingkong/article/details/52516018
+     * @param view
+     */
+    public void mergeByCreate(View view) {
+        Observable<Integer> observable1 = Observable.create(new ObservableOnSubscribe<Integer>() {
+            @Override
+            public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<Integer> emitter) throws Exception {
+                Thread.sleep(3);
+                emitter.onNext(1);
+                emitter.onComplete();
+            }
+        }).subscribeOn(Schedulers.io());
+        Observable<Integer> observable2 = Observable.create(new ObservableOnSubscribe<Integer>() {
+            @Override
+            public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<Integer> emitter) throws Exception {
+                Thread.sleep(2);
+                emitter.onNext(2);
+                emitter.onComplete();
+            }
+        }).subscribeOn(Schedulers.io());
+        Observable<Integer> merge = Observable.merge(observable1,observable2);
+
+        merge.map(new Function<Integer, String>() {
+            @Override
+            public String apply(@io.reactivex.annotations.NonNull Integer integer) throws Exception {
+                return integer+"--> map";
+            }
+        }).timeout(10,TimeUnit.SECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<String>() {
+                    @Override
+                    public void onSubscribe(@io.reactivex.annotations.NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(@io.reactivex.annotations.NonNull String s) {
+                        LogUtils.w("onNext",s);
+                    }
+
+                    @Override
+                    public void onError(@io.reactivex.annotations.NonNull Throwable e) {
+                        LogUtils.w("onError",e);
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        LogUtils.i("oncomplete");
+
+                    }
+                });
+    }
+
+    public void concat(View view) {
+
     }
 }

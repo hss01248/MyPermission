@@ -1,88 +1,137 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".MainActivity">
+    android:layout_height="match_parent">
+   <com.google.android.flexbox.FlexboxLayout
+       xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:app="http://schemas.android.com/apk/res-auto"
+       xmlns:tools="http://schemas.android.com/tools"
+       android:id="@+id/ll"
+       android:layout_width="match_parent"
+       android:layout_height="match_parent"
+       app:flexDirection="row"
+       app:flexWrap="wrap"
+       app:justifyContent="space_around"
+       app:alignItems="stretch"
+       app:alignContent="stretch">
 
    <Button
-       android:layout_width="match_parent"
+       android:layout_width="wrap_content"
        android:text="权限是否声明在manifest里"
        android:onClick="isInManifest"
        android:layout_height="wrap_content"/>
 
    <Button
-       android:layout_width="match_parent"
+       android:layout_width="wrap_content"
        android:text="申请apk安装权限"
        android:onClick="askExtPermissions"
        android:layout_height="wrap_content"/>
    <Button
-       android:layout_width="match_parent"
+       android:layout_width="wrap_content"
        android:text="申请通知权限"
        android:onClick="askNotification"
        android:layout_height="wrap_content"/>
    <Button
-       android:layout_width="match_parent"
+       android:layout_width="wrap_content"
        android:text="申请管理所有存储权限"
        android:onClick="askManagerAllStorage"
        android:layout_height="wrap_content"/>
 
    <Button
-       android:layout_width="match_parent"
+       android:layout_width="wrap_content"
        android:text="监听通知栏权限"
        android:onClick="askNotificationListener"
        android:layout_height="wrap_content"/>
 
    <Button
-       android:layout_width="match_parent"
+       android:layout_width="wrap_content"
        android:text="获取所有应用使用状态"
        android:onClick="useageStatus"
        android:layout_height="wrap_content"/>
    <Button
-       android:layout_width="match_parent"
+       android:layout_width="wrap_content"
        android:text="普通模式-无任何自定义弹窗"
        android:onClick="normal"
        android:layout_height="wrap_content"/>
 
    <Button
-       android:layout_width="match_parent"
+       android:layout_width="wrap_content"
        android:text="请求前弹窗"
        android:onClick="beforeRequest"
        android:layout_height="wrap_content"/>
    <Button
-       android:layout_width="match_parent"
+       android:layout_width="wrap_content"
        android:text="拒绝后弹窗"
        android:onClick="afterDenied"
        android:layout_height="wrap_content"/>
    <Button
-       android:layout_width="match_parent"
+       android:layout_width="wrap_content"
        android:text="请求前拒绝后都弹窗"
        android:onClick="both"
        android:layout_height="wrap_content"/>
 
    <Button
-       android:layout_width="match_parent"
+       android:layout_width="wrap_content"
        android:text="获取定位-locationUtil"
        android:onClick="getLocation"
        android:textAllCaps="false"
        android:layout_height="wrap_content"/>
    <Button
-       android:layout_width="match_parent"
+       android:layout_width="wrap_content"
        android:text="获取定位-locationManager"
        android:onClick="getLocationByLocationManager"
        android:textAllCaps="false"
        android:layout_height="wrap_content"/>
 
    <Button
-       android:layout_width="match_parent"
+       android:layout_width="wrap_content"
        android:text="多个权限请求"
        android:onClick="multiPermission"
        android:layout_height="wrap_content"/>
    <Button
-       android:layout_width="match_parent"
+       android:layout_width="wrap_content"
        android:text="rx_location"
        android:onClick="rxLocation"
        android:layout_height="wrap_content"/>
-</LinearLayout>
+      <Button
+          android:layout_width="wrap_content"
+          android:text="rx-flatmap-normal"
+          android:onClick="rxFlatMapNormal"
+          android:layout_height="wrap_content"/>
+      <Button
+          android:layout_width="wrap_content"
+          android:text="rx-flatmap-normal-timeout"
+          android:onClick="rxFlatMapNormalTimeout"
+          android:layout_height="wrap_content"/>
+      <Button
+          android:layout_width="wrap_content"
+          android:text="rx-flatmap-create"
+          android:onClick="rxFlatMapCreate"
+          android:layout_height="wrap_content"/>
+
+      <Button
+          android:layout_width="wrap_content"
+          android:text="rx-flatmap-create-timeout"
+          android:onClick="rxFlatMapCreateTimeout"
+          android:layout_height="wrap_content"/>
+
+      <Button
+          android:layout_width="wrap_content"
+          android:text="merge-并行"
+          android:onClick="merge"
+          android:layout_height="wrap_content"/>
+      <Button
+          android:layout_width="wrap_content"
+          android:text="merge-并行-by create"
+          android:onClick="mergeByCreate"
+          android:layout_height="wrap_content"/>
+      <Button
+          android:layout_width="wrap_content"
+          android:text="concat-串行"
+          android:onClick="concat"
+          android:layout_height="wrap_content"/>
+   </com.google.android.flexbox.FlexboxLayout>
+</ScrollView>

@@ -45,6 +45,7 @@ dependencies {
 
     //https://github.com/yayaa/LocationManager
     implementation 'com.yayandroid:LocationManager:2.4.1'
+    api 'com.google.android.flexbox:flexbox:3.0.0'
 
     //api 'com.github.hss01248.aop-android:logforaop:1.0.1'
 }

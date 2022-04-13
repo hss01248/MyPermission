@@ -1,5 +1,7 @@
 package com.hss01248.flipper.aop;
 
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.WebView;
@@ -15,6 +17,16 @@ import org.aspectj.lang.ProceedingJoinPoint;
 public class LogMethodAspect {
 
     static Gson gson = new GsonBuilder().serializeNulls().create();
+    static Handler handler;
+
+    static void runOnBack(Runnable runnable){
+        if(handler == null){
+            HandlerThread  thread = new HandlerThread("LogMethodAspect");
+            thread.start();
+            handler = new Handler(thread.getLooper());
+        }
+        handler.post(runnable);
+    }
 
     public static Object logAround(boolean enableLog, String TAG, boolean logResultIfReturnNull, ProceedingJoinPoint joinPoint, IAround around) throws Throwable{
         long start = System.currentTimeMillis();
@@ -78,25 +90,27 @@ public class LogMethodAspect {
     }
 
     public static void logBefore(boolean enableLog, String TAG,  JoinPoint joinPoint, IBefore before) throws Throwable{
-        String des = "";
+        final String[] des = {""};
         //before
         try {
             String s = joinPoint.getSignature().toShortString();
             //Html5JsObj.handleBackBehavior(..)
-            des = s;
+            des[0] = s;
             if(enableLog){
+                String name = Thread.currentThread().getName();
                 Object[] args = joinPoint.getArgs();
                 if(args!= null){
-                    des = s.replace("..", toStrings(args));
+                    des[0] = s.replace("..", toStrings(args));
                 }
                 if(joinPoint.getThis() != null){
-                    des = Integer.toHexString(joinPoint.getThis().hashCode())+"@"+des;
+                    des[0] = Integer.toHexString(joinPoint.getThis().hashCode())+"@"+ des[0];
                 }
                 //des = des+", \ninvoke by url:"+url;
-                Log.d(TAG, Thread.currentThread().getName()+", start of "+des+", \n"+(before==null ? "":before.descExtraForLog()));
+                Log.d(TAG, name+", start of "+ des[0] +", \n"+(before==null ? "":before.descExtraForLog()));
+
             }
             if(before != null){
-                before.before(joinPoint,des);
+                before.before(joinPoint, des[0]);
             }
         } catch (Throwable throwable) {
             throwable.printStackTrace();
@@ -124,12 +138,15 @@ public class LogMethodAspect {
         return sb.toString();
     }
 
+    //todo 比较耗时
     private static String toStr(Object arg) {
         try {
             if(arg == null){
                 return "null";
             }
-            String  str =  gson.toJson(arg);
+            String  str =  ObjParser.parseObj(arg);
+            //String  str =  gson.toJson(arg);
+            //todo 循环引用导致stackoverflow,从而非常耗时
             if(TextUtils.isEmpty(str) || "null".equals(str)){
                 //return ObjParser.parseObj(arg);
                 //return arg.getClass().getSimpleName()+arg.toString()
@@ -137,6 +154,7 @@ public class LogMethodAspect {
             }
             return str;
         }catch (Throwable throwable){
+            //throwable.printStackTrace();
             return ObjParser.parseObj(arg);
         }
     }

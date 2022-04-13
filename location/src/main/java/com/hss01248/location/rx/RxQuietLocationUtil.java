@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.reactivex.Observable;
@@ -154,128 +155,86 @@ public class RxQuietLocationUtil {
        handlerThread =  new HandlerThread("silentlocation");
        handlerThread.start();
 
-        AtomicInteger count = new AtomicInteger(providers.size());
         long start = System.currentTimeMillis();
+        int size = providers.size();
+        Observable<Location> [] locations = new Observable[size];
+        for (int i = 0; i < size; i++) {
+            String provider = providers.get(i);
+            locations[i]  = Observable.create(new ObservableOnSubscribe<Location>() {
+                @Override
+                @SuppressLint("MissingPermission")
+                public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<Location> emitter) throws Exception {
 
+                    LogUtils.i("Observable.create","requestSingleUpdate-"+ provider);
+                    //locationManager.getCurrentLocation(provider,);
+                    locationManager.requestSingleUpdate(provider, new LocationListener() {
+                        @Override
+                        public void onLocationChanged(@NonNull Location location) {
+                            LogUtils.d("onLocationChanged", location, provider, "耗时(ms):", (System.currentTimeMillis() - start));
+                            saveLocation2(location);
+                            emitter.onNext(location);
+                            locationManager.removeUpdates(this);
+                            emitter.onComplete();
+                        }
 
-       /* Observable<String> stringObservable = null;
-        for (String provider : providers) {
-            if(stringObservable == null){
-                stringObservable = Observable.just(provider);
-            }else {
-                stringObservable = Observable.merge(stringObservable,Observable.just(provider));
-            }
-        }*/
-        //stringObservable.do
+                        @Override
+                        public void onStatusChanged(String provider, int status, Bundle extras) {
+                            LogUtils.d("onStatusChanged", provider, status, extras);
+                        }
 
+                        @Override
+                        public void onProviderDisabled(@NonNull String provider) {
+                            LogUtils.w("onProviderDisabled", provider);
+                            locationManager.removeUpdates(this);
+                            //用着用着突然关掉了
+                            emitter.onComplete();
+                        }
 
-
-
-
-
-        //1. complete不调用
-        //2 主线程卡顿,等待
-        Observable<Location> [] finalObservable = new Observable[]{null};
-        Observable<String> stringObservable = Observable.fromIterable(providers);
-        stringObservable = stringObservable.subscribeOn(Schedulers.io());
-        Observable<Location> providersObservable = stringObservable
-                //.observeOn(AndroidSchedulers.mainThread())
-                .flatMap(new Function<String, ObservableSource<Location>>() {
-                    @Override
-                    public ObservableSource<Location> apply(@io.reactivex.annotations.NonNull String provider) throws Exception {
-                        return Observable.create(new ObservableOnSubscribe<Location>() {
-                            @Override
-                            @SuppressLint("MissingPermission")
-                            public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<Location> emitter) throws Exception {
-
-                                LogUtils.i("flatMap-create","requestSingleUpdate");
-                                //locationManager.getCurrentLocation(provider,);
-                                locationManager.requestSingleUpdate(provider, new LocationListener() {
-                                    @Override
-                                    public void onLocationChanged(@NonNull Location location) {
-                                        LogUtils.d("onLocationChanged", location, provider, "耗时(ms):", (System.currentTimeMillis() - start));
-                                        emitter.onNext(location);
-                                        locationManager.removeUpdates(this);
-                                        int i = count.decrementAndGet();
-                                        LogUtils.i("count.decrementAndGet()",i);
-                                        if(i <=0){
-                                           // emitter.onComplete();
-                                            //ObservableFlatMap.InnerObserver.onComplete(),并不会导致最后onComplete的调用
-                                           // finalObservable[0].onc
-
-                                        }
-                                    }
-
-                                    @Override
-                                    public void onStatusChanged(String provider, int status, Bundle extras) {
-                                        LogUtils.d("onStatusChanged", provider, status, extras);
-                                    }
-
-                                    @Override
-                                    public void onProviderDisabled(@NonNull String provider) {
-                                        LogUtils.w("onProviderDisabled", provider);
-                                        locationManager.removeUpdates(this);
-                                        //用着用着突然关掉了
-                                        int i = count.decrementAndGet();
-                                        LogUtils.i("count.decrementAndGet()",i);
-                                        if(i <=0){
-                                            emitter.onComplete();
-                                        }
-                                    }
-
-                                    @Override
-                                    public void onProviderEnabled(@NonNull String provider) {
-                                        LogUtils.d("onProviderEnabled", provider);
-                                    }
-                                    //todo looper
-                                }, handlerThread.getLooper());
-                            }
-                        });
-                    }
-                });
+                        @Override
+                        public void onProviderEnabled(@NonNull String provider) {
+                            LogUtils.d("onProviderEnabled", provider);
+                        }
+                        //todo looper
+                    }, handlerThread.getLooper());
+                }
+            }).subscribeOn(Schedulers.io());
+        }
+        Observable<Location> merge = Observable.mergeArray(locations);
 
         Observable<Location>  gmsObservable = null;
         if(isGmsAvaiable(context)){
             Context finalContext1 = context;
-            count.incrementAndGet();
-             gmsObservable = Observable.create(new ObservableOnSubscribe<Location>() {
+            gmsObservable = Observable.create(new ObservableOnSubscribe<Location>() {
                 @SuppressLint("MissingPermission")
                 @Override
                 public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<Location> emitter) throws Exception {
 
                     LocationServices.getFusedLocationProviderClient(finalContext1)
                             .requestLocationUpdates(new LocationRequest()
-                            .setExpirationDuration(timeOut)
-                            .setNumUpdates(1)
-                            .setMaxWaitTime(timeOut), new LocationCallback() {
-                        @Override
-                        public void onLocationResult(LocationResult result) {
-                            LogUtils.i("gms result", result);
-                            if (result != null && result.getLocations() != null && !result.getLocations().isEmpty()) {
-                                Location location = result.getLocations().get(0);
-                                emitter.onNext(location);
-                            }
-                            int i = count.decrementAndGet();
-                            LogUtils.i("count.decrementAndGet()",i);
-                            if(i <=0){
-                                emitter.onComplete();
-                            }
-                        }
+                                    .setExpirationDuration(timeOut)
+                                    .setNumUpdates(1)
+                                    .setMaxWaitTime(timeOut), new LocationCallback() {
+                                @Override
+                                public void onLocationResult(LocationResult result) {
+                                    LogUtils.i("gms result", result);
+                                    if (result != null && result.getLocations() != null && !result.getLocations().isEmpty()) {
+                                        Location location = result.getLocations().get(0);
 
-                    }, handlerThread.getLooper());
+                                        emitter.onNext(location);
+                                    }
+                                    emitter.onComplete();
+                                }
+
+                            }, handlerThread.getLooper());
                 }
-            });
+            }).subscribeOn(Schedulers.io());
         }
-        finalObservable[0] = providersObservable;
         if(gmsObservable != null){
-            //zip、concat 、merge区别: https://blog.csdn.net/mwthe/article/details/82780193   concat有顺序,而merge不限制先后顺序
-            //flatMap,zip,Merge区别 https://blog.csdn.net/wds1181977/article/details/90041686
-            finalObservable[0] = Observable.merge(providersObservable,gmsObservable);
+            merge = Observable.merge(gmsObservable,merge);
         }
-
-        finalObservable[0] = finalObservable[0].timeout(15, TimeUnit.SECONDS)
-                .observeOn(AndroidSchedulers.mainThread());
-        finalObservable[0].subscribe(new Observer<Location>() {
+        merge.timeout(timeoutMills, TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+       .subscribe(new Observer<Location>() {
                     @Override
                     public void onSubscribe(@io.reactivex.annotations.NonNull Disposable d) {
 
@@ -285,18 +244,19 @@ public class RxQuietLocationUtil {
                     public void onNext(@io.reactivex.annotations.NonNull Location location) {
                         LogUtils.i("onNext",location);
                         listener.onEachLocationChanged(location,"");
-                        /*int i = count.decrementAndGet();
-                        LogUtils.i("count.decrementAndGet()",i);
-                        if(i <=0){
-                           onComplete();
-                        }*/
-
                     }
 
                     @Override
                     public void onError(@io.reactivex.annotations.NonNull Throwable e) {
                         LogUtils.w("onError",e);
+                        if(e instanceof TimeoutException){
+                            listener.onFailed(3,"timeout after "+timeOut+"ms");
+                        }else {
+                            listener.onFailed(1,e.getClass().getSimpleName());
+                        }
+
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                            //java.util.concurrent.TimeoutException
                             handlerThread.quitSafely();
                         }
                     }
@@ -304,12 +264,20 @@ public class RxQuietLocationUtil {
                     @Override
                     public void onComplete() {
                         LogUtils.i("onComplete");
+                        //todo listener.onSuccess();
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                             handlerThread.quitSafely();
                         }
                     }
                 });
 
+    }
+
+    private void saveLocation2(Location location) {
+        if(location != null){
+            LocationSync.save(location.getLatitude(),location.getLongitude());
+            LocationSync.saveLocation(location);
+        }
     }
 
     public static boolean isLocationEnabled(LocationManager locationManager) {
