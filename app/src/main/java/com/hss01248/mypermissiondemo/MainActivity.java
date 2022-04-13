@@ -369,8 +369,8 @@ public class MainActivity extends AppCompatActivity {
 
         final ObservableEmitter<Integer>[] emitterOut = new ObservableEmitter[1];
 
-       // Observable.fromIterable(nums)
-        Observable.create(new ObservableOnSubscribe<Integer>() {
+        Observable.fromIterable(nums)
+        /*Observable.create(new ObservableOnSubscribe<Integer>() {
             @Override
             public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<Integer> emitter) throws Exception {
                 emitterOut[0] = emitter;
@@ -378,13 +378,13 @@ public class MainActivity extends AppCompatActivity {
                 emitter.onNext(9);
 
                 emitter.onComplete();
-               /* int i = atomicInteger.decrementAndGet();
+               *//* int i = atomicInteger.decrementAndGet();
                 if(i ==0){
                     LogUtils.i("Observable.create-emitter.onComplete()");
                     emitter.onComplete();
-                }*/
+                }*//*
             }
-        })
+        })*/
                 .subscribeOn(Schedulers.io())
                 .flatMap(new Function<Integer, ObservableSource<String>>() {
                     @Override
@@ -394,17 +394,18 @@ public class MainActivity extends AppCompatActivity {
                             public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<String> emitter) throws Exception {
                                 //Thread.sleep(1500);
                                 emitter.onNext(integer+"+flatMap(Observable.create)");
-                                int i = atomicInteger.decrementAndGet();
+                                emitter.onComplete();
+                                //todo 每一个都要调用onComplete,而不能自己计数
+                                /*int i = atomicInteger.decrementAndGet();
                                 if(i ==0){
                                     LogUtils.i("flatMap-emitter.onComplete()");
                                     emitter.onComplete();
-                                    //emitterOut[0].onComplete();
-                                }
+                                }*/
                             }
                         }).observeOn(Schedulers.io());//.observeOn(Schedulers.io()
                     }
                 }).observeOn(AndroidSchedulers.mainThread())
-                .timeout(10, TimeUnit.SECONDS)
+                .timeout(5, TimeUnit.SECONDS)
                 .subscribe(new Observer<String>() {
                     @Override
                     public void onSubscribe(@io.reactivex.annotations.NonNull Disposable d) {

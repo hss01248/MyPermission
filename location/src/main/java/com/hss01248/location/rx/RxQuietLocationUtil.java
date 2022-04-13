@@ -48,6 +48,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.reactivex.MaybeObserver;
+import io.reactivex.MaybeSource;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
@@ -157,6 +159,131 @@ public class RxQuietLocationUtil {
 
         long start = System.currentTimeMillis();
         int size = providers.size();
+
+
+        byFlatMap(context, timeoutMills, listener, locationManager, providers, start, size);
+
+    }
+
+    private void byFlatMap(Context context, int timeoutMills, MyLocationCallback listener, LocationManager locationManager, List<String> providers, long start, int size) {
+        AtomicInteger atomicInteger = new AtomicInteger(0);
+        Observable.fromIterable(providers)
+                .flatMap(new Function<String, ObservableSource<Location>>() {
+                    @Override
+                    public ObservableSource<Location> apply(@io.reactivex.annotations.NonNull String provider) throws Exception {
+                        return Observable.create(new ObservableOnSubscribe<Location>() {
+                            @Override
+                            @SuppressLint("MissingPermission")
+                            public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<Location> emitter) throws Exception {
+
+                                LogUtils.i("flatMap", "requestSingleUpdate-" + provider);
+                                //locationManager.getCurrentLocation(provider,);
+                                locationManager.requestSingleUpdate(provider, new LocationListener() {
+                                    @Override
+                                    public void onLocationChanged(@NonNull Location location) {
+                                        LogUtils.d("onLocationChanged", location, provider, "耗时(ms):", (System.currentTimeMillis() - start));
+                                        saveLocation2(location);
+                                        emitter.onNext(location);
+                                        locationManager.removeUpdates(this);
+                                        //todo 重要: flatMap内部的Observable.create: 因为创建了多个Observable,必须每个Observable都调用onComplete,才能触发最终observer的onComplete
+                                        emitter.onComplete();
+                                    }
+
+                                    @Override
+                                    public void onStatusChanged(String provider, int status, Bundle extras) {
+                                        LogUtils.d("onStatusChanged", provider, status, extras);
+                                    }
+
+                                    @Override
+                                    public void onProviderDisabled(@NonNull String provider) {
+                                        LogUtils.w("onProviderDisabled", provider);
+                                        locationManager.removeUpdates(this);
+                                        //用着用着突然关掉了,会触发这里
+                                        emitter.onComplete();
+                                    }
+
+                                    @Override
+                                    public void onProviderEnabled(@NonNull String provider) {
+                                        LogUtils.d("onProviderEnabled", provider);
+                                    }
+                                }, handlerThread.getLooper());
+                            }
+                            //要这里指定subscribeOn(Schedulers.io()),才能让每个Observable在不同的线程工作
+                        }).subscribeOn(Schedulers.io());
+                    }
+                }).mergeWith(Observable.create(new ObservableOnSubscribe<Location>() {
+                        @SuppressLint("MissingPermission")
+                        @Override
+                        public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<Location> emitter) throws Exception {
+                            //if-else的代码直接在Observable内部实现
+                            if (isGmsAvaiable(context)) {
+                                LocationServices.getFusedLocationProviderClient(context)
+                                        .requestLocationUpdates(new LocationRequest()
+                                                .setExpirationDuration(timeOut)
+                                                .setNumUpdates(1)
+                                                .setMaxWaitTime(timeOut), new LocationCallback() {
+                                            @Override
+                                            public void onLocationResult(LocationResult result) {
+                                                LogUtils.i("gms result", result);
+                                                if (result != null && result.getLocations() != null && !result.getLocations().isEmpty()) {
+                                                    Location location = result.getLocations().get(0);
+                                                    saveLocation2(location);
+                                                    emitter.onNext(location);
+                                                }
+                                                emitter.onComplete();
+                                            }
+
+                                        }, handlerThread.getLooper());
+                            } else {
+                                //如果没有onNext,那就直接发onComplete,否则最后Observer无法调用onComplete
+                                emitter.onComplete();
+                            }
+
+                        }})
+                .subscribeOn(Schedulers.io()))
+                .timeout(50, TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Location>() {
+                    @Override
+                    public void onSubscribe(@io.reactivex.annotations.NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(@io.reactivex.annotations.NonNull Location location) {
+                        LogUtils.i("onNext", location);
+                        listener.onEachLocationChanged(location, "");
+                    }
+
+                    @Override
+                    public void onError(@io.reactivex.annotations.NonNull Throwable e) {
+                        LogUtils.w("onError", e);
+                        if (e instanceof TimeoutException) {
+                            listener.onFailed(3, "timeout after " + timeOut + "ms");
+                        } else {
+                            listener.onFailed(1, e.getClass().getSimpleName());
+                        }
+
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                            //java.util.concurrent.TimeoutException
+                            //如果超时,关闭handlerThread,那么定位器无法回调: LocationManager: thread not runable, ignore msg, state:TERMINATED, pkg:com.hss01248.mypermissiondemo
+
+                            //handlerThread.quitSafely();
+                        }
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        LogUtils.i("onComplete");
+                        //todo listener.onSuccess();
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                            handlerThread.quitSafely();
+                        }
+                    }
+                });
+    }
+
+    private void byMerge(Context context, int timeoutMills, MyLocationCallback listener, LocationManager locationManager, List<String> providers, long start, int size) {
         Observable<Location>[] locations = new Observable[size];
         for (int i = 0; i < size; i++) {
             String provider = providers.get(i);
@@ -219,7 +346,7 @@ public class RxQuietLocationUtil {
                                     LogUtils.i("gms result", result);
                                     if (result != null && result.getLocations() != null && !result.getLocations().isEmpty()) {
                                         Location location = result.getLocations().get(0);
-
+                                        saveLocation2(location);
                                         emitter.onNext(location);
                                     }
                                     emitter.onComplete();
@@ -270,7 +397,6 @@ public class RxQuietLocationUtil {
                         }
                     }
                 });
-
     }
 
     private void saveLocation2(Location location) {

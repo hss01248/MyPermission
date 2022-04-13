@@ -21,5 +21,7 @@ public interface MyLocationCallback {
 
      void onFailed(int type,String msg,boolean isFailBeforeReallyRequest);
 
+    default void onQuickestLocationCallback(Location location,String msg){}
+
 
 }
