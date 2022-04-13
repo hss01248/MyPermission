@@ -65,15 +65,15 @@ import io.reactivex.schedulers.Schedulers;
  * no permission        2.8k
  * no cache+10s timeout 0.4k
  * 以上约占总上报量的10%
- *
+ * <p>
  * 饱和式定位工具类: 同时发起gps,network,passive定位
- *
+ * <p>
  * gms管理的蛋疼之处:
  * 当手机有gms时,需要定位开关+gms详细位置开关 同时开启,才能定位,如果gms详细位置开关关闭,则定位必失败,onlocationChanged无回调
  * 但同样一台手机上谷歌,高德能定位成功,是什么原理?
- *
- *
- *
+ * <p>
+ * <p>
+ * <p>
  * https://juejin.cn/post/7016937919533285407
  */
 public class RxQuietLocationUtil {
@@ -112,7 +112,7 @@ public class RxQuietLocationUtil {
 
         MyLocationCallback listener = new MyLocationCallback() {
             @Override
-            public void onFailed(int type, String msg,boolean isFailBeforeReallyRequest) {
+            public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
                 Map<String, String> ext = new HashMap<>();
                 ext.put("msg", msg);
                 Location cache = getFromCache(ext, msg);
@@ -152,20 +152,20 @@ public class RxQuietLocationUtil {
         List<String> providers = locationManager.getProviders(true);
         LogUtils.i("getAllProviders-enabled:", providers);
 
-       handlerThread =  new HandlerThread("silentlocation");
-       handlerThread.start();
+        handlerThread = new HandlerThread("silentlocation");
+        handlerThread.start();
 
         long start = System.currentTimeMillis();
         int size = providers.size();
-        Observable<Location> [] locations = new Observable[size];
+        Observable<Location>[] locations = new Observable[size];
         for (int i = 0; i < size; i++) {
             String provider = providers.get(i);
-            locations[i]  = Observable.create(new ObservableOnSubscribe<Location>() {
+            locations[i] = Observable.create(new ObservableOnSubscribe<Location>() {
                 @Override
                 @SuppressLint("MissingPermission")
                 public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<Location> emitter) throws Exception {
 
-                    LogUtils.i("Observable.create","requestSingleUpdate-"+ provider);
+                    LogUtils.i("Observable.create", "requestSingleUpdate-" + provider);
                     //locationManager.getCurrentLocation(provider,);
                     locationManager.requestSingleUpdate(provider, new LocationListener() {
                         @Override
@@ -201,8 +201,8 @@ public class RxQuietLocationUtil {
         }
         Observable<Location> merge = Observable.mergeArray(locations);
 
-        Observable<Location>  gmsObservable = null;
-        if(isGmsAvaiable(context)){
+        Observable<Location> gmsObservable = null;
+        if (isGmsAvaiable(context)) {
             Context finalContext1 = context;
             gmsObservable = Observable.create(new ObservableOnSubscribe<Location>() {
                 @SuppressLint("MissingPermission")
@@ -229,12 +229,12 @@ public class RxQuietLocationUtil {
                 }
             }).subscribeOn(Schedulers.io());
         }
-        if(gmsObservable != null){
-            merge = Observable.merge(gmsObservable,merge);
+        if (gmsObservable != null) {
+            merge = Observable.merge(gmsObservable, merge);
         }
         merge.timeout(timeoutMills, TimeUnit.MILLISECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
-       .subscribe(new Observer<Location>() {
+                .subscribe(new Observer<Location>() {
                     @Override
                     public void onSubscribe(@io.reactivex.annotations.NonNull Disposable d) {
 
@@ -242,17 +242,17 @@ public class RxQuietLocationUtil {
 
                     @Override
                     public void onNext(@io.reactivex.annotations.NonNull Location location) {
-                        LogUtils.i("onNext",location);
-                        listener.onEachLocationChanged(location,"");
+                        LogUtils.i("onNext", location);
+                        listener.onEachLocationChanged(location, "");
                     }
 
                     @Override
                     public void onError(@io.reactivex.annotations.NonNull Throwable e) {
-                        LogUtils.w("onError",e);
-                        if(e instanceof TimeoutException){
-                            listener.onFailed(3,"timeout after "+timeOut+"ms");
-                        }else {
-                            listener.onFailed(1,e.getClass().getSimpleName());
+                        LogUtils.w("onError", e);
+                        if (e instanceof TimeoutException) {
+                            listener.onFailed(3, "timeout after " + timeOut + "ms");
+                        } else {
+                            listener.onFailed(1, e.getClass().getSimpleName());
                         }
 
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
@@ -274,8 +274,8 @@ public class RxQuietLocationUtil {
     }
 
     private void saveLocation2(Location location) {
-        if(location != null){
-            LocationSync.save(location.getLatitude(),location.getLongitude());
+        if (location != null) {
+            LocationSync.save(location.getLatitude(), location.getLongitude());
             LocationSync.saveLocation(location);
         }
     }
@@ -372,7 +372,6 @@ public class RxQuietLocationUtil {
     }
 
 
-
     private Location getResultSafe(Task<Location> task) {
         try {
             return task.getResult();
@@ -383,16 +382,11 @@ public class RxQuietLocationUtil {
     }
 
 
-
-
-
     static boolean isGmsAvaiable(Context context) {
         return GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS;
         /*;
         return client.;*/
     }
-
-
 
 
     private void onEnd(Location location, Map<String, Location> map, Set<String> count, MyLocationCallback listener) {
@@ -444,14 +438,14 @@ public class RxQuietLocationUtil {
                 if (!isTimeout) {
                     LogUtils.w("超时后looper继续回调,写缓存,然后移除looper");
                     endLooper();
-                }else {
+                } else {
                     //再延时30s关闭
-                   new Handler(Looper.myLooper()).postDelayed(new Runnable() {
-                       @Override
-                       public void run() {
-                           endLooper();
-                       }
-                   },30000);
+                    new Handler(Looper.myLooper()).postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            endLooper();
+                        }
+                    }, 30000);
                 }
             }
 
@@ -483,14 +477,14 @@ public class RxQuietLocationUtil {
 
         if (!isTimeout) {
             endLooper();
-        }else {
+        } else {
             //再延时30s关闭
             new Handler(Looper.myLooper()).postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     endLooper();
                 }
-            },30000);
+            }, 30000);
         }
 
 
@@ -505,7 +499,7 @@ public class RxQuietLocationUtil {
                 } else {
                     Looper.myLooper().quit();
                 }
-               // LocationManager locationManager = (LocationManager) Utils.getApp().getSystemService(Context.LOCATION_SERVICE);
+                // LocationManager locationManager = (LocationManager) Utils.getApp().getSystemService(Context.LOCATION_SERVICE);
                 //locationManager.removeUpdates();
             }
         } catch (Throwable throwable) {
