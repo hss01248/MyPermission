@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.location.LocationManagerCompat;
+import androidx.core.util.Pair;
 
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.Utils;
@@ -38,6 +39,7 @@ import com.hss01248.location.MyLocationCallback;
 import com.hss01248.location.QuietLocationUtil;
 
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -90,51 +92,20 @@ public class RxQuietLocationUtil {
     }
 
     int timeOut = 10000;//10s
-    //static ExecutorService executors;
-    volatile Handler handler;
-    Runnable timeoutRun;
-    Runnable gmsRunnable;
-    boolean hasEnd;
 
     HandlerThread handlerThread;
+    boolean useCacheIfFail = true;
 
     public void getLocation(Context context, MyLocationCallback listener) {
-        getLocation(context, timeOut, listener);
+        getLocation(context, timeOut,true, listener);
     }
 
 
-    public void getLocation(Context context, int timeoutMills, MyLocationCallback listener0) {
+    public void getLocation(Context context, int timeoutMills,boolean useCacheIfFail, MyLocationCallback listener0) {
         timeOut = timeoutMills;
-        /*if (executors == null) {
-            executors = Executors.newCachedThreadPool();
-        }*/
+        this.useCacheIfFail = useCacheIfFail;
         context = context.getApplicationContext();
-
-        MyLocationCallback finalListener = listener0;
-
-        MyLocationCallback listener = new MyLocationCallback() {
-            @Override
-            public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
-                Map<String, String> ext = new HashMap<>();
-                ext.put("msg", msg);
-                Location cache = getFromCache(ext, msg);
-                if (cache == null) {
-                    finalListener.onFailed(type, ext.get("msg"));
-                } else {
-                    finalListener.onSuccess(cache, ext.get("msg"));
-                }
-            }
-
-            @Override
-            public void onSuccess(Location location, String msg) {
-                finalListener.onSuccess(location, msg);
-            }
-
-            @Override
-            public void onEachLocationChanged(Location location, String provider) {
-                listener0.onEachLocationChanged(location, provider);
-            }
-        };
+        MyLocationCallback listener = listener0;
         if (noPermission(context)) {
             listener.onFailed(1, "no permission");
             return;
@@ -161,20 +132,22 @@ public class RxQuietLocationUtil {
         int size = providers.size();
 
 
-        byFlatMap(context, timeoutMills, listener, locationManager, providers, start, size);
+        byFlatMap(context, listener, locationManager, providers, start, size);
 
     }
 
-    private void byFlatMap(Context context, int timeoutMills, MyLocationCallback listener, LocationManager locationManager, List<String> providers, long start, int size) {
+    private void byFlatMap(Context context,  MyLocationCallback listener, LocationManager locationManager, List<String> providers, long start, int size) {
         AtomicInteger atomicInteger = new AtomicInteger(0);
+        List<Pair<String,Location>> pairList = new ArrayList<>();
+
         Observable.fromIterable(providers)
-                .flatMap(new Function<String, ObservableSource<Location>>() {
+                .flatMap(new Function<String, ObservableSource<Pair<String,Location>>>() {
                     @Override
-                    public ObservableSource<Location> apply(@io.reactivex.annotations.NonNull String provider) throws Exception {
-                        return Observable.create(new ObservableOnSubscribe<Location>() {
+                    public ObservableSource<Pair<String,Location>> apply(@io.reactivex.annotations.NonNull String provider) throws Exception {
+                        return Observable.create(new ObservableOnSubscribe<Pair<String,Location>>() {
                             @Override
                             @SuppressLint("MissingPermission")
-                            public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<Location> emitter) throws Exception {
+                            public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<Pair<String,Location>> emitter) throws Exception {
 
                                 LogUtils.i("flatMap", "requestSingleUpdate-" + provider);
                                 //locationManager.getCurrentLocation(provider,);
@@ -183,7 +156,7 @@ public class RxQuietLocationUtil {
                                     public void onLocationChanged(@NonNull Location location) {
                                         LogUtils.d("onLocationChanged", location, provider, "耗时(ms):", (System.currentTimeMillis() - start));
                                         saveLocation2(location);
-                                        emitter.onNext(location);
+                                        emitter.onNext(new Pair<>(provider,location));
                                         locationManager.removeUpdates(this);
                                         //todo 重要: flatMap内部的Observable.create: 因为创建了多个Observable,必须每个Observable都调用onComplete,才能触发最终observer的onComplete
                                         emitter.onComplete();
@@ -211,10 +184,10 @@ public class RxQuietLocationUtil {
                             //要这里指定subscribeOn(Schedulers.io()),才能让每个Observable在不同的线程工作
                         }).subscribeOn(Schedulers.io());
                     }
-                }).mergeWith(Observable.create(new ObservableOnSubscribe<Location>() {
+                }).mergeWith(Observable.create(new ObservableOnSubscribe<Pair<String,Location>>() {
                         @SuppressLint("MissingPermission")
                         @Override
-                        public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<Location> emitter) throws Exception {
+                        public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<Pair<String,Location>> emitter) throws Exception {
                             //if-else的代码直接在Observable内部实现
                             if (isGmsAvaiable(context)) {
                                 LocationServices.getFusedLocationProviderClient(context)
@@ -228,7 +201,7 @@ public class RxQuietLocationUtil {
                                                 if (result != null && result.getLocations() != null && !result.getLocations().isEmpty()) {
                                                     Location location = result.getLocations().get(0);
                                                     saveLocation2(location);
-                                                    emitter.onNext(location);
+                                                    emitter.onNext(new Pair<>("gms",location));
                                                 }
                                                 emitter.onComplete();
                                             }
@@ -241,46 +214,110 @@ public class RxQuietLocationUtil {
 
                         }})
                 .subscribeOn(Schedulers.io()))
-                .timeout(50, TimeUnit.MILLISECONDS)
+                .timeout(timeOut, TimeUnit.MILLISECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<Location>() {
+                .subscribe(new Observer<Pair<String,Location>>() {
                     @Override
                     public void onSubscribe(@io.reactivex.annotations.NonNull Disposable d) {
 
                     }
 
                     @Override
-                    public void onNext(@io.reactivex.annotations.NonNull Location location) {
+                    public void onNext(@io.reactivex.annotations.NonNull Pair<String,Location> location) {
                         LogUtils.i("onNext", location);
-                        listener.onEachLocationChanged(location, "");
+                        pairList.add(location);
+                        int i = atomicInteger.incrementAndGet();
+                        if(i ==1){
+                            LogUtils.i("onQuickest", location);
+                            listener.onQuickestLocationCallback(location.second, location.first);
+                        }
+                        listener.onEachLocationChanged(location.second, location.first);
                     }
 
                     @Override
                     public void onError(@io.reactivex.annotations.NonNull Throwable e) {
                         LogUtils.w("onError", e);
-                        if (e instanceof TimeoutException) {
-                            listener.onFailed(3, "timeout after " + timeOut + "ms");
-                        } else {
-                            listener.onFailed(1, e.getClass().getSimpleName());
-                        }
 
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                            //java.util.concurrent.TimeoutException
-                            //如果超时,关闭handlerThread,那么定位器无法回调: LocationManager: thread not runable, ignore msg, state:TERMINATED, pkg:com.hss01248.mypermissiondemo
-
-                            //handlerThread.quitSafely();
-                        }
+                        dealOnFail(e, pairList,listener);
                     }
 
                     @Override
                     public void onComplete() {
                         LogUtils.i("onComplete");
-                        //todo listener.onSuccess();
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                             handlerThread.quitSafely();
                         }
+                        Pair<String,Location> mostAcurLocation2 = getMostAcurLocation2(pairList);
+                        if(mostAcurLocation2 == null){
+                            onError(new RuntimeException("getMostAcurLocation2 null"));
+                        }else {
+                            listener.onSuccess(mostAcurLocation2.second,"from sys api :"+ mostAcurLocation2.first);
+                        }
+
                     }
                 });
+    }
+
+    private void dealOnFail(@io.reactivex.annotations.NonNull Throwable e, List<Pair<String,Location>> pairList,MyLocationCallback listener) {
+        String msg = e.getClass().getSimpleName();
+        if (e instanceof TimeoutException) {
+            msg =  "timeout after " + timeOut + "ms";
+        }
+        Pair<String, Location> mostAcurLocation2 = getMostAcurLocation2(pairList);
+        if(mostAcurLocation2 != null){
+            listener.onSuccess(mostAcurLocation2.second, mostAcurLocation2.first +" "+ msg);
+        }else {
+            //是否读缓存:
+            if(useCacheIfFail){
+                Map<String, String> ext = new HashMap<>();
+                ext.put("msg", msg);
+                Location cache = getFromCache(ext, msg);
+                if (cache == null) {
+                    listener.onFailed(8,msg);
+                } else {
+                    listener.onSuccess(cache, ext.get("msg"));
+                }
+            }else {
+                listener.onFailed(9,msg);
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            //java.util.concurrent.TimeoutException
+            //如果超时,关闭handlerThread,那么定位器无法回调: LocationManager: thread not runable, ignore msg, state:TERMINATED, pkg:com.hss01248.mypermissiondemo
+
+            Observable.just(1L)
+                    .subscribeOn(Schedulers.io())
+                    .delay(15, TimeUnit.SECONDS)
+                    .doOnNext(new Consumer<Long>() {
+                        @Override
+                        public void accept(Long aLong) throws Exception {
+                            LogUtils.w("15s延时已经到了,关闭handlerThread");
+                            handlerThread.quitSafely();
+                        }
+                    }).observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Observer<Long>() {
+                        @Override
+                        public void onSubscribe(@io.reactivex.annotations.NonNull Disposable d) {
+
+                        }
+
+                        @Override
+                        public void onNext(@io.reactivex.annotations.NonNull Long aLong) {
+
+                        }
+
+                        @Override
+                        public void onError(@io.reactivex.annotations.NonNull Throwable e) {
+
+                        }
+
+                        @Override
+                        public void onComplete() {
+
+                        }
+                    });
+        }
     }
 
     private void byMerge(Context context, int timeoutMills, MyLocationCallback listener, LocationManager locationManager, List<String> providers, long start, int size) {
@@ -464,45 +501,24 @@ public class RxQuietLocationUtil {
     }
 
 
-    private Location getMostAcurLocation(Map<String, Location> map) {
-        if (map.isEmpty()) {
+
+    private Pair<String,Location> getMostAcurLocation2(List<Pair<String,Location>> pairs){
+        if(pairs == null || pairs.isEmpty()){
             return null;
         }
-       /* Location location = null;
-        for (Map.Entry<String, Location> entry : map.entrySet()) {
-            if(entry.getValue() == null){
-                continue;
+        for (Pair<String, Location> pair : pairs) {
+            if (LocationManager.GPS_PROVIDER.equals(pair.first)) {
+                return pair;
             }
-            if(location == null){
-                location = entry.getValue();
-            }else {
-                if(location.getAccuracy() < entry.getValue().getAccuracy()){
-                    location = entry.getValue();
-                }
+            if ("gms".equals(pair.first)) {
+                return pair;
             }
-        }*/
-        if (map.containsKey(LocationManager.GPS_PROVIDER) && map.get(LocationManager.GPS_PROVIDER) != null) {
-            return map.get(LocationManager.GPS_PROVIDER);
-        }
-        if (map.containsKey("fused") && map.get("fused") != null) {
-            return map.get("fused");
-        }
-        if (map.containsKey(LocationManager.PASSIVE_PROVIDER) && map.get(LocationManager.PASSIVE_PROVIDER) != null) {
-            return map.get(LocationManager.PASSIVE_PROVIDER);
-        }
-        if (map.containsKey(LocationManager.NETWORK_PROVIDER) && map.get(LocationManager.NETWORK_PROVIDER) != null) {
-            return map.get(LocationManager.NETWORK_PROVIDER);
-        }
-
-        return null;
-    }
-
-
-    private Location getResultSafe(Task<Location> task) {
-        try {
-            return task.getResult();
-        } catch (Throwable throwable) {
-            LogUtils.w("dd", throwable);
+            if (LocationManager.PASSIVE_PROVIDER.equals(pair.first)) {
+                return pair;
+            }
+            if (LocationManager.NETWORK_PROVIDER.equals(pair.first)) {
+                return pair;
+            }
         }
         return null;
     }
@@ -515,18 +531,7 @@ public class RxQuietLocationUtil {
     }
 
 
-    private void onEnd(Location location, Map<String, Location> map, Set<String> count, MyLocationCallback listener) {
-        //LogUtils.d(location);
-        if (location != null) {
-            map.put(location.getProvider(), location);
-        }
-        LogUtils.d(count);
 
-        if (count.size() == 0) {
-            callback(map, "complete normal", false, listener);
-        }
-
-    }
 
     static Location getFromCache(Map ext, String msg) {
         Location cache = LocationSync.getLocation();
@@ -547,95 +552,6 @@ public class RxQuietLocationUtil {
         return cache;
 
 
-    }
-
-    private void callback(Map<String, Location> map, String msg, boolean isTimeout, MyLocationCallback listener) {
-        LogUtils.i(map, msg, "是否超时:" + isTimeout);
-        if (hasEnd) {
-            LogUtils.w("callback when has end,是否超时:" + isTimeout);
-            Location location = getMostAcurLocation(map);
-            if (location != null) {
-                if (!isTimeout) {
-                    LogUtils.w("超时后保存定位:", location);
-                }
-                LocationSync.save(location.getLatitude(), location.getLongitude());
-                LocationSync.saveLocation(location);
-
-                if (!isTimeout) {
-                    LogUtils.w("超时后looper继续回调,写缓存,然后移除looper");
-                    endLooper();
-                } else {
-                    //再延时30s关闭
-                    new Handler(Looper.myLooper()).postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            endLooper();
-                        }
-                    }, 30000);
-                }
-            }
-
-            return;
-        }
-        hasEnd = true;
-        Location location = getMostAcurLocation(map);
-        if (location != null) {
-            listener.onSuccess(location, "from sys api");
-            try {
-                LocationSync.save(location.getLatitude(), location.getLongitude());
-                LocationSync.saveLocation(location);
-            } catch (Throwable throwable) {
-                throwable.printStackTrace();
-            }
-
-        } else {
-            listener.onFailed(77, "no location get when api request end");
-        }
-        if (!isTimeout) {
-            LogUtils.i("正常结束,去掉调那些timeoutRunnable");
-            if (handler != null) {
-                handler.removeCallbacks(timeoutRun);
-                if (gmsRunnable != null) {
-                    handler.removeCallbacks(gmsRunnable);
-                }
-            }
-        }
-
-        if (!isTimeout) {
-            endLooper();
-        } else {
-            //再延时30s关闭
-            new Handler(Looper.myLooper()).postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    endLooper();
-                }
-            }, 30000);
-        }
-
-
-    }
-
-    private void endLooper() {
-        try {
-            if (Looper.getMainLooper() != Looper.myLooper()) {
-                LogUtils.d("quit loop.myLooper");
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                    Looper.myLooper().quitSafely();
-                } else {
-                    Looper.myLooper().quit();
-                }
-                // LocationManager locationManager = (LocationManager) Utils.getApp().getSystemService(Context.LOCATION_SERVICE);
-                //locationManager.removeUpdates();
-            }
-        } catch (Throwable throwable) {
-            throwable.printStackTrace();
-        }
-    }
-
-    private static boolean onlyCoarsePermission(Context context) {
-        return ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED;
     }
 
     private static boolean noPermission(Context context) {
