@@ -133,5 +133,12 @@
           android:text="concat-串行"
           android:onClick="concat"
           android:layout_height="wrap_content"/>
+
+      <Button
+          android:layout_width="wrap_content"
+          android:text="rxLocation2"
+          android:textAllCaps="false"
+          android:onClick="rxLocation2"
+          android:layout_height="wrap_content"/>
    </com.google.android.flexbox.FlexboxLayout>
 </ScrollView>

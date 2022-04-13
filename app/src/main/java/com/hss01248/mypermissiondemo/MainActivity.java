@@ -2,6 +2,7 @@ package com.hss01248.mypermissiondemo;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.util.Pair;
 
 import android.Manifest;
 import android.content.pm.PackageInfo;
@@ -18,7 +19,9 @@ import com.blankj.utilcode.util.ToastUtils;
 import com.blankj.utilcode.util.Utils;
 import com.hss01248.location.LocationUtil;
 import com.hss01248.location.MyLocationCallback;
+import com.hss01248.location.rx.RxLocationUtil;
 import com.hss01248.location.rx.RxQuietLocationUtil;
+import com.hss01248.location.rx.RxQuietLocationUtil2;
 import com.hss01248.permission.MyPermissions;
 import com.hss01248.permission.ext.IExtPermission;
 import com.hss01248.permission.ext.IExtPermissionCallback;
@@ -528,5 +531,40 @@ public class MainActivity extends AppCompatActivity {
 
     public void concat(View view) {
 
+    }
+
+    public void rxLocation2(View view) {
+        RxLocationUtil.getLocation(this, new MyLocationCallback() {
+                            @Override
+                            public void onSuccess(Location location, String msg) {
+
+                            }
+
+                            @Override
+                            public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
+
+                            }
+                        })
+                .subscribe(new Observer<Pair<String, Location>>() {
+                    @Override
+                    public void onSubscribe(@io.reactivex.annotations.NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(@io.reactivex.annotations.NonNull Pair<String, Location> stringLocationPair) {
+                        LogUtils.w("onNext",stringLocationPair);
+                    }
+
+                    @Override
+                    public void onError(@io.reactivex.annotations.NonNull Throwable e) {
+                        LogUtils.w("onError",e);
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        LogUtils.i("oncomplete");
+                    }
+                });
     }
 }
