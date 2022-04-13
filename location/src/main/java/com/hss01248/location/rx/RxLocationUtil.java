@@ -328,7 +328,7 @@ public class RxLocationUtil {
 
         }
     }
-    //todo 对接 emitter.onNext();
+    //todo  这个方法不行  对接 emitter.onNext();
     private static void connectEmitterAndObservable(ObservableEmitter<Pair<String, Location>> emitter,Observable<Pair<String, Location>> pairObservable){
         pairObservable.subscribe(new Observer<Pair<String, Location>>() {
             @Override
@@ -337,6 +337,7 @@ public class RxLocationUtil {
 
             @Override
             public void onNext(@io.reactivex.annotations.NonNull Pair<String, Location> stringLocationPair) {
+                LogUtils.w("connectEmitterAndObservable-onNext",stringLocationPair);
                 emitter.onNext(stringLocationPair);
             }
 
