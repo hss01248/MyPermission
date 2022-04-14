@@ -369,25 +369,7 @@ public class MainActivity extends AppCompatActivity {
         nums.add(1);
         nums.add(9);
         AtomicInteger atomicInteger = new AtomicInteger(2);
-
-        final ObservableEmitter<Integer>[] emitterOut = new ObservableEmitter[1];
-
         Observable.fromIterable(nums)
-        /*Observable.create(new ObservableOnSubscribe<Integer>() {
-            @Override
-            public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<Integer> emitter) throws Exception {
-                emitterOut[0] = emitter;
-                emitter.onNext(1);
-                emitter.onNext(9);
-
-                emitter.onComplete();
-               *//* int i = atomicInteger.decrementAndGet();
-                if(i ==0){
-                    LogUtils.i("Observable.create-emitter.onComplete()");
-                    emitter.onComplete();
-                }*//*
-            }
-        })*/
                 .subscribeOn(Schedulers.io())
                 .flatMap(new Function<Integer, ObservableSource<String>>() {
                     @Override
@@ -398,7 +380,7 @@ public class MainActivity extends AppCompatActivity {
                                 //Thread.sleep(1500);
                                 emitter.onNext(integer+"+flatMap(Observable.create)");
                                 emitter.onComplete();
-                                //todo 每一个都要调用onComplete,而不能自己计数
+                                //todo 每一个都要调用onComplete,而不能自己计数.下面代码是错误的
                                 /*int i = atomicInteger.decrementAndGet();
                                 if(i ==0){
                                     LogUtils.i("flatMap-emitter.onComplete()");
