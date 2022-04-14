@@ -58,6 +58,9 @@ import io.reactivex.ObservableTransformer;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.Subject;
 
 /**
@@ -127,63 +130,68 @@ public class RxLocationUtil {
         if (QuietLocationUtil.isLocationEnabled(locationManager)) {
            return checkPermission(context, timeout, showBeforeRequest, showAfterRequest, callback);
         }
-        return Observable.create(new ObservableOnSubscribe<Pair<String, Location>>() {
-            @Override
-            public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<Pair<String, Location>> emitter) throws Exception {
-                callback.onGmsSwitchDialogShow();
-                //开关关闭,就去申请打开开关
-                AlertDialog alertDialog = new AlertDialog.Builder(ActivityUtils.getTopActivity())
-                        .setTitle(R.string.location_tip)
-                        .setMessage(R.string.location_msg_gps)
-                        .setPositiveButton(R.string.location_ok, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                Intent locationIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                                StartActivityUtil.goOutAppForResult(ActivityUtils.getTopActivity(), locationIntent, new ActivityResultListener() {
-                                    @Override
-                                    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-                                        if (!QuietLocationUtil.isLocationEnabled(locationManager)) {
-                                            callback.onGmsDialogCancelClicked();
-                                            emitter.onError(new LocationFailException("location switch off-2").setFailBeforeReallyRequest(true));
-                                           // callback.onFailed(2, "location switch off-2",true);
-                                            return;
-                                        }
-                                        callback.onGmsDialogOkClicked();
-                                        Observable<Pair<String, Location>> pairObservable = checkPermission(context, timeout, showBeforeRequest, showAfterRequest, callback);
-                                        connectEmitterAndObservable(emitter,pairObservable);
-                                    }
 
-                                    @Override
-                                    public void onActivityNotFound(Throwable e) {
+        return Observable.create(new ObservableOnSubscribe<Integer>() {
+             @Override
+             public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<Integer> emitter) throws Exception {
+                 callback.onGmsSwitchDialogShow();
+                 //开关关闭,就去申请打开开关
+                 AlertDialog alertDialog = new AlertDialog.Builder(ActivityUtils.getTopActivity())
+                         .setTitle(R.string.location_tip)
+                         .setMessage(R.string.location_msg_gps)
+                         .setPositiveButton(R.string.location_ok, new DialogInterface.OnClickListener() {
+                             @Override
+                             public void onClick(DialogInterface dialog, int which) {
+                                 Intent locationIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                                 StartActivityUtil.goOutAppForResult(ActivityUtils.getTopActivity(), locationIntent, new ActivityResultListener() {
+                                     @Override
+                                     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+                                         if (!QuietLocationUtil.isLocationEnabled(locationManager)) {
+                                             callback.onGmsDialogCancelClicked();
+                                             emitter.onError(new LocationFailException("location switch off-2").setFailBeforeReallyRequest(true));
+                                             // callback.onFailed(2, "location switch off-2",true);
+                                             return;
+                                         }
+                                         callback.onGmsDialogOkClicked();
+                                         emitter.onNext(1);
+                                         emitter.onComplete();
+                                     }
 
-                                    }
-                                });
+                                     @Override
+                                     public void onActivityNotFound(Throwable e) {
 
-                            }
-                        }).setNegativeButton(R.string.location_cancel, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                callback.onGmsDialogCancelClicked();
-                                emitter.onError(new LocationFailException("location switch off").setFailBeforeReallyRequest(true));
-                               // callback.onFailed(2, "location switch off",true);
-                            }
-                        }).create();
-                alertDialog.setCanceledOnTouchOutside(false);
-                alertDialog.setCancelable(false);
-                alertDialog.show();
-            }
-        }).subscribeOn(AndroidSchedulers.mainThread());
+                                     }
+                                 });
 
+                             }
+                         }).setNegativeButton(R.string.location_cancel, new DialogInterface.OnClickListener() {
+                             @Override
+                             public void onClick(DialogInterface dialog, int which) {
+                                 callback.onGmsDialogCancelClicked();
+                                 emitter.onError(new LocationFailException("location switch off").setFailBeforeReallyRequest(true));
+                                 // callback.onFailed(2, "location switch off",true);
+                             }
+                         }).create();
+                 alertDialog.setCanceledOnTouchOutside(false);
+                 alertDialog.setCancelable(false);
+                 alertDialog.show();
 
-
+             }
+         }).subscribeOn(AndroidSchedulers.mainThread())
+         .flatMap(new Function<Integer, ObservableSource<Pair<String, Location>>>() {
+             @Override
+             public ObservableSource<Pair<String, Location>> apply(@io.reactivex.annotations.NonNull Integer integer) throws Exception {
+                 return checkPermission(context, timeout, showBeforeRequest, showAfterRequest, callback);
+             }
+         });
     }
 
     private static Observable<Pair<String,Location>> checkSwitchByGms(Context context, boolean silent, int timeout, boolean showBeforeRequest,
                                          boolean showAfterRequest,boolean asQuickAsPossible,boolean useLastKnownLocation, MyLocationCallback callback, boolean isFirstIn) {
-
-        return Observable.create(new ObservableOnSubscribe<Pair<String, Location>>() {
+        final LocationSettingsResult[] result0 = {null};
+        return Observable.create(new ObservableOnSubscribe<String>() {
             @Override
-            public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<Pair<String, Location>> emitter) throws Exception {
+            public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<String> emitter) throws Exception {
                 try {
                     GoogleApiClient googleApiClient = new GoogleApiClient.Builder(context)
                             .addApi(LocationServices.API).build();
@@ -202,8 +210,8 @@ public class RxLocationUtil {
                         @Override
                         public void onResult(LocationSettingsResult result) {
                             if (result == null) {
-                                Observable<Pair<String, Location>> location = getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false, asQuickAsPossible, useLastKnownLocation, callback);
-                                connectEmitterAndObservable(emitter,location);
+                                emitter.onNext("getLocation");
+                                emitter.onComplete();
                                 return;
                             }
                             LogUtils.i(result.getStatus(), result.getLocationSettingsStates());
@@ -215,14 +223,17 @@ public class RxLocationUtil {
                                     if(!isFirstIn){
                                         callback.onGmsDialogOkClicked();
                                     }
-                                    checkPermission(context, timeout, showBeforeRequest, showAfterRequest, callback);
+                                    emitter.onNext("checkPermission");
+                                    emitter.onComplete();
+
                                     break;
                                 case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                                     //Location settings are not satisfied. Show the user a dialog to upgrade location settings
                                     if (isFirstIn) {
+                                        result0[0] = result;
                                         callback.onGmsSwitchDialogShow();
-                                        Observable<Pair<String, Location>> pairObservable = requestGmsSwitch(context, silent, timeout, showAfterRequest, showAfterRequest, asQuickAsPossible, useLastKnownLocation, callback, result);
-                                        connectEmitterAndObservable(emitter,pairObservable);
+                                        emitter.onNext("requestGmsSwitch");
+                                        emitter.onComplete();
                                     } else {
                                         callback.onGmsDialogCancelClicked();
                                         emitter.onError(new LocationFailException("location switch off-gms").setFailBeforeReallyRequest(true));
@@ -236,23 +247,39 @@ public class RxLocationUtil {
                                     //Location settings are inadequate, and cannot be fixed here. Dialog not created.
                                     //todo
                                     Log.w("gms", "Error enabling location. Please try again");
-                                    Observable<Pair<String, Location>> location =  getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false,asQuickAsPossible,useLastKnownLocation , callback);
-                                    connectEmitterAndObservable(emitter,location);
+                                    emitter.onNext("getLocation");
+                                    emitter.onComplete();
                                     break;
                                 default:
                                     //todo
                                     Log.w("gms", "Error enabling location. Please try again2");
-                                    Observable<Pair<String, Location>> location2 =  getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false, asQuickAsPossible,useLastKnownLocation ,callback);
-                                    connectEmitterAndObservable(emitter,location2);
+                                    emitter.onNext("getLocation");
+                                    emitter.onComplete();
                                     break;
                             }
+
                         }
                     });
                 } catch (Throwable throwable) {
                     throwable.printStackTrace();
                 }
             }
-        });
+        }).subscribeOn(Schedulers.io())
+              .flatMap(new Function<String, ObservableSource<Pair<String,Location>>>() {
+                  @Override
+                  public ObservableSource<Pair<String,Location>> apply(@io.reactivex.annotations.NonNull String s) throws Exception {
+                      switch (s){
+                          case "getLocation":
+                              return getLocation(context, silent, timeout, showBeforeRequest,
+                                      showAfterRequest, false,asQuickAsPossible,useLastKnownLocation , callback);
+                          case "requestGmsSwitch":
+                              return requestGmsSwitch(context, silent, timeout, showAfterRequest, showAfterRequest, asQuickAsPossible, useLastKnownLocation, callback, result0[0]);
+                          case "checkPermission":
+                              return  checkPermission(context, timeout, showBeforeRequest, showAfterRequest, callback);
+                      }
+                      return null;
+                  }
+              });
 
 
     }
@@ -274,8 +301,8 @@ public class RxLocationUtil {
                                    Log.i("location", "PendingIntent unable to execute request.");
                                    e.printStackTrace();
                                    //todo
-                                   Observable<Pair<String, Location>> location = getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false, asQuickAsPossible, useLastKnownLocation, callback);
-                                    connectEmitterAndObservable(emitter,location);
+                                   emitter.onNext(new Pair<>("getLocation",null));
+                                   emitter.onComplete();
                                }
                            }
                        }, 300);
@@ -284,9 +311,8 @@ public class RxLocationUtil {
 
                    @Override
                    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-                       //再次检查
-                       Observable<Pair<String, Location>> pairObservable = checkSwitchByGms(context, silent, timeout, showBeforeRequest, showAfterRequest, asQuickAsPossible, useLastKnownLocation, callback, false);
-                        connectEmitterAndObservable(emitter,pairObservable);
+                       emitter.onNext(new Pair<>("checkSwitchByGms",null));
+                       emitter.onComplete();
                    }
 
                    @Override
@@ -295,7 +321,16 @@ public class RxLocationUtil {
                    }
                });
            }
-       }).subscribeOn(AndroidSchedulers.mainThread());
+       }).subscribeOn(AndroidSchedulers.mainThread())
+               .flatMap(new Function<Pair<String, Location>, ObservableSource<Pair<String, Location>>>() {
+                   @Override
+                   public ObservableSource<Pair<String, Location>> apply(@io.reactivex.annotations.NonNull Pair<String, Location> stringLocationPair) throws Exception {
+                       if(stringLocationPair.first.equals("checkSwitchByGms")){
+                           return checkSwitchByGms(context, silent, timeout, showBeforeRequest, showAfterRequest, asQuickAsPossible, useLastKnownLocation, callback, false);
+                       }
+                       return getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false, asQuickAsPossible, useLastKnownLocation, callback);
+                   }
+               });
 
     }
 
@@ -313,8 +348,8 @@ public class RxLocationUtil {
                             new PermissionUtils.FullCallback() {
                                 @Override
                                 public void onGranted(@NonNull List<String> granted) {
-                                    Observable<Pair<String, Location>> pairObservable = doRequestLocation(context, timeout, callback);
-                                    connectEmitterAndObservable(emitter,pairObservable);
+                                    emitter.onNext(new Pair<>("doRequestLocation",null));
+                                    emitter.onComplete();
                                 }
 
                                 @Override
@@ -324,7 +359,14 @@ public class RxLocationUtil {
                                 }
                             }, Manifest.permission.ACCESS_FINE_LOCATION);
                 }
-            }).subscribeOn(AndroidSchedulers.mainThread());
+            }).subscribeOn(AndroidSchedulers.mainThread())
+                    .flatMap(new Function<Pair<String, Location>, ObservableSource<Pair<String, Location>>>() {
+                        @Override
+                        public ObservableSource<Pair<String, Location>> apply(@io.reactivex.annotations.NonNull Pair<String, Location> stringLocationPair) throws Exception {
+
+                            return doRequestLocation(context, timeout, callback);
+                        }
+                    });
 
         }
     }
@@ -360,8 +402,14 @@ public class RxLocationUtil {
         return Observable.create(new ObservableOnSubscribe<Pair<String, Location>>() {
             @Override
             public void subscribe(@io.reactivex.annotations.NonNull ObservableEmitter<Pair<String, Location>> emitter) throws Exception {
-                Observable<Pair<String,Location>> pairObservable =  new RxQuietLocationUtil2().getLocation(Utils.getApp(),timeout,false);
-                connectEmitterAndObservable(emitter,pairObservable);
+                emitter.onNext(new Pair<>("getLocation",null));
+                emitter.onComplete();
+            }
+        }).flatMap(new Function<Pair<String, Location>, ObservableSource<Pair<String, Location>>>() {
+            @Override
+            public ObservableSource<Pair<String, Location>> apply(@io.reactivex.annotations.NonNull Pair<String, Location> stringLocationPair) throws Exception {
+
+                return new RxQuietLocationUtil2().getLocation(Utils.getApp(),timeout,false);
             }
         });
     }
