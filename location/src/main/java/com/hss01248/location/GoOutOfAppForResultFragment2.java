@@ -25,6 +25,10 @@ public class GoOutOfAppForResultFragment2 extends BaseTransFragment<Intent> {
     boolean startWaitingResult;
     boolean consumed;
 
+    public GoOutOfAppForResultFragment2() {
+        super();
+    }
+
     public GoOutOfAppForResultFragment2(FragmentActivity activity, Intent intent) {
         super(activity, intent);
     }
