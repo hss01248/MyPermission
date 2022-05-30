@@ -25,6 +25,10 @@ public class GoOutOfAppForResultFragment2 extends BaseTransFragment<Intent> {
     boolean startWaitingResult;
     boolean consumed;
 
+    public GoOutOfAppForResultFragment2() {
+        super();
+    }
+
     public GoOutOfAppForResultFragment2(FragmentActivity activity, Intent intent) {
         super(activity, intent);
     }
@@ -33,11 +37,13 @@ public class GoOutOfAppForResultFragment2 extends BaseTransFragment<Intent> {
         requestCode = new Random().nextInt(8799);
         this.listener = listener;
         try {
-            if (!listener.onInterceptStartIntent(this, bean, requestCode)) {
+            if (listener != null && !listener.onInterceptStartIntent(this, bean, requestCode)) {
                 startActivityForResult(bean, requestCode);
             }
         } catch (Throwable throwable) {
-            listener.onActivityNotFound(throwable);
+            if(listener != null){
+                listener.onActivityNotFound(throwable);
+            }
             finish();
         }
     }
@@ -84,7 +90,9 @@ public class GoOutOfAppForResultFragment2 extends BaseTransFragment<Intent> {
     }
 
     protected void onStartOfResultBack(int requestCode, int resultCode, @Nullable Intent data) {
-        listener.onActivityResult(requestCode, resultCode, data);
+        if(listener != null){
+            listener.onActivityResult(requestCode, resultCode, data);
+        }
         if (StartActivityUtil.debugable) {
             Log.i("onActivityResult2", "req:" + requestCode + ",result:onStartOfResultBack,data:null");
         }
