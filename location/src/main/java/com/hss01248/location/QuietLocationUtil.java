@@ -94,12 +94,21 @@ public class QuietLocationUtil {
             public void onFailed(int type, String msg,boolean isFailBeforeReallyRequest) {
                 Map<String, String> ext = new HashMap<>();
                 ext.put("msg", msg);
-                Location cache = getFromCache(ext, msg);
-                if (cache == null) {
+                if(configUseSpCache()){
+                    Location cache = getFromCache(ext, msg);
+                    if (cache == null) {
+                        finalListener.onFailed(type, ext.get("msg"));
+                    } else {
+                        finalListener.onSuccess(cache, ext.get("msg"));
+                    }
+                }else {
                     finalListener.onFailed(type, ext.get("msg"));
-                } else {
-                    finalListener.onSuccess(cache, ext.get("msg"));
                 }
+            }
+
+            @Override
+            public boolean configUseSpCache() {
+                return listener0.configUseSpCache();
             }
 
             @Override

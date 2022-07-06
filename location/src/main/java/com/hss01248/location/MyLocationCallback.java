@@ -19,6 +19,10 @@ public interface MyLocationCallback {
 
     default void onBeforeReallyRequest(){}
 
+    default boolean configUseSpCache(){
+       return true;
+    }
+
      void onFailed(int type,String msg,boolean isFailBeforeReallyRequest);
 
 

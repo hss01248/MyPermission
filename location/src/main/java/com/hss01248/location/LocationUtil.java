@@ -266,7 +266,7 @@ public class LocationUtil {
                         public void onDenied(@NonNull List<String> deniedForever, @NonNull List<String> denied) {
                             callback.onFailed(1, "no permission",true);
                         }
-                    }, Manifest.permission.ACCESS_FINE_LOCATION);
+                    }, Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION);
         }
     }
 
