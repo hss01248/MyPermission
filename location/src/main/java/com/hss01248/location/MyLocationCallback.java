@@ -23,6 +23,14 @@ public interface MyLocationCallback {
        return true;
     }
 
+    /**
+     * 只判断/请求定位权限和定位开关,不实际发起定位请求
+     * @return
+     */
+    default boolean configJustAskPermissionAndSwitch(){
+        return false;
+    }
+
      void onFailed(int type,String msg,boolean isFailBeforeReallyRequest);
 
 
