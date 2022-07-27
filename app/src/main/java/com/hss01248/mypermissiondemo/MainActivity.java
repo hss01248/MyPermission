@@ -114,6 +114,11 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
+            public void onGmsSwitchDialogShow() {
+                MyLocationCallback.super.onGmsSwitchDialogShow();
+            }
+
+            @Override
             public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
                 ToastUtils.showLong(type+","+msg);
                 LogUtils.w(msg,type);

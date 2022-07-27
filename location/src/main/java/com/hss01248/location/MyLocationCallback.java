@@ -11,6 +11,12 @@ public interface MyLocationCallback {
 
    default void onEachLocationChanged(Location location,String provider){}
 
+    default void onEachLocationChanged(Location location,String provider,long costOfJustThisUpdate,long costFromUtilStart){
+       onEachLocationChanged(location, provider);
+    }
+
+    default void onEachLocationStart(String provider){}
+
     default void onGmsSwitchDialogShow(){}
 
     default void onGmsDialogOkClicked(){}
@@ -22,6 +28,15 @@ public interface MyLocationCallback {
     default boolean configUseSpCache(){
        return true;
     }
+
+    default boolean configUseSystemLastKnownLocation(){
+        return true;
+    }
+
+    default boolean configNoNetworkProvider(){
+        return false;
+    }
+
 
     /**
      * 只判断/请求定位权限和定位开关,不实际发起定位请求
