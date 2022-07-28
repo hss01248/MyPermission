@@ -18,6 +18,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 
 import com.blankj.utilcode.util.LogUtils;
+import com.blankj.utilcode.util.StringUtils;
 import com.blankj.utilcode.util.Utils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -180,7 +181,7 @@ public class QuietLocationUtil {
                 timeoutRun = new Runnable() {
                     @Override
                     public void run() {
-                        callback(map, timeOut + "s timeout", true, finalListener3);
+                        callback(map, timeOut/1000 + "s "+ StringUtils.getString(R.string.location_timeout_msg), true, finalListener3);
                     }
                 };
                 handler.postDelayed(timeoutRun, timeOut);
@@ -620,7 +621,12 @@ public class QuietLocationUtil {
             }
 
         } else {
-            listener.onFailed(77, "no location get when api request end");
+            if(isTimeout){
+                listener.onFailed(88, msg);
+            }else {
+                listener.onFailed(77, "no location get when api request end");
+            }
+
         }
         if (!isTimeout) {
             LogUtils.i("正常结束,去掉调那些timeoutRunnable");

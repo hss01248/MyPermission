@@ -104,13 +104,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getLocation(View view) {
-        LocationUtil.getLocation(view.getContext(),false,10000,false,false,LogProxy.getProxy(new MyLocationCallback() {
+        LocationUtil.getLocation(view.getContext(),false,1000,false,false,LogProxy.getProxy(new MyLocationCallback() {
 
             @Override
             public void onSuccess(Location location, String msg) {
                 ToastUtils.showLong("success,"+msg+", location:"+location);
                 LogUtils.i(msg,location);
-
             }
 
             @Override

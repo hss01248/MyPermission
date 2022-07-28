@@ -5,4 +5,5 @@
     <string name="location_msg_gps">In order to improve the accuracy of positioning and serve you better, please open gps?</string>
     <string name="location_msg_permission">Please give me the permission to locate?</string>
     <string name="location_tip">Tips</string>
+    <string name="location_timeout_msg">timeout</string>
 </resources>
