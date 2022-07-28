@@ -114,6 +114,16 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
+            public boolean configUseSpCache() {
+                return false;
+            }
+
+            @Override
+            public boolean configUseSystemLastKnownLocation() {
+                return false;
+            }
+
+            @Override
             public void onGmsSwitchDialogShow() {
                 MyLocationCallback.super.onGmsSwitchDialogShow();
             }
