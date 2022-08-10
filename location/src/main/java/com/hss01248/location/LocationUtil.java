@@ -38,6 +38,7 @@ import com.hss01248.permission.MyPermissions;
 
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @Despciption todo
@@ -163,10 +164,30 @@ public class LocationUtil {
             LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder().addLocationRequest(locationRequest);
             builder.setAlwaysShow(true);
 
+            boolean[] hasTimeout = new boolean[]{false};
+            //超时处理
+            ThreadUtils.executeBySingleWithDelay(new ThreadUtils.SimpleTask<Object>() {
+                @Override
+                public Object doInBackground() throws Throwable {
+                    return null;
+                }
+
+                @Override
+                public void onSuccess(Object result) {
+                    hasTimeout[0] = true;
+                    LogUtils.w("gms 判断状态超时,辣鸡gms: LocationServices.SettingsApi.checkLocationSettings");
+                    getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false,asQuickAsPossible,useLastKnownLocation ,callback);
+                }
+            },2000, TimeUnit.MILLISECONDS);
+
             PendingResult<LocationSettingsResult> result = LocationServices.SettingsApi.checkLocationSettings(googleApiClient, builder.build());
+            // 有的手机TMD这里不回调,也不抛异常, 辣鸡GMS
             result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
                 @Override
                 public void onResult(LocationSettingsResult result) {
+                    if(hasTimeout[0]){
+                        return;
+                    }
                     if (result == null) {
                         getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false,asQuickAsPossible,useLastKnownLocation ,callback);
                         return;
