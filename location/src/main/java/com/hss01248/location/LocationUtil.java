@@ -164,7 +164,7 @@ public class LocationUtil {
             LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder().addLocationRequest(locationRequest);
             builder.setAlwaysShow(true);
 
-            boolean[] hasTimeout = new boolean[]{false};
+            boolean[] haveCallbacked = new boolean[]{false};
             //超时处理
             ThreadUtils.executeBySingleWithDelay(new ThreadUtils.SimpleTask<Object>() {
                 @Override
@@ -174,7 +174,10 @@ public class LocationUtil {
 
                 @Override
                 public void onSuccess(Object result) {
-                    hasTimeout[0] = true;
+                    if(haveCallbacked[0]){
+                        return;
+                    }
+                    haveCallbacked[0] = true;
                     LogUtils.w("gms 判断状态超时,辣鸡gms: LocationServices.SettingsApi.checkLocationSettings");
                     getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false,asQuickAsPossible,useLastKnownLocation ,callback);
                 }
@@ -185,9 +188,10 @@ public class LocationUtil {
             result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
                 @Override
                 public void onResult(LocationSettingsResult result) {
-                    if(hasTimeout[0]){
+                    if(haveCallbacked[0]){
                         return;
                     }
+                    haveCallbacked[0] = true;
                     if (result == null) {
                         getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false,asQuickAsPossible,useLastKnownLocation ,callback);
                         return;
