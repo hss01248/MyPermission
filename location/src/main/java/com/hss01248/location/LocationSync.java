@@ -1,17 +1,25 @@
 package com.hss01248.location;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.location.Address;
 import android.location.Location;
+import android.location.LocationProvider;
 import android.text.TextUtils;
-import android.util.Log;
 
+import com.blankj.utilcode.util.GsonUtils;
 import com.blankj.utilcode.util.LogUtils;
+import com.blankj.utilcode.util.SPUtils;
+import com.blankj.utilcode.util.ThreadUtils;
 import com.blankj.utilcode.util.Utils;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 /**
  * @Despciption todo
@@ -29,6 +37,103 @@ public class LocationSync {
     private static final String PARAMS_LOCATION = "locationxx";
     private static final String PARAMS_LAT = "latitudexx";
     private static final String PARAMS_LONG = "longitudexx";
+
+    private static  final TreeSet<LocationInfo> cachedLocations = new TreeSet<>(new Comparator<LocationInfo>() {
+        @Override
+        public int compare(LocationInfo o1, LocationInfo o2) {
+            return (int) (o2.timeStamp - o1.timeStamp);
+        }
+    });
+
+    public static void putToCache(Location location, String startProviderName,
+                                  boolean isFromLastKnowLocation,
+                                  long timeCost,
+                                  LocationProvider provider){
+        if(location == null){
+            return;
+        }
+        LocationInfo info = new LocationInfo();
+        info.lattidude = location.getLatitude();
+        info.longtitude = location.getLongitude();
+        info.timeStamp = location.getTime();
+        info.altitude = location.getAltitude();
+        info.accuracy = location.getAccuracy();
+        info.bearing = location.getBearing();
+        info.speed = location.getSpeed();
+        info.timeCost = timeCost;
+        info.realProvider = location.getProvider();
+        //location.getSpeedAccuracyMetersPerSecond()
+        if(isFromLastKnowLocation){
+            info.calledMethod = startProviderName+"-lastKnowLocation";
+        }else {
+            info.calledMethod = startProviderName;
+        }
+        if(provider != null){
+            info.providerInfo = new ProviderInfo();
+            info.providerInfo.initByProvider(provider);
+        }
+        cachedLocations.add(info);
+
+        if(LogUtils.getConfig().isLogSwitch()){
+            String json = new GsonBuilder().serializeNulls().setPrettyPrinting().create().toJson(cachedLocations);
+            LogUtils.json(json);
+        }
+
+        saveAsync(cachedLocations);
+    }
+
+    private static void saveAsync(TreeSet<LocationInfo> cachedLocations) {
+        //长度控制: 最多十条
+        Iterator<LocationInfo> iterator = cachedLocations.iterator();
+        int count = 0;
+        while (iterator.hasNext()){
+            count++;
+            LocationInfo next = iterator.next();
+            if(count > 9){
+                iterator.remove();
+            }
+        }
+        String json = GsonUtils.toJson(cachedLocations);
+        SPUtils.getInstance().put("cachedLocations",json);
+    }
+    public static void initAsync(){
+        ThreadUtils.executeByCached(new ThreadUtils.SimpleTask<Object>() {
+            @Override
+            public Object doInBackground() throws Throwable {
+                String str = SPUtils.getInstance().getString("cachedLocations","");
+                if(TextUtils.isEmpty(str)){
+                    return null;
+                }
+                List<LocationInfo> list = GsonUtils.fromJson(str,new TypeToken<List<LocationInfo>>(){}.getType());
+                if(list != null && !list.isEmpty()){
+                    cachedLocations.addAll(list);
+                }
+                return null;
+            }
+
+            @Override
+            public void onSuccess(Object result) {
+
+            }
+        });
+
+
+    }
+
+    public static LocationInfo getLocation2(){
+        if(cachedLocations.isEmpty()){
+            return null;
+        }
+        try {
+            for (LocationInfo cachedLocation : cachedLocations) {
+                return cachedLocation;
+            }
+        }catch (Throwable throwable){
+            throwable.printStackTrace();
+        }
+
+        return cachedLocations.first();
+    }
 
 
     /**

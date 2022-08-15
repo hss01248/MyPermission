@@ -330,30 +330,30 @@ public class QuietLocationUtil {
 
                 @Override
                 public void run() {
-                    if(listener.configUseSystemLastKnownLocation()){
-                        fusedLocationProviderClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
-                            @Override
-                            public void onComplete(@NonNull Task<Location> task) {
-                                Location lastLocation1 = getResultSafe(task);
-                                //Fatal Exception: com.google.android.gms.tasks.RuntimeExecutionException
-                                //com.google.android.gms.common.api.ApiException: 8: The connection to Google Play services was lost
-                                //com.google.android.gms.tasks.zzu.getResult (zzu.java:15)
-                                //devicedata.gps.SilentLocationUtil$3$1.onComplete (SilentLocationUtil.java:265)
-                                //com.google.android.gms.tasks.zzj.run (zzj.java:4)
-                                //com.android.internal.os.ZygoteInit.main (ZygoteInit.java:873)
-                                if (lastLocation1 != null) {
-                                    LogUtils.i("gms", "get last location:" + lastLocation1);
-                                    map.put(lastLocation1.getProvider(), lastLocation1);
-                                    if(LocationSync.getLongitude() ==0){
-                                        LocationSync.save(lastLocation1.getLatitude(), lastLocation1.getLongitude());
-                                        LocationSync.saveLocation(lastLocation1);
-                                    }
-                                }else {
-                                    LogUtils.w("gms", "get last location:" + lastLocation1);
-                                }
+                    fusedLocationProviderClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Location> task) {
+                            Location lastLocation1 = getResultSafe(task);
+                            //Fatal Exception: com.google.android.gms.tasks.RuntimeExecutionException
+                            //com.google.android.gms.common.api.ApiException: 8: The connection to Google Play services was lost
+                            //com.google.android.gms.tasks.zzu.getResult (zzu.java:15)
+                            //devicedata.gps.SilentLocationUtil$3$1.onComplete (SilentLocationUtil.java:265)
+                            //com.google.android.gms.tasks.zzj.run (zzj.java:4)
+                            //com.android.internal.os.ZygoteInit.main (ZygoteInit.java:873)
+                            if (lastLocation1 != null) {
+                                LogUtils.i("gms", "get last location:" + lastLocation1);
+                                LocationSync.putToCache(lastLocation1,"gms",true,0,locationManager.getProvider(lastLocation1.getProvider()));
+                                /*map.put(lastLocation1.getProvider(), lastLocation1);
+                                if(LocationSync.getLongitude() ==0){
+                                    LocationSync.save(lastLocation1.getLatitude(), lastLocation1.getLongitude());
+                                    LocationSync.saveLocation(lastLocation1);
+                                }*/
+                            }else {
+                                LogUtils.w("gms", "get last location:" + lastLocation1);
                             }
-                        });
-                    }
+                        }
+                    });
+
                     LogUtils.i("start request gms");
                     long start = System.currentTimeMillis();
                     fusedLocationProviderClient.requestLocationUpdates(new LocationRequest()
@@ -365,11 +365,17 @@ public class QuietLocationUtil {
                             LogUtils.i("onLocationChanged", result,"gms","耗时(ms):",
                                     (System.currentTimeMillis() - start),"距最初耗时(ms)",System.currentTimeMillis() - startFromBeginning);
                             if (result != null && result.getLocations() != null && !result.getLocations().isEmpty()) {
-                                Location location = result.getLocations().get(0);
+                                LogUtils.w("gmslocations",result.getLocations());
+
+                                List<Location> locations = result.getLocations();
+                                for (Location location1 : locations) {
+                                    LocationSync.putToCache(location1,"gms",false,0,locationManager.getProvider(location1.getProvider()));
+                                }
+                                Location location = locations.get(0);
                                 listener.onEachLocationChanged(location,"gms",System.currentTimeMillis() - start,System.currentTimeMillis() - startFromBeginning);
                                 countSet.remove("gms");
-                                LocationSync.save(location.getLatitude(), location.getLongitude());
-                                LocationSync.saveLocation(location);
+                                //LocationSync.save(location.getLatitude(), location.getLongitude());
+                                //LocationSync.saveLocation(location);
                                 onEnd(location, map, countSet, listener);
                             } else {
                                 countSet.remove("gms");
@@ -489,20 +495,16 @@ public class QuietLocationUtil {
                 LogUtils.d("start request " + provider);
                 listener.onEachLocationStart(provider);
                 long start = System.currentTimeMillis();
-                if(listener.configUseSystemLastKnownLocation()){
-                    @SuppressLint("MissingPermission") Location lastKnownLocation = locationManager.getLastKnownLocation(provider);
-                    if (lastKnownLocation != null) {
-                        //LogUtils.d(lastKnownLocation);
-                        LogUtils.d("lastKnownLocation", lastKnownLocation, provider, "耗时(ms):", (System.currentTimeMillis() - start)
-                                ,"距最初耗时(ms)",System.currentTimeMillis() - startFromBeginning);
-                        map.put(lastKnownLocation.getProvider(), lastKnownLocation);
-                        //如果本地缓存没有,就更新一次
-                        if(LocationSync.getLongitude() ==0){
-                            LocationSync.save(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
-                            LocationSync.saveLocation(lastKnownLocation);
-                        }
-                    }
+                //if(listener.configUseSystemLastKnownLocation()){
+                @SuppressLint("MissingPermission") Location lastKnownLocation = locationManager.getLastKnownLocation(provider);
+                if (lastKnownLocation != null) {
+                    //LogUtils.d(lastKnownLocation);
+                    LogUtils.d("lastKnownLocation", lastKnownLocation, provider, "耗时(ms):", (System.currentTimeMillis() - start)
+                            ,"距最初耗时(ms)",System.currentTimeMillis() - startFromBeginning);
+                    //map.put(lastKnownLocation.getProvider(), lastKnownLocation);
+                    LocationSync.putToCache(lastKnownLocation,provider,true,System.currentTimeMillis() - start,locationManager.getProvider(provider));
                 }
+               // }
 
                 locationManager.requestSingleUpdate(provider, new android.location.LocationListener() {
                     @Override
@@ -510,8 +512,7 @@ public class QuietLocationUtil {
                         LogUtils.d("onLocationChanged", location, provider, "耗时(ms):",
                                 (System.currentTimeMillis() - start),"距最初耗时(ms)",System.currentTimeMillis() - startFromBeginning);
                         if(location != null){
-                            LocationSync.save(location.getLatitude(), location.getLongitude());
-                            LocationSync.saveLocation(location);
+                            LocationSync.putToCache(location,provider,false,System.currentTimeMillis() - start,locationManager.getProvider(provider));
                             listener.onEachLocationChanged(location,provider,System.currentTimeMillis() - start,System.currentTimeMillis() - startFromBeginning);
                         }
                         countSet.remove(provider);

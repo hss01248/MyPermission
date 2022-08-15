@@ -2,6 +2,8 @@ package com.hss01248.mypermissiondemo;
 
 import androidx.multidex.MultiDexApplication;
 
+import com.hss01248.location.LocationSync;
+
 /**
  * @Despciption todo
  * @Author hss
@@ -12,5 +14,6 @@ public class BaseApp extends MultiDexApplication {
     @Override
     public void onCreate() {
         super.onCreate();
+        LocationSync.initAsync();
     }
 }
