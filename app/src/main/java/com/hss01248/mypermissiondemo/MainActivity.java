@@ -226,9 +226,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getLocationFast(View view) {
-        LocationUtil.getLocation(view.getContext(),false,5000,false,false,LogProxy.getProxy(new MyLocationFastCallback() {
-
-
+        LocationUtil.getLocation(view.getContext(),false,15000,false,false,
+               new MyLocationFastCallback() {
 
             @Override
             public void onSuccessFast(Location location, String msg) {
@@ -242,16 +241,11 @@ public class MainActivity extends AppCompatActivity {
                 LogUtils.w(msg,type);
             }
 
-            @Override
-            public boolean configUseSpCache() {
-                return true;
-            }
-
-            @Override
-            public boolean configUseSystemLastKnownLocation() {
-                return true;
-            }
-
-        }));
+           @Override
+           public long useCacheInTimeOfMills() {
+                //5min内有效
+               return 5*60*1000;
+           }
+       });
     }
 }
