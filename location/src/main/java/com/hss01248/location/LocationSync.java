@@ -6,6 +6,7 @@ import android.location.Location;
 import android.location.LocationProvider;
 import android.text.TextUtils;
 
+import com.blankj.utilcode.util.EncryptUtils;
 import com.blankj.utilcode.util.GsonUtils;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.SPUtils;
@@ -14,12 +15,15 @@ import com.blankj.utilcode.util.Utils;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
-import java.util.TreeSet;
 
 /**
  * @Despciption todo
@@ -38,12 +42,8 @@ public class LocationSync {
     private static final String PARAMS_LAT = "latitudexx";
     private static final String PARAMS_LONG = "longitudexx";
 
-    private static  final TreeSet<LocationInfo> cachedLocations = new TreeSet<>(new Comparator<LocationInfo>() {
-        @Override
-        public int compare(LocationInfo o1, LocationInfo o2) {
-            return (int) (o2.timeStamp - o1.timeStamp);
-        }
-    });
+    private static  final List<LocationInfo> cachedLocations = new ArrayList<>();
+    //PriorityBlockingQueue
 
     public static void putToCache(Location location, String startProviderName,
                                   boolean isFromLastKnowLocation,
@@ -52,16 +52,10 @@ public class LocationSync {
         if(location == null){
             return;
         }
-        LocationInfo info = new LocationInfo();
-        info.lattidude = location.getLatitude();
-        info.longtitude = location.getLongitude();
-        info.timeStamp = location.getTime();
-        info.altitude = location.getAltitude();
-        info.accuracy = location.getAccuracy();
-        info.bearing = location.getBearing();
-        info.speed = location.getSpeed();
+        LocationInfo info = toLocationInfo(location);
+
         info.timeCost = timeCost;
-        info.realProvider = location.getProvider();
+        info.secondsBeforeSaved = (System.currentTimeMillis() - info.timeStamp)/1000;
         //location.getSpeedAccuracyMetersPerSecond()
         if(isFromLastKnowLocation){
             info.calledMethod = startProviderName+"-lastKnowLocation";
@@ -69,32 +63,89 @@ public class LocationSync {
             info.calledMethod = startProviderName;
         }
         if(provider != null){
-            info.providerInfo = new ProviderInfo();
-            info.providerInfo.initByProvider(provider);
+           // info.providerInfo = new ProviderInfo();
+           // info.providerInfo.initByProvider(provider);
         }
-        cachedLocations.add(info);
+        boolean shouldSave = sortBeforeAdd(info, cachedLocations);
+        if(!shouldSave){
+            return;
+        }
+        try {
+            if(LogUtils.getConfig().isLogSwitch()){
+                String json = new GsonBuilder().serializeNulls().setPrettyPrinting().create().toJson(cachedLocations);
+                LogUtils.json(json);
+            }
 
-        if(LogUtils.getConfig().isLogSwitch()){
-            String json = new GsonBuilder().serializeNulls().setPrettyPrinting().create().toJson(cachedLocations);
-            LogUtils.json(json);
+            saveAsync();
+        }catch (Throwable throwable){
+            LogUtils.w(throwable);
         }
 
-        saveAsync(cachedLocations);
     }
 
-    private static void saveAsync(TreeSet<LocationInfo> cachedLocations) {
-        //长度控制: 最多十条
-        Iterator<LocationInfo> iterator = cachedLocations.iterator();
-        int count = 0;
-        while (iterator.hasNext()){
-            count++;
-            LocationInfo next = iterator.next();
-            if(count > 9){
-                iterator.remove();
+    /**
+     * 模拟PriorityBlockingQueue
+     * @param info
+     * @param cachedLocations
+     */
+    private static synchronized boolean sortBeforeAdd(LocationInfo info, List<LocationInfo> cachedLocations) {
+        try {
+            if(cachedLocations.contains(info)){
+                LogUtils.w("经纬度和时间相同,同一条数据,不添加到list:",info);
+                return false;
             }
+            List<LocationInfo> locationInfos2 = new ArrayList<>(cachedLocations);
+            locationInfos2.add(info);
+            Collections.sort(locationInfos2, new Comparator<LocationInfo>() {
+                @Override
+                public int compare(LocationInfo o1, LocationInfo o2) {
+                    return (int) (o2.timeStamp - o1.timeStamp);
+                }
+            });
+            if(locationInfos2.size() > 8){
+                List<LocationInfo> list = locationInfos2.subList(0, 8);
+                cachedLocations.clear();
+                cachedLocations.addAll(list);
+                //ConcurrentModificationException
+            }else {
+                cachedLocations.clear();
+                cachedLocations.addAll(locationInfos2);
+            }
+            LocationInfo fullLocationInfo = getFullLocationInfo();
+            if(fullLocationInfo != null){
+                save(fullLocationInfo.lattidude,fullLocationInfo.longtitude);
+            }
+        }catch (Throwable throwable){
+           LogUtils.w(throwable);
         }
-        String json = GsonUtils.toJson(cachedLocations);
-        SPUtils.getInstance().put("cachedLocations",json);
+        return true;
+    }
+
+    private static void sort() {
+        try {
+            Collections.sort(cachedLocations, new Comparator<LocationInfo>() {
+                @Override
+                public int compare(LocationInfo o1, LocationInfo o2) {
+                    return (int) (o2.timeStamp - o1.timeStamp);
+                }
+            });
+        }catch (Throwable throwable){
+            LogUtils.w(throwable);
+        }
+
+    }
+
+    private static synchronized void saveAsync() {
+
+        try {
+            //这里内部会遍历
+            String json = GsonUtils.toJson(cachedLocations);
+            //LogUtils.json(json);
+            SPUtils.getInstance().put("cachedLocations",json);
+        }catch (Throwable throwable){
+            throwable.printStackTrace();
+        }
+
     }
     public static void initAsync(){
         ThreadUtils.executeByCached(new ThreadUtils.SimpleTask<Object>() {
@@ -106,7 +157,9 @@ public class LocationSync {
                 }
                 List<LocationInfo> list = GsonUtils.fromJson(str,new TypeToken<List<LocationInfo>>(){}.getType());
                 if(list != null && !list.isEmpty()){
+                    cachedLocations.clear();
                     cachedLocations.addAll(list);
+                    sort();
                 }
                 return null;
             }
@@ -120,19 +173,84 @@ public class LocationSync {
 
     }
 
-    public static LocationInfo getLocation2(){
+    public static LocationInfo getFullLocationInfo(){
         if(cachedLocations.isEmpty()){
+            //发起一次定位:
+            //requestOnce();
             return null;
         }
         try {
-            for (LocationInfo cachedLocation : cachedLocations) {
-                return cachedLocation;
-            }
+            return cachedLocations.get(0);
         }catch (Throwable throwable){
             throwable.printStackTrace();
         }
 
-        return cachedLocations.first();
+        return null;
+    }
+
+    private static void requestOnce() {
+        ThreadUtils.executeByCached(new ThreadUtils.SimpleTask<Object>() {
+            @Override
+            public Object doInBackground() throws Throwable {
+                new QuietLocationUtil().getLocation(Utils.getApp(), new MyLocationCallback() {
+                    @Override
+                    public void onSuccess(Location location, String msg) {
+
+                    }
+
+                    @Override
+                    public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
+
+                    }
+                });
+                return null;
+            }
+
+            @Override
+            public void onSuccess(Object result) {
+
+            }
+        });
+    }
+
+    public static Location getLocation3(){
+        LocationInfo info = getFullLocationInfo();
+        if(info == null){
+            return null;
+        }
+        return toAndroidLocation(info);
+    }
+
+    public static Location toAndroidLocation(LocationInfo info){
+        Location location = new Location(info.realProvider);
+        location.setAltitude(info.altitude);
+        location.setTime(info.timeStamp);
+        location.setLongitude(info.longtitude);
+        location.setAccuracy(info.accuracy);
+        location.setLatitude(info.lattidude);
+        location.setBearing(info.bearing);
+        location.setSpeed(info.speed);
+        return location;
+    }
+
+    public static LocationInfo toLocationInfo(Location location){
+        if(location == null){
+            return null;
+        }
+        LocationInfo info = new LocationInfo();
+        info.lattidude = location.getLatitude();
+        info.longtitude = location.getLongitude();
+        info.timeStamp = location.getTime();
+        if(LogUtils.getConfig().isLogSwitch()){
+            info.timeStampStr = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(info.timeStamp));
+        }
+        info.locale = Locale.getDefault().getCountry();
+        info.altitude = location.getAltitude();
+        info.accuracy = location.getAccuracy();
+        info.bearing = location.getBearing();
+        info.speed = location.getSpeed();
+        info.realProvider = location.getProvider();
+        return info;
     }
 
 
@@ -142,6 +260,7 @@ public class LocationSync {
      * @param mLatitude 纬度
      * @param mLongitude 经度
      */
+    @Deprecated
     public static void save(double mLatitude, double mLongitude) {
         LogUtils.i(TAG, "设置:" + mLatitude + ", " + mLongitude);
         put(PARAMS_LAT, String.valueOf(mLatitude));
@@ -151,30 +270,21 @@ public class LocationSync {
 
     /**获取经度*/
     public static double getLongitude(){
-        String mLongitude = getString(PARAMS_LONG);
-        if(TextUtils.isEmpty(mLongitude)){
+        LocationInfo location2 = getFullLocationInfo();
+        if(location2 == null){
             return 0;
         }
-        try {
-            return Double.parseDouble(mLongitude);
-        }catch (Throwable throwable){
-            throwable.printStackTrace();
-            return 0;
-        }
+        return location2.longtitude;
     }
 
-    /**获取纬度*/
+    /**建议直接使用getFullLocationInfo*/
+    @Deprecated
     public static double getLatitude(){
-        String mLatitude = getString(PARAMS_LAT);
-        if(TextUtils.isEmpty(mLatitude)){
+        LocationInfo location2 = getFullLocationInfo();
+        if(location2 == null){
             return 0;
         }
-        try {
-            return Double.parseDouble(mLatitude);
-        }catch (Throwable throwable){
-            throwable.printStackTrace();
-            return 0;
-        }
+       return location2.lattidude;
 
     }
 
@@ -210,16 +320,19 @@ public class LocationSync {
      *
      * @param mLocation mLocation
      */
+    @Deprecated
     public static void saveLocation(Location mLocation){
-        LOCATION_MAP.put(PARAMS_LOCATION,mLocation);
+
     }
 
 
     /**
      * 从内存中获取 Location 信息
+     * 建议直接使用getFullLocationInfo
      * @return Location
      */
+    @Deprecated
     public static Location getLocation(){
-        return LOCATION_MAP.get(PARAMS_LOCATION);
+        return getLocation3();
     }
 }

@@ -70,6 +70,12 @@
        android:layout_height="wrap_content"/>
    <Button
        android:layout_width="match_parent"
+       android:text="获取定位-locationUtil-fast模式"
+       android:onClick="getLocationFast"
+       android:textAllCaps="false"
+       android:layout_height="wrap_content"/>
+   <Button
+       android:layout_width="match_parent"
        android:text="获取定位-locationManager"
        android:onClick="getLocationByLocationManager"
        android:textAllCaps="false"

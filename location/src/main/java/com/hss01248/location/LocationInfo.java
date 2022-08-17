@@ -2,6 +2,9 @@ package com.hss01248.location;
 
 import androidx.annotation.Keep;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * @Despciption todo  https://www.runoob.com/w3cnote/android-tutorial-gps.html
  * @Author hss
@@ -14,6 +17,10 @@ public class LocationInfo {
     public double longtitude;
     public double lattidude;
     public long timeStamp;
+    public String timeStampStr;
+    public String locale;
+
+    public long secondsBeforeSaved;
 
     /**
      * gms,gps,network
@@ -69,7 +76,7 @@ public class LocationInfo {
         return "LocationInfo{" +
                 "longtitude=" + longtitude +
                 ", lattidude=" + lattidude +
-                ", timeStamp=" + timeStamp +
+                ", timeStamp=" + timeStamp +", "+new SimpleDateFormat("MM-dd HH:mm:ss").format(new Date(timeStamp))+
                 ", realProvider='" + realProvider + '\'' +
                 ", calledMethod='" + calledMethod + '\'' +
                 ", providerInfo=" + providerInfo +

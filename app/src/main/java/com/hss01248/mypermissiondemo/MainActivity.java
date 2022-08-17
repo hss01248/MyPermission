@@ -18,6 +18,7 @@ import com.blankj.utilcode.util.ToastUtils;
 import com.blankj.utilcode.util.Utils;
 import com.hss01248.location.LocationUtil;
 import com.hss01248.location.MyLocationCallback;
+import com.hss01248.location.MyLocationFastCallback;
 import com.hss01248.permission.MyPermissions;
 import com.hss01248.permission.ext.IExtPermission;
 import com.hss01248.permission.ext.IExtPermissionCallback;
@@ -222,5 +223,35 @@ public class MainActivity extends AppCompatActivity {
                 .notify(new LocationListener() {  })
                 .build();
         awesomeLocationManager.get();*/
+    }
+
+    public void getLocationFast(View view) {
+        LocationUtil.getLocation(view.getContext(),false,5000,false,false,LogProxy.getProxy(new MyLocationFastCallback() {
+
+
+
+            @Override
+            public void onSuccessFast(Location location, String msg) {
+                ToastUtils.showLong("success,"+msg+", location:"+location);
+                LogUtils.i(msg,location);
+            }
+
+            @Override
+            public void onFinalFail(int type, String msg, boolean isFailBeforeReallyRequest) {
+                ToastUtils.showLong(type+","+msg);
+                LogUtils.w(msg,type);
+            }
+
+            @Override
+            public boolean configUseSpCache() {
+                return true;
+            }
+
+            @Override
+            public boolean configUseSystemLastKnownLocation() {
+                return true;
+            }
+
+        }));
     }
 }

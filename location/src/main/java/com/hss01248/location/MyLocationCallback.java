@@ -9,6 +9,8 @@ public interface MyLocationCallback {
 
     void onSuccess(Location location,String msg);
 
+
+
    default void onEachLocationChanged(Location location,String provider){}
 
     default void onEachLocationChanged(Location location,String provider,long costOfJustThisUpdate,long costFromUtilStart){
@@ -25,12 +27,28 @@ public interface MyLocationCallback {
 
     default void onBeforeReallyRequest(){}
 
-    default boolean configUseSpCache(){
-       return true;
+
+
+    /**
+     * 默认一年,约等于永久:
+     * @return
+     */
+    default long useCacheInTimeOfMills(){
+       return 365*24*60*60*1000L;
     }
 
+
+    @Deprecated
     default boolean configUseSystemLastKnownLocation(){
         return true;
+    }
+    @Deprecated
+    default boolean configUseSpCache(){
+        return true;
+    }
+
+    default boolean configNeedParseAdress(){
+        return false;
     }
 
     default boolean configNoNetworkProvider(){
@@ -47,6 +65,8 @@ public interface MyLocationCallback {
     }
 
      void onFailed(int type,String msg,boolean isFailBeforeReallyRequest);
+
+
 
 
 }

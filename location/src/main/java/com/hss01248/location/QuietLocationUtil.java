@@ -33,6 +33,9 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -91,23 +94,17 @@ public class QuietLocationUtil {
         MyLocationCallback listener = new MyLocationCallback() {
             @Override
             public void onFailed(int type, String msg,boolean isFailBeforeReallyRequest) {
-                Map<String, String> ext = new HashMap<>();
-                ext.put("msg", msg);
-                if(configUseSpCache()){
-                    Location cache = getFromCache(ext, msg);
-                    if (cache == null) {
-                        finalListener.onFailed(type, ext.get("msg"));
-                    } else {
-                        finalListener.onSuccess(cache, ext.get("msg"));
-                    }
-                }else {
-                    finalListener.onFailed(type, ext.get("msg"));
+                LocationInfo fullLocationInfo = LocationSync.getFullLocationInfo();
+                if(fullLocationInfo == null){
+                    finalListener.onFailed(type, msg,isFailBeforeReallyRequest);
+                    return;
                 }
-            }
-
-            @Override
-            public boolean configUseSpCache() {
-                return listener0.configUseSpCache();
+                if(System.currentTimeMillis() - fullLocationInfo.timeStamp > useCacheInTimeOfMills()){
+                    LogUtils.w("失败,取缓存,有缓存,但超过了失效:"+ useCacheInTimeOfMills(),fullLocationInfo);
+                    finalListener.onFailed(type, msg,isFailBeforeReallyRequest);
+                    return;
+                }
+                finalListener.onSuccess(LocationSync.toAndroidLocation(fullLocationInfo), "from new cache and "+msg);
             }
 
             @Override
@@ -128,11 +125,6 @@ public class QuietLocationUtil {
             @Override
             public boolean configNoNetworkProvider() {
                 return listener0.configNoNetworkProvider();
-            }
-
-            @Override
-            public boolean configUseSystemLastKnownLocation() {
-                return listener0.configUseSystemLastKnownLocation();
             }
 
             @Override
@@ -157,6 +149,7 @@ public class QuietLocationUtil {
         }
 
         LogUtils.i("getAllProviders-enabled:", locationManager.getProviders(true));
+        // [passive, network, fused, gps]
 
         Context finalContext = context;
         MyLocationCallback finalListener1 = listener;
@@ -175,7 +168,7 @@ public class QuietLocationUtil {
 
 
                 handler = new Handler(Looper.myLooper());
-                Map<String, Location> map = new HashMap<>();
+                List<Location> map = new ArrayList<>();
                 Set<String> countSet = new HashSet<>();
 
                 timeoutRun = new Runnable() {
@@ -195,10 +188,10 @@ public class QuietLocationUtil {
                         requestByType(LocationManager.NETWORK_PROVIDER, locationManager, map, countSet, finalListener1,startFromBeginning);
                     }
                     requestByType(LocationManager.GPS_PROVIDER, locationManager, map, countSet, finalListener1,startFromBeginning);
-                    if(!listener.configNoNetworkProvider()){
+                    //if(!listener.configNoNetworkProvider()){
                         requestByType(LocationManager.PASSIVE_PROVIDER, locationManager, map, countSet, finalListener1,startFromBeginning);
-                    }
-                    //requestByType("fused", locationManager, map, countSet, finalListener1);
+                   // }
+                    requestByType("fused", locationManager, map, countSet, finalListener1,startFromBeginning);
                     if (isGmsAvaiable(finalContext)) {
                         requestGmsLocation(finalContext, locationManager, map, countSet, finalListener1,startFromBeginning);
                         //return;
@@ -244,7 +237,6 @@ public class QuietLocationUtil {
             if (locationEnabled3) {
                 return true;
             }
-
             List<String> allProviders = locationManager.getProviders(true);
             LogUtils.d("providers:", allProviders);
             if (allProviders != null && !allProviders.isEmpty()) {
@@ -287,24 +279,11 @@ public class QuietLocationUtil {
     }
 
 
-    private Location getMostAcurLocation(Map<String, Location> map) {
+    private Location getMostAcurLocation(List<Location> map) {
         if (map.isEmpty()) {
             return null;
         }
-       /* Location location = null;
-        for (Map.Entry<String, Location> entry : map.entrySet()) {
-            if(entry.getValue() == null){
-                continue;
-            }
-            if(location == null){
-                location = entry.getValue();
-            }else {
-                if(location.getAccuracy() < entry.getValue().getAccuracy()){
-                    location = entry.getValue();
-                }
-            }
-        }*/
-        if (map.containsKey(LocationManager.GPS_PROVIDER) && map.get(LocationManager.GPS_PROVIDER) != null) {
+       /* if (map.containsKey(LocationManager.GPS_PROVIDER) && map.get(LocationManager.GPS_PROVIDER) != null) {
             return map.get(LocationManager.GPS_PROVIDER);
         }
         if (map.containsKey("fused") && map.get("fused") != null) {
@@ -315,14 +294,14 @@ public class QuietLocationUtil {
         }
         if (map.containsKey(LocationManager.NETWORK_PROVIDER) && map.get(LocationManager.NETWORK_PROVIDER) != null) {
             return map.get(LocationManager.NETWORK_PROVIDER);
-        }
+        }*/
 
-        return null;
+        return map.get(0);
     }
 
     @SuppressLint("MissingPermission")
     private void onGmsConnected(Context context, Set<String> countSet, LocationManager locationManager,
-                                Map<String, Location> map, MyLocationCallback listener, long startFromBeginning) {
+                                List<Location> map, MyLocationCallback listener, long startFromBeginning) {
         try {
             listener.onEachLocationStart("gms");
             FusedLocationProviderClient fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
@@ -362,12 +341,13 @@ public class QuietLocationUtil {
                             .setMaxWaitTime(timeOut), new LocationCallback() {
                         @Override
                         public void onLocationResult(LocationResult result) {
-                            LogUtils.i("onLocationChanged", result,"gms","耗时(ms):",
-                                    (System.currentTimeMillis() - start),"距最初耗时(ms)",System.currentTimeMillis() - startFromBeginning);
-                            if (result != null && result.getLocations() != null && !result.getLocations().isEmpty()) {
-                                LogUtils.w("gmslocations",result.getLocations());
 
+                            if (result != null && result.getLocations() != null && !result.getLocations().isEmpty()) {
                                 List<Location> locations = result.getLocations();
+                                LogUtils.w("gmslocations",locations);
+                                LogUtils.i("onLocationChanged", locations.get(0),locations.get(0).getTime(),"gms","耗时(ms):",
+                                        (System.currentTimeMillis() - start),"距最初耗时(ms)",System.currentTimeMillis() - startFromBeginning);
+
                                 for (Location location1 : locations) {
                                     LocationSync.putToCache(location1,"gms",false,0,locationManager.getProvider(location1.getProvider()));
                                 }
@@ -435,7 +415,7 @@ public class QuietLocationUtil {
 
 
 
-    private void requestGmsLocation(Context context, LocationManager locationManager, Map<String, Location> map,
+    private void requestGmsLocation(Context context, LocationManager locationManager, List<Location> map,
                                     Set<String> countSet, MyLocationCallback listener, long startFromBeginning) {
         try {
             //LocationServices.getFusedLocationProviderClient(context).getLastLocation().addOnCompleteListener()
@@ -485,7 +465,7 @@ public class QuietLocationUtil {
     }
 
     @SuppressLint("MissingPermission")
-    private void requestByType(String provider, LocationManager locationManager, Map<String, Location> map, Set<String> countSet, MyLocationCallback listener, long startFromBeginning) {
+    private void requestByType(String provider, LocationManager locationManager, List<Location> map, Set<String> countSet, MyLocationCallback listener, long startFromBeginning) {
         //不要相信系统的LocationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))的返回值，被改过的系统中isProviderEnabled用于判断GPS还是可以的，判断其他定位方式就算了。
         //作者：一步三回头
         //链接：https://juejin.cn/post/7016937919533285407。
@@ -509,7 +489,7 @@ public class QuietLocationUtil {
                 locationManager.requestSingleUpdate(provider, new android.location.LocationListener() {
                     @Override
                     public void onLocationChanged(@NonNull Location location) {
-                        LogUtils.d("onLocationChanged", location, provider, "耗时(ms):",
+                        LogUtils.i("onLocationChanged", location,location.getTime(), provider, "耗时(ms):",
                                 (System.currentTimeMillis() - start),"距最初耗时(ms)",System.currentTimeMillis() - startFromBeginning);
                         if(location != null){
                             LocationSync.putToCache(location,provider,false,System.currentTimeMillis() - start,locationManager.getProvider(provider));
@@ -548,41 +528,24 @@ public class QuietLocationUtil {
     }
 
 
-    private void onEnd(Location location, Map<String, Location> map, Set<String> count, MyLocationCallback listener) {
-        //LogUtils.d(location);
+    private void onEnd(Location location, List<Location> map, Set<String> count, MyLocationCallback listener) {
         if (location != null) {
-            map.put(location.getProvider(), location);
+            map.add(location);
+            Collections.sort(map, new Comparator<Location>() {
+                @Override
+                public int compare(Location o1, Location o2) {
+                    return (int) (o2.getTime() - o1.getTime());
+                }
+            });
         }
         LogUtils.d(count);
-
         if (count.size() == 0) {
             callback(map, "complete normal", false, listener);
         }
-
     }
 
-    static Location getFromCache(Map ext, String msg) {
-        Location cache = LocationSync.getLocation();
-        if (cache == null) {
-            double lon = LocationSync.getLongitude();
-            double lat = LocationSync.getLatitude();
-            if (lon == 0 && lat == 0) {
-                ext.put("msg", "no cache and " + msg);
-            } else {
-                cache = new Location(LocationManager.PASSIVE_PROVIDER);
-                cache.setLongitude(LocationSync.getLongitude());
-                cache.setLatitude(LocationSync.getLatitude());
-                ext.put("msg", "from disk cache and " + msg);
-            }
-        } else {
-            ext.put("msg", "from memory cache and " + msg);
-        }
-        return cache;
 
-
-    }
-
-    private void callback(Map<String, Location> map, String msg, boolean isTimeout, MyLocationCallback listener) {
+    private void callback(List<Location> map, String msg, boolean isTimeout, MyLocationCallback listener) {
         LogUtils.i(map, msg, "是否超时:" + isTimeout);
         if (hasEnd) {
             LogUtils.w("callback when has end,是否超时:" + isTimeout);
@@ -591,8 +554,8 @@ public class QuietLocationUtil {
                 if (!isTimeout) {
                     LogUtils.w("超时后保存定位:", location);
                 }
-                LocationSync.save(location.getLatitude(), location.getLongitude());
-                LocationSync.saveLocation(location);
+                //LocationSync.save(location.getLatitude(), location.getLongitude());
+                //LocationSync.saveLocation(location);
 
                 if (!isTimeout) {
                     LogUtils.w("超时后looper继续回调,写缓存,然后移除looper");
@@ -613,14 +576,7 @@ public class QuietLocationUtil {
         hasEnd = true;
         Location location = getMostAcurLocation(map);
         if (location != null) {
-            listener.onSuccess(location, "from sys api");
-            try {
-                LocationSync.save(location.getLatitude(), location.getLongitude());
-                LocationSync.saveLocation(location);
-            } catch (Throwable throwable) {
-                throwable.printStackTrace();
-            }
-
+            listener.onSuccess(location, "from real_time sys api");
         } else {
             if(isTimeout){
                 listener.onFailed(88, msg);
