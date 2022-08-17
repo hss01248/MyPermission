@@ -14,8 +14,11 @@ import android.view.View;
 import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.PermissionUtils;
+import com.blankj.utilcode.util.ThreadUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.blankj.utilcode.util.Utils;
+import com.hss01248.location.LocationInfo;
+import com.hss01248.location.LocationSync;
 import com.hss01248.location.LocationUtil;
 import com.hss01248.location.MyLocationCallback;
 import com.hss01248.location.MyLocationFastCallback;
@@ -38,6 +41,7 @@ import com.yayandroid.locationmanager.listener.LocationListener;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -247,5 +251,72 @@ public class MainActivity extends AppCompatActivity {
                return 5*60*1000;
            }
        });
+    }
+
+    public void concurrentModify(View view) {
+        ThreadUtils.executeByCpu(new ThreadUtils.SimpleTask<Object>() {
+            @Override
+            public Object doInBackground() throws Throwable {
+                for (int i = 0; i < 100; i++) {
+                    int finalI = i;
+                    ThreadUtils.executeByIo(new ThreadUtils.SimpleTask<Object>() {
+                        @Override
+                        public Object doInBackground() throws Throwable {
+                            LogUtils.w("putToCache---->"+ finalI);
+                            Location location = new Location("gps");
+                            location.setLatitude(new Random(80).nextDouble());
+                            location.setLongitude(new Random(90).nextDouble());
+                            location.setTime(System.currentTimeMillis());
+                            LocationSync.putToCache(location,"gms",false,0,null);
+                            return null;
+                        }
+
+                        @Override
+                        public void onSuccess(Object result) {
+
+                        }
+                    });
+                }
+                return null;
+            }
+
+            @Override
+            public void onSuccess(Object result) {
+
+            }
+        });
+
+        ThreadUtils.executeByCpu(new ThreadUtils.SimpleTask<Object>() {
+            @Override
+            public Object doInBackground() throws Throwable {
+                for (int i = 0; i < 100; i++) {
+                    int finalI = i;
+                    ThreadUtils.executeByCpu(new ThreadUtils.SimpleTask<Object>() {
+                        @Override
+                        public Object doInBackground() throws Throwable {
+                            LogUtils.w("getFullLocationInfo---->"+ finalI);
+                            LocationInfo fullLocationInfo = LocationSync.getFullLocationInfo();
+                            LogUtils.i(fullLocationInfo);
+                            return null;
+                        }
+
+                        @Override
+                        public void onSuccess(Object result) {
+
+                        }
+                    });
+                }
+                return null;
+            }
+
+            @Override
+            public void onSuccess(Object result) {
+
+            }
+        });
+
+
+
+
     }
 }

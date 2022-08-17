@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @Despciption todo
@@ -42,7 +43,7 @@ public class LocationSync {
     private static final String PARAMS_LAT = "latitudexx";
     private static final String PARAMS_LONG = "longitudexx";
 
-    private static  final List<LocationInfo> cachedLocations = new ArrayList<>();
+    private static  final List<LocationInfo> cachedLocations = new CopyOnWriteArrayList<>();
     //PriorityBlockingQueue
 
     public static void putToCache(Location location, String startProviderName,
@@ -88,37 +89,39 @@ public class LocationSync {
      * @param info
      * @param cachedLocations
      */
-    private static synchronized boolean sortBeforeAdd(LocationInfo info, List<LocationInfo> cachedLocations) {
-        try {
-            if(cachedLocations.contains(info)){
-                LogUtils.w("经纬度和时间相同,同一条数据,不添加到list:",info);
-                return false;
-            }
-            List<LocationInfo> locationInfos2 = new ArrayList<>(cachedLocations);
-            locationInfos2.add(info);
-            Collections.sort(locationInfos2, new Comparator<LocationInfo>() {
-                @Override
-                public int compare(LocationInfo o1, LocationInfo o2) {
-                    return (int) (o2.timeStamp - o1.timeStamp);
+    private static  boolean sortBeforeAdd(LocationInfo info, List<LocationInfo> cachedLocations) {
+        synchronized (LocationSync.class){
+            try {
+                if(cachedLocations.contains(info)){
+                    LogUtils.w("经纬度和时间相同,同一条数据,不添加到list:",info);
+                    return false;
                 }
-            });
-            if(locationInfos2.size() > 8){
-                List<LocationInfo> list = locationInfos2.subList(0, 8);
-                cachedLocations.clear();
-                cachedLocations.addAll(list);
-                //ConcurrentModificationException
-            }else {
-                cachedLocations.clear();
-                cachedLocations.addAll(locationInfos2);
+                List<LocationInfo> locationInfos2 = new ArrayList<>(cachedLocations);
+                locationInfos2.add(info);
+                Collections.sort(locationInfos2, new Comparator<LocationInfo>() {
+                    @Override
+                    public int compare(LocationInfo o1, LocationInfo o2) {
+                        return (int) (o2.timeStamp - o1.timeStamp);
+                    }
+                });
+                if(locationInfos2.size() > 8){
+                    List<LocationInfo> list = locationInfos2.subList(0, 8);
+                    cachedLocations.clear();
+                    cachedLocations.addAll(list);
+                    //ConcurrentModificationException
+                }else {
+                    cachedLocations.clear();
+                    cachedLocations.addAll(locationInfos2);
+                }
+                LocationInfo fullLocationInfo = getFullLocationInfo();
+                if(fullLocationInfo != null){
+                    save(fullLocationInfo.lattidude,fullLocationInfo.longtitude);
+                }
+            }catch (Throwable throwable){
+                LogUtils.e(throwable);
             }
-            LocationInfo fullLocationInfo = getFullLocationInfo();
-            if(fullLocationInfo != null){
-                save(fullLocationInfo.lattidude,fullLocationInfo.longtitude);
-            }
-        }catch (Throwable throwable){
-           LogUtils.w(throwable);
+            return true;
         }
-        return true;
     }
 
     private static void sort() {
@@ -147,7 +150,11 @@ public class LocationSync {
         }
 
     }
+    static boolean hasAsync = false;
     public static void initAsync(){
+        if(hasAsync){
+            return;
+        }
         ThreadUtils.executeByCached(new ThreadUtils.SimpleTask<Object>() {
             @Override
             public Object doInBackground() throws Throwable {
@@ -166,7 +173,7 @@ public class LocationSync {
 
             @Override
             public void onSuccess(Object result) {
-
+                hasAsync = true;
             }
         });
 
@@ -182,7 +189,14 @@ public class LocationSync {
         try {
             return cachedLocations.get(0);
         }catch (Throwable throwable){
-            throwable.printStackTrace();
+            LogUtils.e(throwable);
+            synchronized (LocationSync.class){
+                try {
+                    return cachedLocations.get(0);
+                }catch (Throwable throwable2){
+                    LogUtils.e(throwable);
+                }
+            }
         }
 
         return null;
@@ -262,9 +276,9 @@ public class LocationSync {
      */
     @Deprecated
     public static void save(double mLatitude, double mLongitude) {
-        LogUtils.i(TAG, "设置:" + mLatitude + ", " + mLongitude);
-        put(PARAMS_LAT, String.valueOf(mLatitude));
-        put(PARAMS_LONG, String.valueOf(mLongitude));
+        //LogUtils.i(TAG, "设置:" + mLatitude + ", " + mLongitude);
+        //put(PARAMS_LAT, String.valueOf(mLatitude));
+        //put(PARAMS_LONG, String.valueOf(mLongitude));
     }
 
 
