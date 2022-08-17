@@ -229,7 +229,7 @@ list中最多保留8个定位,并按定位时间(location.getTime())倒排序.
 ## gradle
 
 ```groovy
-    api "com.github.hss01248.MyPermission:location:2.0.0"
+    api "com.github.hss01248.MyPermission:location:2.0.1"
 ```
 
 ## 代码调用
