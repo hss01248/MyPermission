@@ -229,10 +229,12 @@ list中最多保留8个定位,并按定位时间(location.getTime())倒排序.
 ## gradle
 
 ```groovy
-    api "com.github.hss01248.MyPermission:location:2.0.1"
+    api "com.github.hss01248.MyPermission:location:2.0.2"
 ```
 
 ## 代码调用
+
+![image-20220819145153034](https://cdn.jsdelivr.net/gh/shuiniuhss/myimages@main/imagemac2/1660891913085-image-20220819145153034.jpg)
 
 ### 一 发起一次定位
 

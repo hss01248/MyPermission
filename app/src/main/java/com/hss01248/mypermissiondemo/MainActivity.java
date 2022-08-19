@@ -22,6 +22,7 @@ import com.hss01248.location.LocationSync;
 import com.hss01248.location.LocationUtil;
 import com.hss01248.location.MyLocationCallback;
 import com.hss01248.location.MyLocationFastCallback;
+import com.hss01248.location.QuietLocationUtil;
 import com.hss01248.permission.MyPermissions;
 import com.hss01248.permission.ext.IExtPermission;
 import com.hss01248.permission.ext.IExtPermissionCallback;
@@ -245,11 +246,11 @@ public class MainActivity extends AppCompatActivity {
                 LogUtils.w(msg,type);
             }
 
-           @Override
+          /* @Override
            public long useCacheInTimeOfMills() {
                 //5min内有效
                return 5*60*1000;
-           }
+           }*/
        });
     }
 
@@ -318,5 +319,21 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    }
+
+    public void getLocationSilent(View view) {
+        new QuietLocationUtil().getLocation(getApplication(), new MyLocationCallback() {
+            @Override
+            public void onSuccess(Location location, String msg) {
+                ToastUtils.showLong("success,"+msg+", location:"+location);
+                LogUtils.i(msg,location);
+            }
+
+            @Override
+            public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
+                ToastUtils.showLong(type+","+msg);
+                LogUtils.w(msg,type);
+            }
+        });
     }
 }

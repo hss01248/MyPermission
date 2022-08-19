@@ -76,6 +76,7 @@ public class LocationUtil {
     }
 
     public static void getLocation(Context context, boolean silent, int timeout, boolean showBeforeRequest, boolean showAfterRequest, MyLocationCallback callback) {
+        callback = new WrappedLocationCallback(callback);
         getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, true,false,false, callback);
     }
 

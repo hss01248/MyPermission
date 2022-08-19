@@ -89,49 +89,11 @@ public class QuietLocationUtil {
         }*/
         context = context.getApplicationContext();
 
-        MyLocationCallback finalListener = listener0;
-
-        MyLocationCallback listener = new MyLocationCallback() {
-            @Override
-            public void onFailed(int type, String msg,boolean isFailBeforeReallyRequest) {
-                LocationInfo fullLocationInfo = LocationSync.getFullLocationInfo();
-                if(fullLocationInfo == null){
-                    finalListener.onFailed(type, msg,isFailBeforeReallyRequest);
-                    return;
-                }
-                if(System.currentTimeMillis() - fullLocationInfo.timeStamp > useCacheInTimeOfMills()){
-                    LogUtils.w("失败,取缓存,有缓存,但超过了失效:"+ useCacheInTimeOfMills(),fullLocationInfo);
-                    finalListener.onFailed(type, msg,isFailBeforeReallyRequest);
-                    return;
-                }
-                finalListener.onSuccess(LocationSync.toAndroidLocation(fullLocationInfo), "from new cache and "+msg);
-            }
-
-            @Override
-            public void onSuccess(Location location, String msg) {
-                finalListener.onSuccess(location, msg);
-            }
-
-            @Override
-            public void onEachLocationChanged(Location location, String provider) {
-                listener0.onEachLocationChanged(location, provider);
-            }
-
-            @Override
-            public void onEachLocationStart(String provider) {
-                listener0.onEachLocationStart(provider);
-            }
-
-            @Override
-            public boolean configNoNetworkProvider() {
-                return listener0.configNoNetworkProvider();
-            }
-
-            @Override
-            public boolean configJustAskPermissionAndSwitch() {
-                return listener0.configJustAskPermissionAndSwitch();
-            }
-        };
+        MyLocationCallback listener = listener0;
+        if(!(listener0 instanceof WrappedLocationCallback)){
+            //包裹,处理缓存的情况
+            listener = new WrappedLocationCallback(listener0);
+        }
         if (noPermission(context)) {
             listener.onFailed(1, "no permission");
             return;
@@ -153,9 +115,6 @@ public class QuietLocationUtil {
 
         Context finalContext = context;
         MyLocationCallback finalListener1 = listener;
-
-        MyLocationCallback finalListener2 = listener;
-        MyLocationCallback finalListener3 = listener;
         long startFromBeginning = System.currentTimeMillis();
         new Thread((new Runnable() {
             @Override
@@ -174,7 +133,7 @@ public class QuietLocationUtil {
                 timeoutRun = new Runnable() {
                     @Override
                     public void run() {
-                        callback(map, timeOut/1000 + "s "+ StringUtils.getString(R.string.location_timeout_msg), true, finalListener3);
+                        callback(map, timeOut/1000 + "s "+ StringUtils.getString(R.string.location_timeout_msg), true, finalListener1);
                     }
                 };
                 handler.postDelayed(timeoutRun, timeOut);
@@ -184,7 +143,7 @@ public class QuietLocationUtil {
                     return;
                 }*/
                 try {
-                    if(!listener.configNoNetworkProvider()){
+                    if(!finalListener1.configNoNetworkProvider()){
                         requestByType(LocationManager.NETWORK_PROVIDER, locationManager, map, countSet, finalListener1,startFromBeginning);
                     }
                     requestByType(LocationManager.GPS_PROVIDER, locationManager, map, countSet, finalListener1,startFromBeginning);

@@ -69,14 +69,21 @@
 
       <Button
           android:layout_width="match_parent"
-          android:text="获取定位-locationUtil"
+          android:text="获取定位-locationUtil-普通模式(饱和到超时模式),
+          (自带一年缓存,可覆写) \n LocationUtil.getLocation(xx,xxx,..., new new MyLocationCallback() {})"
           android:onClick="getLocation"
           android:textAllCaps="false"
           android:layout_height="wrap_content"/>
       <Button
           android:layout_width="match_parent"
-          android:text="获取定位-locationUtil-fast模式"
+          android:text="获取定位-locationUtil-fast模式(自带2min缓存,可覆写)\n LocationUtil.getLocation(xx,xxx,..., new new MyLocationFastCallback() {})"
           android:onClick="getLocationFast"
+          android:textAllCaps="false"
+          android:layout_height="wrap_content"/>
+      <Button
+          android:layout_width="match_parent"
+          android:text="获取定位-locationUtil-silent模式(自带一年缓存,可覆写)\n new QuietLocationUtil().getLocation"
+          android:onClick="getLocationSilent"
           android:textAllCaps="false"
           android:layout_height="wrap_content"/>
       <Button
