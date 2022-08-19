@@ -49,8 +49,17 @@ import java.util.concurrent.TimeUnit;
 public class LocationUtil {
 
 
+    public static ILocationMetric getLocationMetric() {
+        return locationMetric;
+    }
 
-    LocationRequestConfig config;
+    public static void setLocationMetric(ILocationMetric locationMetric) {
+        LocationUtil.locationMetric = locationMetric;
+    }
+
+    private static ILocationMetric locationMetric;
+
+
     /**
      * 默认版 拒绝权限后有一次挽回行为
      *

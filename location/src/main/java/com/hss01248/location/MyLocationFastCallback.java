@@ -16,6 +16,14 @@ import java.util.Map;
 public abstract class MyLocationFastCallback implements MyLocationCallback{
 
     private  volatile boolean hasCallbacked = false;
+    private long start;
+
+    @Override
+    public void onBeforeReallyRequest() {
+        MyLocationCallback.super.onBeforeReallyRequest();
+        start = System.currentTimeMillis();
+    }
+
     @Override
     public void onSuccess(Location location, String msg) {
         if(hasCallbacked){
@@ -23,7 +31,19 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
             return;
         }
         hasCallbacked = true;
+        onReport(location,msg,true);
         onSuccessFast(location,msg);
+    }
+
+    private void onReport(Location location, String msg, boolean success) {
+        //上报统计数据
+        try {
+            if(LocationUtil.getLocationMetric() != null){
+                LocationUtil.getLocationMetric().reportFastCallback(success,location,success? "":msg,success?msg:"",System.currentTimeMillis() - start);
+            }
+        }catch (Throwable throwable){
+            LogUtils.w(throwable);
+        }
     }
 
     @Override
@@ -34,6 +54,7 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
             return;
         }
         hasCallbacked = true;
+        onReport(location,provider,true);
         onSuccessFast(location,"from real_time sys api");
 
     }
@@ -57,6 +78,7 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
             return;
         }
         hasCallbacked = true;
+        onReport(null,msg,false);
         onFinalFail(type, msg,isFailBeforeReallyRequest);
         /*LocationInfo fullLocationInfo = LocationSync.getFullLocationInfo();
         if(fullLocationInfo == null){
