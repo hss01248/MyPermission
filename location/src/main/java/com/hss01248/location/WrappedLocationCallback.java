@@ -35,6 +35,7 @@ public class WrappedLocationCallback implements MyLocationCallback{
     @Override
     public void onEachLocationChanged(Location location, String provider, long costOfJustThisUpdate, long costFromUtilStart) {
         MyLocationCallback.super.onEachLocationChanged(location, provider, costOfJustThisUpdate, costFromUtilStart);
+        //上报统计数据
     }
 
     @Override

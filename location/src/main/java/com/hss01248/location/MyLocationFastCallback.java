@@ -57,8 +57,8 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
             return;
         }
         hasCallbacked = true;
-
-        LocationInfo fullLocationInfo = LocationSync.getFullLocationInfo();
+        onFinalFail(type, msg,isFailBeforeReallyRequest);
+        /*LocationInfo fullLocationInfo = LocationSync.getFullLocationInfo();
         if(fullLocationInfo == null){
             onFinalFail(type, msg,isFailBeforeReallyRequest);
             return;
@@ -68,6 +68,6 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
             onFinalFail(type, msg,isFailBeforeReallyRequest);
             return;
         }
-        onSuccessFast(LocationSync.toAndroidLocation(fullLocationInfo), "from new cache and "+msg);
+        onSuccessFast(LocationSync.toAndroidLocation(fullLocationInfo), "from new cache and "+msg);*/
     }
 }
