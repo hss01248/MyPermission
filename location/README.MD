@@ -229,7 +229,7 @@ list中最多保留8个定位,并按定位时间(location.getTime())倒排序.
 ## gradle
 
 ```groovy
-    api "com.github.hss01248.MyPermission:location:2.0.2"
+    api "com.github.hss01248.MyPermission:location:2.0.5"
 ```
 
 ## 代码调用
@@ -241,7 +241,19 @@ list中最多保留8个定位,并按定位时间(location.getTime())倒排序.
 #### 1 静默定位
 
 ```java
-new QuietLocationUtil().getLocation(context, timeout, callback);
+ LocationUtil.getLocationSilent(getApplication(),10000, new MyLocationCallback() {
+            @Override
+            public void onSuccess(Location location, String msg) {
+                ToastUtils.showLong("success,"+msg+", location:"+location);
+                LogUtils.i(msg,location);
+            }
+
+            @Override
+            public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
+                ToastUtils.showLong(type+","+msg);
+                LogUtils.w(msg,type);
+            }
+        });
 ```
 
 #### 2 普通定位

@@ -59,7 +59,7 @@ import java.util.Set;
  *
  * https://juejin.cn/post/7016937919533285407
  */
-public class QuietLocationUtil {
+ class QuietLocationUtil {
 
     public int getTimeOut() {
         return timeOut;
@@ -80,9 +80,13 @@ public class QuietLocationUtil {
     public void getLocation(Context context, MyLocationCallback listener) {
         getLocation(context, timeOut, listener);
     }
-
-
+    @Deprecated
     public void getLocation(Context context, int timeoutMills, MyLocationCallback listener0) {
+        getLocation(context,timeoutMills,false,listener0);
+    }
+
+
+    public void getLocation(Context context, int timeoutMills,boolean withoutGms, MyLocationCallback listener0) {
         timeOut = timeoutMills;
         /*if (executors == null) {
             executors = Executors.newCachedThreadPool();
@@ -151,7 +155,7 @@ public class QuietLocationUtil {
                         requestByType(LocationManager.PASSIVE_PROVIDER, locationManager, map, countSet, finalListener1,startFromBeginning);
                    // }
                     requestByType("fused", locationManager, map, countSet, finalListener1,startFromBeginning);
-                    if (isGmsAvaiable(finalContext)) {
+                    if (!withoutGms && isGmsAvaiable(finalContext)) {
                         requestGmsLocation(finalContext, locationManager, map, countSet, finalListener1,startFromBeginning);
                         //return;
                     }
@@ -505,9 +509,9 @@ public class QuietLocationUtil {
 
 
     private void callback(List<Location> map, String msg, boolean isTimeout, MyLocationCallback listener) {
-        LogUtils.i(map, msg, "是否超时:" + isTimeout);
+        LogUtils.i(map, msg, "是否为超时的回调:" + isTimeout);
         if (hasEnd) {
-            LogUtils.w("callback when has end,是否超时:" + isTimeout);
+            LogUtils.w("callback when has end,是否为超时的回调:" + isTimeout);
             Location location = getMostAcurLocation(map);
             if (location != null) {
                 if (!isTimeout) {
@@ -517,16 +521,19 @@ public class QuietLocationUtil {
                 //LocationSync.saveLocation(location);
 
                 if (!isTimeout) {
-                    LogUtils.w("超时后looper继续回调,写缓存,然后移除looper");
+                    //假定: 超时后,只有一个没有完成的回调
+                    LogUtils.w("超时后looper继续onLocationChanged回调,写缓存,然后立刻移除looper");
                     endLooper();
                 }else {
+                    LogUtils.w("超时后再延时45s关闭looper");
                     //再延时30s关闭
                    new Handler(Looper.myLooper()).postDelayed(new Runnable() {
                        @Override
                        public void run() {
+                           LogUtils.w("已延时45s关闭looper2");
                            endLooper();
                        }
-                   },30000);
+                   },45000);
                 }
             }
 
@@ -557,13 +564,14 @@ public class QuietLocationUtil {
         if (!isTimeout) {
             endLooper();
         }else {
-            //再延时30s关闭
+            LogUtils.w("超时后再延时45s关闭looper2");
             new Handler(Looper.myLooper()).postDelayed(new Runnable() {
                 @Override
                 public void run() {
+                    LogUtils.w("已延时45s关闭looper2");
                     endLooper();
                 }
-            },30000);
+            },45000);
         }
 
 

@@ -75,18 +75,16 @@ public class LocationUtil {
         if (LocationSync.getLocation() != null) {
             return LocationSync.getLocation();
         }
-        if (LocationSync.getLatitude() != 0 && LocationSync.getLongitude() != 0) {
-            Location location = new Location(LocationManager.PASSIVE_PROVIDER);
-            location.setLongitude(LocationSync.getLongitude());
-            location.setLatitude(LocationSync.getLatitude());
-            return location;
-        }
         return null;
     }
 
-    public static void getLocation(Context context, boolean silent, int timeout, boolean showBeforeRequest, boolean showAfterRequest, MyLocationCallback callback) {
+    public static void getLocationSilent(Context context,int timeoutMills,MyLocationCallback callback){
+        getLocation(context,true,timeoutMills,false,false,callback);
+    }
+
+    public static void getLocation(Context context, boolean silent, int timeoutMills, boolean showBeforeRequest, boolean showAfterRequest, MyLocationCallback callback) {
         callback = new WrappedLocationCallback(callback);
-        getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, true,false,false, callback);
+        getLocation(context, silent, timeoutMills, showBeforeRequest, showAfterRequest, true,false,false,false, callback);
     }
 
     /**
@@ -97,11 +95,11 @@ public class LocationUtil {
      * @param callback
      */
     private static void getLocation(Context context, boolean silent, int timeout, boolean showBeforeRequest,
-                                    boolean showAfterRequest, boolean requestGmsDialog, boolean asQuickAsPossible,boolean useLastKnownLocation,MyLocationCallback callback) {
+                                    boolean showAfterRequest, boolean requestGmsDialog, boolean asQuickAsPossible,boolean useLastKnownLocation,boolean withoutGms,MyLocationCallback callback) {
 
 
         if (silent) {
-            doRequestLocation(context, timeout, callback);
+            doRequestLocation(context, timeout,withoutGms, callback);
             return;
         }
         LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
@@ -113,7 +111,7 @@ public class LocationUtil {
         }
         //开关打开,则去申请权限
         if (QuietLocationUtil.isLocationEnabled(locationManager)) {
-            checkPermission(context, timeout, showBeforeRequest, showAfterRequest, callback);
+            checkPermission(context, timeout, showBeforeRequest, showAfterRequest,withoutGms, callback);
             return;
         }
         callback.onGmsSwitchDialogShow();
@@ -134,7 +132,7 @@ public class LocationUtil {
                                     return;
                                 }
                                 callback.onGmsDialogOkClicked();
-                                checkPermission(context, timeout, showBeforeRequest, showAfterRequest, callback);
+                                checkPermission(context, timeout, showBeforeRequest, showAfterRequest,withoutGms, callback);
                             }
 
                             @Override
@@ -189,7 +187,7 @@ public class LocationUtil {
                     }
                     haveCallbacked[0] = true;
                     LogUtils.w("gms 判断状态超时,辣鸡gms: LocationServices.SettingsApi.checkLocationSettings");
-                    getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false,asQuickAsPossible,useLastKnownLocation ,callback);
+                    getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false,asQuickAsPossible,useLastKnownLocation ,true,callback);
                 }
             },2000, TimeUnit.MILLISECONDS);
 
@@ -203,7 +201,7 @@ public class LocationUtil {
                     }
                     haveCallbacked[0] = true;
                     if (result == null) {
-                        getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false,asQuickAsPossible,useLastKnownLocation ,callback);
+                        getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false,asQuickAsPossible,useLastKnownLocation ,true,callback);
                         return;
                     }
                     LogUtils.i(result.getStatus(), result.getLocationSettingsStates());
@@ -215,7 +213,7 @@ public class LocationUtil {
                             if(!isFirstIn){
                                 callback.onGmsDialogOkClicked();
                             }
-                            checkPermission(context, timeout, showBeforeRequest, showAfterRequest, callback);
+                            checkPermission(context, timeout, showBeforeRequest, showAfterRequest,false, callback);
                             break;
                         case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                             //Location settings are not satisfied. Show the user a dialog to upgrade location settings
@@ -224,21 +222,25 @@ public class LocationUtil {
                                 requestGmsSwitch(context, silent, timeout, showAfterRequest, showAfterRequest, asQuickAsPossible,useLastKnownLocation ,callback, result);
                             } else {
                                 callback.onGmsDialogCancelClicked();
-                                callback.onFailed(2, "location switch off-gms",true);
-                               // Log.w("gms", "不同意gms弹窗,那么绕过gms,请求原生定位");
-                               // getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false,asQuickAsPossible,useLastKnownLocation , callback);
+                                LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+                                if(locationManager != null && QuietLocationUtil.isLocationEnabled(locationManager)){
+                                    Log.w("gms", "不同意gms弹窗,且定位开关开启,那么绕过gms,请求原生定位");
+                                    getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false,asQuickAsPossible,useLastKnownLocation ,true, callback);
+                                }else {
+                                    callback.onFailed(2, "location switch off-gms",true);
+                                }
                             }
                             break;
                         case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
                             //Location settings are inadequate, and cannot be fixed here. Dialog not created.
                             //todo
                             Log.w("gms", "Error enabling location. Please try again");
-                            getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false,asQuickAsPossible,useLastKnownLocation , callback);
+                            getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false,asQuickAsPossible,useLastKnownLocation ,true, callback);
                             break;
                         default:
                             //todo
                             Log.w("gms", "Error enabling location. Please try again2");
-                            getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false, asQuickAsPossible,useLastKnownLocation ,callback);
+                            getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false, asQuickAsPossible,useLastKnownLocation ,true,callback);
                             break;
                     }
                 }
@@ -263,7 +265,7 @@ public class LocationUtil {
                             Log.i("location", "PendingIntent unable to execute request.");
                             e.printStackTrace();
                             //todo
-                            getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false, asQuickAsPossible,useLastKnownLocation ,callback);
+                            getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false, asQuickAsPossible,useLastKnownLocation ,true,callback);
                         }
                     }
                 }, 300);
@@ -283,10 +285,10 @@ public class LocationUtil {
         });
     }
 
-    private static void checkPermission(Context context, int timeout, boolean showBeforeRequest, boolean showAfterRequest, MyLocationCallback callback) {
+    private static void checkPermission(Context context, int timeout, boolean showBeforeRequest, boolean showAfterRequest,boolean withoutGms, MyLocationCallback callback) {
         if (PermissionUtils.isGranted(Manifest.permission.ACCESS_COARSE_LOCATION)
                 && PermissionUtils.isGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
-            doRequestLocation(context, timeout, callback);
+            doRequestLocation(context, timeout,withoutGms, callback);
         } else {
             MyPermissions.requestByMostEffort(
                     showBeforeRequest,
@@ -294,7 +296,7 @@ public class LocationUtil {
                     new PermissionUtils.FullCallback() {
                         @Override
                         public void onGranted(@NonNull List<String> granted) {
-                            doRequestLocation(context, timeout, callback);
+                            doRequestLocation(context, timeout,withoutGms, callback);
                         }
 
                         @Override
@@ -305,10 +307,10 @@ public class LocationUtil {
         }
     }
 
-    private static void doRequestLocation(Context context, int timeout, MyLocationCallback callback) {
+    private static void doRequestLocation(Context context, int timeout,boolean withoutGms, MyLocationCallback callback) {
         callback.onBeforeReallyRequest();
         if(!callback.configJustAskPermissionAndSwitch()){
-            new QuietLocationUtil().getLocation(context, timeout, callback);
+            new QuietLocationUtil().getLocation(context, timeout,withoutGms, callback);
         }
     }
 }
