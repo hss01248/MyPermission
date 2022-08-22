@@ -147,22 +147,31 @@ public class LocationSync {
             //这里内部会遍历
             String json = GsonUtils.toJson(cachedLocations);
             //LogUtils.json(json);
-            SPUtils.getInstance().put("cachedLocations",json);
+            locationCache.saveLocations(json);
         }catch (Throwable throwable){
             throwable.printStackTrace();
         }
 
     }
     static boolean hasAsync = false;
+    static ILocationCache locationCache = new DefaultLocationCache();
     @Deprecated
     public static void initAsync(){
+
+    }
+
+    public static void initAsync(ILocationCache locationCache2){
         if(hasAsync){
             return;
         }
+        if(locationCache2 != null){
+            locationCache = locationCache2;
+        }
+
         ThreadUtils.executeByCached(new ThreadUtils.SimpleTask<Object>() {
             @Override
             public Object doInBackground() throws Throwable {
-                String str = SPUtils.getInstance().getString("cachedLocations","");
+                String str = locationCache.getLocationJasonArrStr();
                 if(TextUtils.isEmpty(str)){
                     return null;
                 }
