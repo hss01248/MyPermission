@@ -20,7 +20,7 @@ public class LocationInfo {
     public String timeStampStr;
     public String locale;
 
-    public long secondsBeforeSaved;
+    public long secondsBeforeSaved = -1;
 
     /**
      * gms,gps,network

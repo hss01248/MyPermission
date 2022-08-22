@@ -56,7 +56,10 @@ public class LocationSync {
         LocationInfo info = toLocationInfo(location);
 
         info.timeCost = timeCost;
-        info.secondsBeforeSaved = (System.currentTimeMillis() - info.timeStamp)/1000;
+        if(!isFromLastKnowLocation){
+            info.secondsBeforeSaved = (System.currentTimeMillis() - info.timeStamp)/1000;
+        }
+
         //location.getSpeedAccuracyMetersPerSecond()
         if(isFromLastKnowLocation){
             info.calledMethod = startProviderName+"-lastKnowLocation";
@@ -151,6 +154,7 @@ public class LocationSync {
 
     }
     static boolean hasAsync = false;
+    @Deprecated
     public static void initAsync(){
         if(hasAsync){
             return;
@@ -302,12 +306,12 @@ public class LocationSync {
 
     }
 
-    private static void put(String paramsLat, String valueOf) {
-        Utils.getApp().getSharedPreferences("locationutil", Context.MODE_PRIVATE).edit().putString(paramsLat,valueOf).apply();
+    private static void put(String key, String valueOf) {
+        Utils.getApp().getSharedPreferences("locationutil", Context.MODE_PRIVATE).edit().putString(key,valueOf).apply();
     }
 
-    private static String getString(String paramsLat) {
-        return Utils.getApp().getSharedPreferences("locationutil",Context.MODE_PRIVATE).getString(paramsLat,"");
+    private static String getString(String key) {
+        return Utils.getApp().getSharedPreferences("locationutil",Context.MODE_PRIVATE).getString(key,"");
     }
 
     /**

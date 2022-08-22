@@ -262,6 +262,7 @@ public class QuietLocationUtil {
         return map.get(0);
     }
 
+    //https://developers.google.com/android/reference/com/google/android/gms/location/LocationRequest
     @SuppressLint("MissingPermission")
     private void onGmsConnected(Context context, Set<String> countSet, LocationManager locationManager,
                                 List<Location> map, MyLocationCallback listener, long startFromBeginning) {
@@ -314,12 +315,28 @@ public class QuietLocationUtil {
                                 for (Location location1 : locations) {
                                     LocationSync.putToCache(location1,"gms",false,0,locationManager.getProvider(location1.getProvider()));
                                 }
-                                Location location = locations.get(0);
-                                listener.onEachLocationChanged(location,"gms",System.currentTimeMillis() - start,System.currentTimeMillis() - startFromBeginning);
+                                long maxTime = 30000;//listener.useCacheInTimeOfMills()
+                                for (Location location : locations) {
+                                    //gms有时会返回比较老的数据,对定位实时性要求高的业务造成干扰,所以需要判断
+                                    if(System.currentTimeMillis() - location.getTime() < maxTime){
+                                        listener.onEachLocationChanged(location,"gms",System.currentTimeMillis() - start,System.currentTimeMillis() - startFromBeginning);
+                                    }else {
+                                        LogUtils.e("gmsLocation","gms返回的定位超过了配置的定位有效期,坑爹的gms:"+(System.currentTimeMillis() - location.getTime())/1000+"s之前的数据");
+                                    }
+                                }
+                                for (Location location : locations) {
+                                    if(System.currentTimeMillis() - location.getTime() < maxTime){
+                                        map.add(location);
+                                        Collections.sort(map, new Comparator<Location>() {
+                                            @Override
+                                            public int compare(Location o1, Location o2) {
+                                                return (int) (o2.getTime() - o1.getTime());
+                                            }
+                                        });
+                                    }
+                                }
                                 countSet.remove("gms");
-                                //LocationSync.save(location.getLatitude(), location.getLongitude());
-                                //LocationSync.saveLocation(location);
-                                onEnd(location, map, countSet, listener);
+                                onEnd(null, map, countSet, listener);
                             } else {
                                 countSet.remove("gms");
                                 onEnd(null, map, countSet, listener);
