@@ -99,6 +99,12 @@ public class LocationSync {
                     LogUtils.w("经纬度和时间相同,同一条数据,不添加到list:",info);
                     return false;
                 }
+                if(cachedLocations.size() == 8){
+                    if(cachedLocations.get(cachedLocations.size()-1).timeStamp > info.timeStamp){
+                        LogUtils.w("数据太老,不添加到list:",info);
+                        return false;
+                    }
+                }
                 List<LocationInfo> locationInfos2 = new ArrayList<>(cachedLocations);
                 locationInfos2.add(info);
                 Collections.sort(locationInfos2, new Comparator<LocationInfo>() {
