@@ -59,7 +59,7 @@ import java.util.Set;
  *
  * https://juejin.cn/post/7016937919533285407
  */
- class QuietLocationUtil {
+public class QuietLocationUtil {
 
     public int getTimeOut() {
         return timeOut;
