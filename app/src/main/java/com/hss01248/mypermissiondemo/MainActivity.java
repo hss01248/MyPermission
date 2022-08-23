@@ -22,6 +22,7 @@ import com.hss01248.location.LocationSync;
 import com.hss01248.location.LocationUtil;
 import com.hss01248.location.MyLocationCallback;
 import com.hss01248.location.MyLocationFastCallback;
+import com.hss01248.location.QuietLocationUtil;
 import com.hss01248.permission.MyPermissions;
 import com.hss01248.permission.ext.IExtPermission;
 import com.hss01248.permission.ext.IExtPermissionCallback;
@@ -322,7 +323,8 @@ public class MainActivity extends AppCompatActivity {
 
     public void getLocationSilent(View view) {
 
-        LocationUtil.getLocationSilent(getApplication(),10000, new MyLocationCallback() {
+
+        new QuietLocationUtil().getLocation(getApplication(),10000, new MyLocationCallback() {
             @Override
             public void onSuccess(Location location, String msg) {
                 ToastUtils.showLong("success,"+msg+", location:"+location);

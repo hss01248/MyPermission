@@ -156,7 +156,18 @@ public class QuietLocationUtil {
                    // }
                     requestByType("fused", locationManager, map, countSet, finalListener1,startFromBeginning);
                     if (!withoutGms && isGmsAvaiable(finalContext)) {
-                        requestGmsLocation(finalContext, locationManager, map, countSet, finalListener1,startFromBeginning);
+                        GmsLocationUtil.hasGmsGranted(finalContext, new GmsLocationUtil.IGmsSettingsStateCallback() {
+                            @Override
+                            public void open() {
+                                requestGmsLocation(finalContext, locationManager, map, countSet, finalListener1,startFromBeginning);
+                            }
+
+                            @Override
+                            public void close(String msg) {
+                                LogUtils.w("gms state wrong:"+msg);
+                            }
+                        });
+
                         //return;
                     }
                 } catch (Throwable throwable) {
@@ -593,7 +604,7 @@ public class QuietLocationUtil {
             new Handler(Looper.myLooper()).postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    LogUtils.w("已延时45s关闭looper2");
+                    LogUtils.w("已延时45s,立刻关闭looper2");
                     endLooper();
                 }
             },45000);
