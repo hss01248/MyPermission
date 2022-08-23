@@ -4,12 +4,11 @@ import android.content.Context;
 import android.location.Address;
 import android.location.Location;
 import android.location.LocationProvider;
+import android.os.Bundle;
 import android.text.TextUtils;
 
-import com.blankj.utilcode.util.EncryptUtils;
 import com.blankj.utilcode.util.GsonUtils;
 import com.blankj.utilcode.util.LogUtils;
-import com.blankj.utilcode.util.SPUtils;
 import com.blankj.utilcode.util.ThreadUtils;
 import com.blankj.utilcode.util.Utils;
 import com.google.gson.GsonBuilder;
@@ -53,38 +52,70 @@ public class LocationSync {
         if(location == null){
             return;
         }
-        LocationInfo info = toLocationInfo(location);
-
-        info.timeCost = timeCost;
-        if(!isFromLastKnowLocation){
-            info.secondsBeforeSaved = (System.currentTimeMillis() - info.timeStamp)/1000;
-        }
-
-        //location.getSpeedAccuracyMetersPerSecond()
-        if(isFromLastKnowLocation){
-            info.calledMethod = startProviderName+"-lastKnowLocation";
-        }else {
-            info.calledMethod = startProviderName;
-        }
-        if(provider != null){
-           // info.providerInfo = new ProviderInfo();
-           // info.providerInfo.initByProvider(provider);
-        }
-        boolean shouldSave = sortBeforeAdd(info, cachedLocations);
-        if(!shouldSave){
-            return;
-        }
+        long start = System.currentTimeMillis();
         try {
-            if(LogUtils.getConfig().isLogSwitch()){
-                String json = new GsonBuilder().serializeNulls().setPrettyPrinting().create().toJson(cachedLocations);
-                LogUtils.json(json);
+            LocationInfo info = toLocationInfo(location);
+
+            info.timeCost = timeCost;
+            if(!isFromLastKnowLocation){
+                info.millsOldWhenSaved = (System.currentTimeMillis() - info.timeStamp);
             }
 
-            saveAsync();
+            //location.getSpeedAccuracyMetersPerSecond()
+            if(isFromLastKnowLocation){
+                info.calledMethod = startProviderName+"-lastKnowLocation";
+            }else {
+                info.calledMethod = startProviderName;
+            }
+            saveExtraToLocation(location, info);
+
+            if(provider != null){
+                // info.providerInfo = new ProviderInfo();
+                // info.providerInfo.initByProvider(provider);
+            }
+            boolean shouldSave = sortBeforeAdd(info, cachedLocations);
+            if(!shouldSave){
+                return;
+            }
+            try {
+                if(LogUtils.getConfig().isLogSwitch()){
+                    String json = new GsonBuilder().serializeNulls().setPrettyPrinting().create().toJson(cachedLocations);
+                    LogUtils.json(json);
+                }
+
+                saveAsync();
+            }catch (Throwable throwable){
+                LogUtils.w(throwable);
+            }
+
         }catch (Throwable throwable){
             LogUtils.w(throwable);
+        }finally {
+            if(LogUtils.getConfig().isLogSwitch()){
+                //2-10ms
+                LogUtils.i("location","put to cache cost(ms):"+ (System.currentTimeMillis() - start));
+            }
         }
 
+    }
+
+    public static String getFormatedLocationInfos(){
+        return   new GsonBuilder().serializeNulls().setPrettyPrinting().create().toJson(cachedLocations);
+    }
+
+    private static void saveExtraToLocation(Location location, LocationInfo info) {
+        Bundle bundle = location.getExtras();
+        if(bundle == null){
+            bundle = new Bundle();
+            bundle.putString("calledMethod", info.calledMethod);
+            bundle.putLong("millsOldWhenSaved", info.millsOldWhenSaved);
+            bundle.putLong("timeCost", info.timeCost);
+            location.setExtras(bundle);
+        }else {
+            bundle.putString("calledMethod", info.calledMethod);
+            bundle.putLong("millsOldWhenSaved", info.millsOldWhenSaved);
+            bundle.putLong("timeCost", info.timeCost);
+        }
     }
 
     /**
@@ -150,8 +181,9 @@ public class LocationSync {
     private static synchronized void saveAsync() {
 
         try {
+            List<LocationInfo> list = new ArrayList<>(cachedLocations);
             //这里内部会遍历
-            String json = GsonUtils.toJson(cachedLocations);
+            String json = GsonUtils.toJson(list);
             //LogUtils.json(json);
             locationCache.saveLocations(json);
         }catch (Throwable throwable){
@@ -263,6 +295,7 @@ public class LocationSync {
         location.setLatitude(info.lattidude);
         location.setBearing(info.bearing);
         location.setSpeed(info.speed);
+        saveExtraToLocation(location, info);
         return location;
     }
 
@@ -283,6 +316,13 @@ public class LocationSync {
         info.bearing = location.getBearing();
         info.speed = location.getSpeed();
         info.realProvider = location.getProvider();
+
+        Bundle bundle = location.getExtras();
+        if(bundle != null){
+            info.calledMethod = bundle.getString("calledMethod", "");
+            info.millsOldWhenSaved = bundle.getLong("millsOldWhenSaved", -1);
+            info.timeCost = bundle.getLong("timeCost", 0);
+        }
         return info;
     }
 

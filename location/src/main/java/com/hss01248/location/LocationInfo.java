@@ -20,7 +20,7 @@ public class LocationInfo {
     public String timeStampStr;
     public String locale;
 
-    public long secondsBeforeSaved = -1;
+    public long millsOldWhenSaved = -1;
 
     /**
      * gms,gps,network
@@ -71,12 +71,17 @@ public class LocationInfo {
         return result;
     }
 
+    //  ", timeStamp=" + timeStamp +", "+new SimpleDateFormat("MM-dd HH:mm:ss").format(new Date(timeStamp))+
+
     @Override
     public String toString() {
         return "LocationInfo{" +
                 "longtitude=" + longtitude +
                 ", lattidude=" + lattidude +
-                ", timeStamp=" + timeStamp +", "+new SimpleDateFormat("MM-dd HH:mm:ss").format(new Date(timeStamp))+
+                ", timeStamp=" + timeStamp +
+                ", timeStampStr='" + timeStampStr + '\'' +
+                ", locale='" + locale + '\'' +
+                ", millsOldWhenSaved=" + millsOldWhenSaved +
                 ", realProvider='" + realProvider + '\'' +
                 ", calledMethod='" + calledMethod + '\'' +
                 ", providerInfo=" + providerInfo +
