@@ -322,6 +322,14 @@ public class QuietLocationUtil {
                                         listener.onEachLocationChanged(location,"gms",System.currentTimeMillis() - start,System.currentTimeMillis() - startFromBeginning);
                                     }else {
                                         LogUtils.e("gmsLocation","gms返回的定位超过了配置的定位有效期,坑爹的gms:"+(System.currentTimeMillis() - location.getTime())/1000+"s之前的数据");
+                                        try {
+                                            if(LocationUtil.getLocationMetric() != null){
+                                                LocationUtil.getLocationMetric().reportEachLocationChanged(location,"gms",location.getProvider(),System.currentTimeMillis() - start,System.currentTimeMillis() - startFromBeginning);
+                                            }
+                                        }catch (Throwable throwable){
+                                            LogUtils.w(throwable);
+                                        }
+
                                     }
                                 }
                                 for (Location location : locations) {
