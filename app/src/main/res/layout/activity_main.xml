@@ -98,6 +98,23 @@
           android:text="多个权限请求"
           android:onClick="multiPermission"
           android:layout_height="wrap_content"/>
+      <Button
+          android:layout_width="match_parent"
+          android:text="查看缓存定位数据"
+          android:onClick="showCachedLocation"
+          android:layout_height="wrap_content"/>
+
+      <Button
+          android:layout_width="match_parent"
+          android:text="单独请求gps"
+          android:onClick="gpsOnly"
+          android:layout_height="wrap_content"/>
+
+      <Button
+          android:layout_width="match_parent"
+          android:text="单独请求融合卫星定位"
+          android:onClick="fusedOnly"
+          android:layout_height="wrap_content"/>
 
       <Button
           android:layout_width="match_parent"

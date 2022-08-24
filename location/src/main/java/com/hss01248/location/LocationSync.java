@@ -1,14 +1,22 @@
 package com.hss01248.location;
 
 import android.content.Context;
+import android.content.DialogInterface;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.location.Address;
 import android.location.Location;
 import android.location.LocationProvider;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.WindowManager;
 
+import androidx.appcompat.app.AlertDialog;
+
+import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.GsonUtils;
 import com.blankj.utilcode.util.LogUtils;
+import com.blankj.utilcode.util.ScreenUtils;
 import com.blankj.utilcode.util.ThreadUtils;
 import com.blankj.utilcode.util.Utils;
 import com.google.gson.GsonBuilder;
@@ -77,6 +85,7 @@ public class LocationSync {
             if(!shouldSave){
                 return;
             }
+            //AndroidBus.postByTag("location",cachedLocations);
             try {
                 if(LogUtils.getConfig().isLogSwitch()){
                     String json = new GsonBuilder().serializeNulls().setPrettyPrinting().create().toJson(cachedLocations);
@@ -101,6 +110,27 @@ public class LocationSync {
 
     public static String getFormatedLocationInfos(){
         return   new GsonBuilder().serializeNulls().setPrettyPrinting().create().toJson(cachedLocations);
+    }
+
+    public static AlertDialog showFormatedLocationInfosInDialog(){
+        String infos = LocationSync.getFormatedLocationInfos();
+
+        AlertDialog dialog = new AlertDialog.Builder(ActivityUtils.getTopActivity())
+                .setTitle("缓存的定位")
+                .setMessage(infos)
+                .setPositiveButton("ok", null)
+                .create();
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog0) {
+                dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.WHITE));
+                WindowManager.LayoutParams attributes = dialog.getWindow().getAttributes();
+                attributes.width = ScreenUtils.getScreenWidth();
+                dialog.getWindow().setAttributes(attributes);
+            }
+        });
+        dialog.show();
+        return dialog;
     }
 
     private static void saveExtraToLocation(Location location, LocationInfo info) {

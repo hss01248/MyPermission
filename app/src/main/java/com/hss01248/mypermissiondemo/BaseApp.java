@@ -14,6 +14,6 @@ public class BaseApp extends MultiDexApplication {
     @Override
     public void onCreate() {
         super.onCreate();
-        LocationSync.initAsync();
+        LocationSync.initAsync(null);
     }
 }

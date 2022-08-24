@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId "com.hss01248.mypermissiondemo"
-        minSdkVersion 16
+        minSdkVersion 19
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"
@@ -43,4 +43,5 @@ dependencies {
 
     //https://github.com/yayaa/LocationManager
     implementation 'com.yayandroid:LocationManager:2.4.1'
+    api "com.github.hss01248.AndoridBus:bus:1.0.4"
 }
