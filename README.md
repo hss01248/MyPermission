@@ -77,3 +77,27 @@ getLocation(Context context, int timeout, IPermissionDialog dialogBeforeRequest,
 com.github.hss01248.MyPermission:location:1.0.0
 com.github.hss01248.MyPermission:permission:1.0.0
 ```
+
+
+
+# 定位坐标系和准确性
+
+>  WGS-84：是国际标准，GPS坐标（Google Earth使用、或者GPS模块）；
+>
+> GCJ-02：中国坐标偏移标准，Google Map(国内. 国外谷歌地图为 WGS-84坐标系?)、高德、腾讯使用；
+>
+> BD-09：百度坐标偏移标准，Baidu Map使用；
+
+https://www.hss01248.tech/mapsdemo2022.html?lat=-7.19981408&lng=113.47079679&from=gps
+
+from的取值: 
+
+* gps : Android/ios系统返回的定位信息
+* baidu: 百度地图拾取到的定位信息
+* gaode  或者tenxun: 高德,腾讯地图拾取到的经纬度
+
+转换的目标坐标系为GCJ-02
+
+内部用到的工具: https://github.com/hujiulong/gcoord
+
+参考: [地图，GPS位置地图坐标系](https://blog.csdn.net/ShareUs/article/details/86695708)

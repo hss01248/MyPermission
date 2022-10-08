@@ -103,6 +103,11 @@
           android:text="查看缓存定位数据"
           android:onClick="showCachedLocation"
           android:layout_height="wrap_content"/>
+      <Button
+          android:layout_width="match_parent"
+          android:text="查看最新定位在地图上的位置"
+          android:onClick="showLocationInmap"
+          android:layout_height="wrap_content"/>
 
       <Button
           android:layout_width="match_parent"

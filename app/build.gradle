@@ -43,5 +43,13 @@ dependencies {
 
     //https://github.com/yayaa/LocationManager
     implementation 'com.yayandroid:LocationManager:2.4.1'
-    api "com.github.hss01248.AndoridBus:bus:1.0.4"
+    api "com.github.hss01248.AndoridBus:bus:2.0.3"
+}
+configurations {
+    all {
+        resolutionStrategy {
+            force "androidx.appcompat:appcompat:1.2.0"
+            force "com.google.android.material:material:1.2.0"
+        }
+    }
 }

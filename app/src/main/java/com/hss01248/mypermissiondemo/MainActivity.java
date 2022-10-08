@@ -9,6 +9,7 @@ import android.Manifest;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PermissionInfo;
@@ -17,10 +18,12 @@ import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Looper;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.blankj.utilcode.util.AppUtils;
@@ -430,5 +433,17 @@ public class MainActivity extends AppCompatActivity {
         }else {
             ToastUtils.showShort("no permission");
         }
+    }
+
+    public void showLocationInmap(View view) {
+        LocationInfo info = LocationSync.getFullLocationInfo();
+        if(info ==null){
+            ToastUtils.showShort("没有缓存数据");
+            return;
+        }
+        String url = "https://www.hss01248.tech/mapsdemo2022.html?lat="+info.lattidude+"&lng="+info.longtitude+"&from=gps";
+        Uri uri = Uri.parse(url);
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        startActivity(intent);
     }
 }
