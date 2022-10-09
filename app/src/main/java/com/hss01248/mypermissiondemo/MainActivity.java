@@ -35,6 +35,7 @@ import com.blankj.utilcode.util.ThreadUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.blankj.utilcode.util.Utils;
 import com.google.gson.GsonBuilder;
+import com.hss01248.basewebview.BaseWebviewActivity;
 import com.hss01248.bus.AndroidBus;
 import com.hss01248.bus.ContextBusObserver;
 import com.hss01248.location.LocationInfo;
@@ -52,12 +53,6 @@ import com.hss01248.permission.ext.permissions.NotificationListenerPermissionImp
 import com.hss01248.permission.ext.permissions.NotificationPermission;
 import com.hss01248.permission.ext.permissions.StorageManagerPermissionImpl;
 import com.hss01248.permission.ext.permissions.UsageAccessPermissionImpl;
-import com.hss01248.webviewspider.basewebview.BaseWebviewActivity;
-import com.yayandroid.locationmanager.configuration.DefaultProviderConfiguration;
-import com.yayandroid.locationmanager.configuration.GooglePlayServicesConfiguration;
-import com.yayandroid.locationmanager.configuration.LocationConfiguration;
-import com.yayandroid.locationmanager.configuration.PermissionConfiguration;
-import com.yayandroid.locationmanager.constants.ProviderType;
 
 import java.util.Arrays;
 import java.util.List;

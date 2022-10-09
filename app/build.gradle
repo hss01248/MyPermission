@@ -48,7 +48,7 @@ dependencies {
     //https://github.com/yayaa/LocationManager
     implementation 'com.yayandroid:LocationManager:2.4.1'
     api "com.github.hss01248.AndoridBus:bus:2.0.3"
-    api 'com.github.hss01248.ImageLoader:webviewspider:3.4.6'
+    api 'com.github.hss01248.ImageLoader:baseWebview:3.4.7'
     implementation "com.google.android:flexbox:0.3.1"
 }
 configurations {
