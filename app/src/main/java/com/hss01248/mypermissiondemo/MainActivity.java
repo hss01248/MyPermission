@@ -26,6 +26,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.PermissionUtils;
@@ -33,6 +34,7 @@ import com.blankj.utilcode.util.ScreenUtils;
 import com.blankj.utilcode.util.ThreadUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.blankj.utilcode.util.Utils;
+import com.google.gson.GsonBuilder;
 import com.hss01248.bus.AndroidBus;
 import com.hss01248.bus.ContextBusObserver;
 import com.hss01248.location.LocationInfo;
@@ -50,6 +52,7 @@ import com.hss01248.permission.ext.permissions.NotificationListenerPermissionImp
 import com.hss01248.permission.ext.permissions.NotificationPermission;
 import com.hss01248.permission.ext.permissions.StorageManagerPermissionImpl;
 import com.hss01248.permission.ext.permissions.UsageAccessPermissionImpl;
+import com.hss01248.webviewspider.basewebview.BaseWebviewActivity;
 import com.yayandroid.locationmanager.configuration.DefaultProviderConfiguration;
 import com.yayandroid.locationmanager.configuration.GooglePlayServicesConfiguration;
 import com.yayandroid.locationmanager.configuration.LocationConfiguration;
@@ -130,8 +133,9 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onSuccess(Location location, String msg) {
-                ToastUtils.showLong("success," + msg + ", location:" + location);
+               // ToastUtils.showLong("success," + msg + ", location:" + location);
                 LogUtils.i(msg, location);
+                showFormatedLocationInfoInDialog(location);
             }
 
             @Override
@@ -252,8 +256,9 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onSuccessFast(Location location, String msg) {
-                        ToastUtils.showLong("success," + msg + ", location:" + location);
+                        //ToastUtils.showLong("success," + msg + ", location:" + location);
                         LogUtils.i(msg, location);
+                        showFormatedLocationInfoInDialog(location);
                     }
 
                     @Override
@@ -341,8 +346,9 @@ public class MainActivity extends AppCompatActivity {
         new QuietLocationUtil().getLocation(getApplication(), 10000, new MyLocationCallback() {
             @Override
             public void onSuccess(Location location, String msg) {
-                ToastUtils.showLong("success," + msg + ", location:" + location);
+                //ToastUtils.showLong("success," + msg + ", location:" + location);
                 LogUtils.i(msg, location);
+                showFormatedLocationInfoInDialog(location);
             }
 
             @Override
@@ -372,6 +378,8 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+
+
     public void gpsOnly(View view) {
         android.location.LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -381,9 +389,10 @@ public class MainActivity extends AppCompatActivity {
                 locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, new LocationListener() {
                     @Override
                     public void onLocationChanged(@NonNull Location location) {
-                        ToastUtils.showLong( "cost(s):"+(System.currentTimeMillis() - start)/1000+", location:" + location);
+                        //ToastUtils.showLong( "cost(s):"+(System.currentTimeMillis() - start)/1000+", location:" + location);
                         LogUtils.i( location,"cost(s):"+(System.currentTimeMillis() - start)/1000,
                                 "old:"+(System.currentTimeMillis() - location.getTime()));
+                        showFormatedLocationInfoInDialog(location);
                     }
 
                     @Override
@@ -413,9 +422,10 @@ public class MainActivity extends AppCompatActivity {
             locationManager.requestSingleUpdate("fused", new LocationListener() {
                 @Override
                 public void onLocationChanged(@NonNull Location location) {
-                    ToastUtils.showLong( "cost(s):"+(System.currentTimeMillis() - start)/1000+", location:" + location);
+                    //ToastUtils.showLong( "cost(s):"+(System.currentTimeMillis() - start)/1000+", location:" + location);
                     LogUtils.i( location,"cost(ms):"+(System.currentTimeMillis() - start),
                             "old:"+(System.currentTimeMillis() - location.getTime()));
+                    showFormatedLocationInfoInDialog(location);
                 }
 
                 @Override
@@ -441,9 +451,43 @@ public class MainActivity extends AppCompatActivity {
             ToastUtils.showShort("没有缓存数据");
             return;
         }
-        String url = "https://www.hss01248.tech/mapsdemo2022.html?lat="+info.lattidude+"&lng="+info.longtitude+"&from=gps";
-        Uri uri = Uri.parse(url);
-        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-        startActivity(intent);
+        goMap(info.lattidude,info.longtitude);
+    }
+
+    private  void goMap(double lattidude,double longtitude) {
+        try {
+            String url = "https://www.hss01248.tech/mapsdemo2022.html?lat="+ lattidude+"&lng="+ longtitude+"&from=gps";
+           /* Uri uri = Uri.parse(url);
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            startActivity(intent);*/
+            BaseWebviewActivity.start(this,url);
+        }catch (Throwable throwable){
+            ToastUtils.showShort(throwable.getMessage());
+        }
+    }
+
+    public  void showFormatedLocationInfoInDialog(Location location){
+        ThreadUtils.getMainHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                LocationInfo info = LocationSync.toLocationInfo(location);
+                String json = new GsonBuilder().setPrettyPrinting().create().toJson(info);
+
+                AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("定位结果")
+                        .setMessage(json)
+                        .setPositiveButton("跳到地图", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                goMap(location.getLatitude(),location.getLongitude());
+                            }
+                        })
+                        .setNegativeButton("取消", null)
+                        .create();
+                dialog.show();
+            }
+        });
+
+
     }
 }

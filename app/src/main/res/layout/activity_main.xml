@@ -4,127 +4,130 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-   <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-       xmlns:app="http://schemas.android.com/apk/res-auto"
-       xmlns:tools="http://schemas.android.com/tools"
+   <com.google.android.flexbox.FlexboxLayout
+       android:padding="8dp"
        android:layout_width="match_parent"
        android:layout_height="match_parent"
-       android:orientation="vertical"
-       tools:context=".MainActivity">
+       app:flexDirection="row"
+       app:flexWrap="wrap"
+       app:justifyContent="space_between"
+
+       app:alignItems="stretch"
+       app:alignContent="stretch">
 
       <Button
-          android:layout_width="match_parent"
+          android:layout_width="wrap_content"
           android:text="权限是否声明在manifest里"
           android:onClick="isInManifest"
           android:layout_height="wrap_content"/>
 
       <Button
-          android:layout_width="match_parent"
+          android:layout_width="wrap_content"
           android:text="申请apk安装权限"
           android:onClick="askExtPermissions"
           android:layout_height="wrap_content"/>
       <Button
-          android:layout_width="match_parent"
+          android:layout_width="wrap_content"
           android:text="申请通知权限"
           android:onClick="askNotification"
           android:layout_height="wrap_content"/>
       <Button
-          android:layout_width="match_parent"
+          android:layout_width="wrap_content"
           android:text="申请管理所有存储权限"
           android:onClick="askManagerAllStorage"
           android:layout_height="wrap_content"/>
 
       <Button
-          android:layout_width="match_parent"
+          android:layout_width="wrap_content"
           android:text="监听通知栏权限"
           android:onClick="askNotificationListener"
           android:layout_height="wrap_content"/>
 
       <Button
-          android:layout_width="match_parent"
+          android:layout_width="wrap_content"
           android:text="获取所有应用使用状态"
           android:onClick="useageStatus"
           android:layout_height="wrap_content"/>
       <Button
-          android:layout_width="match_parent"
+          android:layout_width="wrap_content"
           android:text="普通模式-无任何自定义弹窗"
           android:onClick="normal"
           android:layout_height="wrap_content"/>
 
       <Button
-          android:layout_width="match_parent"
+          android:layout_width="wrap_content"
           android:text="请求前弹窗"
           android:onClick="beforeRequest"
           android:layout_height="wrap_content"/>
       <Button
-          android:layout_width="match_parent"
+          android:layout_width="wrap_content"
           android:text="拒绝后弹窗"
           android:onClick="afterDenied"
           android:layout_height="wrap_content"/>
       <Button
-          android:layout_width="match_parent"
+          android:layout_width="wrap_content"
           android:text="请求前拒绝后都弹窗"
           android:onClick="both"
           android:layout_height="wrap_content"/>
 
       <Button
-          android:layout_width="match_parent"
+          android:layout_width="wrap_content"
           android:text="获取定位-locationUtil-普通模式(饱和到超时模式),
           (自带一年缓存,可覆写) \n LocationUtil.getLocation(xx,xxx,..., new new MyLocationCallback() {})"
           android:onClick="getLocation"
           android:textAllCaps="false"
           android:layout_height="wrap_content"/>
       <Button
-          android:layout_width="match_parent"
+          android:layout_width="wrap_content"
           android:text="获取定位-locationUtil-fast模式(自带2min缓存,可覆写)\n LocationUtil.getLocation(xx,xxx,..., new new MyLocationFastCallback() {})"
           android:onClick="getLocationFast"
           android:textAllCaps="false"
           android:layout_height="wrap_content"/>
       <Button
-          android:layout_width="match_parent"
+          android:layout_width="wrap_content"
           android:text="获取定位-locationUtil-silent模式(自带一年缓存,可覆写)\n new QuietLocationUtil().getLocation"
           android:onClick="getLocationSilent"
           android:textAllCaps="false"
           android:layout_height="wrap_content"/>
       <Button
-          android:layout_width="match_parent"
+          android:layout_width="wrap_content"
           android:text="获取定位-locationManager"
           android:onClick="getLocationByLocationManager"
           android:textAllCaps="false"
           android:layout_height="wrap_content"/>
 
       <Button
-          android:layout_width="match_parent"
+          android:layout_width="wrap_content"
           android:text="多个权限请求"
           android:onClick="multiPermission"
           android:layout_height="wrap_content"/>
       <Button
-          android:layout_width="match_parent"
+          android:layout_width="wrap_content"
           android:text="查看缓存定位数据"
           android:onClick="showCachedLocation"
           android:layout_height="wrap_content"/>
       <Button
-          android:layout_width="match_parent"
+          android:layout_width="wrap_content"
           android:text="查看最新定位在地图上的位置"
           android:onClick="showLocationInmap"
           android:layout_height="wrap_content"/>
 
       <Button
-          android:layout_width="match_parent"
+          android:layout_width="wrap_content"
           android:text="单独请求gps"
           android:onClick="gpsOnly"
           android:layout_height="wrap_content"/>
 
       <Button
-          android:layout_width="match_parent"
+          android:layout_width="wrap_content"
           android:text="单独请求融合卫星定位"
           android:onClick="fusedOnly"
           android:layout_height="wrap_content"/>
 
       <Button
-          android:layout_width="match_parent"
+          android:layout_width="wrap_content"
           android:text="测试并发读写"
           android:onClick="concurrentModify"
           android:layout_height="wrap_content"/>
-   </LinearLayout>
+   </com.google.android.flexbox.FlexboxLayout>
 </ScrollView>
