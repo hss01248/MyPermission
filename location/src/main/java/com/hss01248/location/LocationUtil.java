@@ -286,8 +286,8 @@ public class LocationUtil {
     }
 
     private static void checkPermission(Context context, int timeout, boolean showBeforeRequest, boolean showAfterRequest,boolean withoutGms, MyLocationCallback callback) {
-        if (PermissionUtils.isGranted(Manifest.permission.ACCESS_COARSE_LOCATION)
-                && PermissionUtils.isGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
+        if (PermissionUtils.isGranted(Manifest.permission.ACCESS_COARSE_LOCATION )
+             && PermissionUtils.isGranted(Manifest.permission.ACCESS_FINE_LOCATION)){
             doRequestLocation(context, timeout,withoutGms, callback);
         } else {
             MyPermissions.requestByMostEffort(
@@ -304,6 +304,7 @@ public class LocationUtil {
                             callback.onFailed(1, "no permission",true);
                         }
                     }, Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION);
+            //Android 12 ACCESS_COARSE_LOCATION 模糊定位,accuracy=2000米, 中心点随机偏差几千米
         }
     }
 
