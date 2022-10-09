@@ -101,3 +101,18 @@ from的取值:
 内部用到的工具: https://github.com/hujiulong/gcoord
 
 参考: [地图，GPS位置地图坐标系](https://blog.csdn.net/ShareUs/article/details/86695708)
+
+
+
+# Android12 定位-模糊定位和精确定位的问题
+
+![image-20221009180154103](https://cdn.jsdelivr.net/gh/shuiniuhss/myimages@main/imagemac2/1665309714286-image-20221009180154103.jpg)
+
+一般来说都是同时申请模糊定位和精确定位权限.本工具库已经写死,必须申请精确定位权限,否则回调onError.
+
+>  经改代码测试: 
+
+如果单独申请模糊定位权限,实测:    accuracy=2000米, 中心点随机偏差几千米
+
+单独申请ACCESS_FINE_LOCATION时,精确定位 android12也会跳出模糊定位的选项,就是上面的截图. 但国产手机有的没有这个界面,面向国外的手机才有. 充分说明了国内的隐私保护情况之恶劣.
+
