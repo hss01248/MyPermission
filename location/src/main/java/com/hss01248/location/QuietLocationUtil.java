@@ -296,7 +296,9 @@ public class QuietLocationUtil {
                             //com.android.internal.os.ZygoteInit.main (ZygoteInit.java:873)
                             if (lastLocation1 != null) {
                                 LogUtils.i("gms", "get last location:" + lastLocation1);
-                                LocationSync.putToCache(lastLocation1,"gms",true,0,locationManager.getProvider(lastLocation1.getProvider()));
+                                //没有finelocation权限时,locationManager.getProvider(gps)会抛异常
+                                // locationManager.getProvider(lastLocation1.getProvider())
+                                LocationSync.putToCache(lastLocation1,"gms",true,0,null);
                                 /*map.put(lastLocation1.getProvider(), lastLocation1);
                                 if(LocationSync.getLongitude() ==0){
                                     LocationSync.save(lastLocation1.getLatitude(), lastLocation1.getLongitude());
@@ -324,7 +326,7 @@ public class QuietLocationUtil {
                                         (System.currentTimeMillis() - start),"距最初耗时(ms)",System.currentTimeMillis() - startFromBeginning);
 
                                 for (Location location1 : locations) {
-                                    LocationSync.putToCache(location1,"gms",false,0,locationManager.getProvider(location1.getProvider()));
+                                    LocationSync.putToCache(location1,"gms",false,0,null);
                                 }
                                 long maxTime = 30000;//listener.useCacheInTimeOfMills()
                                 for (Location location : locations) {
@@ -481,7 +483,7 @@ public class QuietLocationUtil {
                     LogUtils.d("lastKnownLocation", lastKnownLocation, provider, "耗时(ms):", (System.currentTimeMillis() - start)
                             ,"距最初耗时(ms)",System.currentTimeMillis() - startFromBeginning);
                     //map.put(lastKnownLocation.getProvider(), lastKnownLocation);
-                    LocationSync.putToCache(lastKnownLocation,provider,true,System.currentTimeMillis() - start,locationManager.getProvider(provider));
+                    LocationSync.putToCache(lastKnownLocation,provider,true,System.currentTimeMillis() - start,null);
                 }
                // }
 
@@ -491,7 +493,7 @@ public class QuietLocationUtil {
                         LogUtils.i("onLocationChanged", location,location.getTime(), provider, "耗时(ms):",
                                 (System.currentTimeMillis() - start),"距最初耗时(ms)",System.currentTimeMillis() - startFromBeginning);
                         if(location != null){
-                            LocationSync.putToCache(location,provider,false,System.currentTimeMillis() - start,locationManager.getProvider(provider));
+                            LocationSync.putToCache(location,provider,false,System.currentTimeMillis() - start,null);
                             listener.onEachLocationChanged(location,provider,System.currentTimeMillis() - start,System.currentTimeMillis() - startFromBeginning);
                         }
                         countSet.remove(provider);

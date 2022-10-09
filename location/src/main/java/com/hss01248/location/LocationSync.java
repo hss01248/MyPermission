@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.WindowManager;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 
 import com.blankj.utilcode.util.ActivityUtils;
@@ -56,7 +57,7 @@ public class LocationSync {
     public static void putToCache(Location location, String startProviderName,
                                   boolean isFromLastKnowLocation,
                                   long timeCost,
-                                  LocationProvider provider){
+                                 @Nullable LocationProvider provider){
         if(location == null){
             return;
         }
