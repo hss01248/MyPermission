@@ -21,6 +21,7 @@ import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.PermissionUtils;
 import com.blankj.utilcode.util.ThreadUtils;
+import com.blankj.utilcode.util.Utils;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
@@ -37,6 +38,7 @@ import com.hss01248.activityresult.TheActivityListener;
 import com.hss01248.permission.MyPermissions;
 
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -60,6 +62,13 @@ public class LocationUtil {
     private static ILocationMetric locationMetric;
 
 
+    public static  void getLocationSilent(long timeoutMills,MyLocationCallback callback){
+        new QuietLocationUtil().getLocation(Utils.getApp(), (int) timeoutMills,callback);
+    }
+
+    public static  void getLocationFast(long timeoutMills,MyLocationCallback callback){
+        LocationUtil.getLocation(Utils.getApp(), false, (int) timeoutMills, false, false,callback);
+    }
     /**
      * 默认版 拒绝权限后有一次挽回行为
      *
@@ -68,7 +77,7 @@ public class LocationUtil {
      */
     public static void getLocation(Context context, MyLocationCallback callback) {
         getLocation(context, false, 10000, false,
-                true, callback);
+                false, callback);
     }
 
     public static Location getLocation() {
@@ -77,6 +86,7 @@ public class LocationUtil {
         }
         return null;
     }
+
 
     public static void getLocationSilent(Context context,int timeoutMills,MyLocationCallback callback){
         getLocation(context,true,timeoutMills,false,false,callback);
@@ -301,7 +311,20 @@ public class LocationUtil {
 
                         @Override
                         public void onDenied(@NonNull List<String> deniedForever, @NonNull List<String> denied) {
-                            callback.onFailed(1, "no permission",true);
+                           if(callback.configAcceptOnlyCoarseLocationPermission()){
+                               List<String> list = new ArrayList<>();
+                               list.addAll(deniedForever);
+                               list.addAll(denied);
+                               if(!list.contains(Manifest.permission.ACCESS_COARSE_LOCATION)){
+                                   //只拒绝了fine location权限,没有拒绝模糊定位权限-android12
+                                   doRequestLocation(context, timeout,withoutGms, callback);
+                               }else {
+                                   callback.onFailed(1, "no permission",true);
+                               }
+                           }else {
+                               callback.onFailed(1, "no permission",true);
+                           }
+
                         }
                     }, Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION);
             //

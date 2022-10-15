@@ -55,6 +55,10 @@ public interface MyLocationCallback {
         return false;
     }
 
+    default boolean configAcceptOnlyCoarseLocationPermission(){
+        return false;
+    }
+
 
     /**
      * 只判断/请求定位权限和定位开关,不实际发起定位请求

@@ -123,6 +123,12 @@
           android:text="单独请求融合卫星定位"
           android:onClick="fusedOnly"
           android:layout_height="wrap_content"/>
+      <Button
+          android:layout_width="wrap_content"
+          android:text="targetSdkVersion 32且手机是android12时-支持仅模糊定位权限申请"
+          android:onClick="coarseLocationOnly"
+          android:layout_height="wrap_content"/>
+
 
       <Button
           android:layout_width="wrap_content"
