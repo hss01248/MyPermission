@@ -31,6 +31,8 @@ public class LocationInfo {
 
     public long timeCost;
 
+    public  long costFromBegin;
+
     /**
      * 海拔高度
      */
@@ -86,6 +88,7 @@ public class LocationInfo {
                 ", calledMethod='" + calledMethod + '\'' +
                 ", providerInfo=" + providerInfo +
                 ", timeCost=" + timeCost +
+                ", costFromBegin=" + costFromBegin +
                 ", altitude=" + altitude +
                 ", accuracy=" + accuracy +
                 ", speed=" + speed +

@@ -59,6 +59,14 @@ public interface MyLocationCallback {
         return false;
     }
 
+    /**
+     * 从开关和权限完成后,真正开始定位前,弹loading dialog,定位回调成功或失败时关闭.
+     * @return
+     */
+    default boolean configShowLoadingDialog(){
+        return false;
+    }
+
 
     /**
      * 只判断/请求定位权限和定位开关,不实际发起定位请求

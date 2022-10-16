@@ -334,8 +334,9 @@ public class LocationUtil {
     }
 
     private static void doRequestLocation(Context context, int timeout,boolean withoutGms, MyLocationCallback callback) {
-        callback.onBeforeReallyRequest();
+
         if(!callback.configJustAskPermissionAndSwitch()){
+            callback.onBeforeReallyRequest();
             new QuietLocationUtil().getLocation(context, timeout,withoutGms, callback);
         }
     }

@@ -57,7 +57,14 @@ public class LocationSync {
     public static void putToCache(Location location, String startProviderName,
                                   boolean isFromLastKnowLocation,
                                   long timeCost,
-                                 @Nullable LocationProvider provider){
+                                  @Nullable LocationProvider provider){
+        putToCache(location,startProviderName,isFromLastKnowLocation,timeCost,-1);
+    }
+
+    public static void putToCache(Location location, String startProviderName,
+                                  boolean isFromLastKnowLocation,
+                                  long timeCost,
+                                 long costFromBegin){
         if(location == null){
             return;
         }
@@ -66,6 +73,7 @@ public class LocationSync {
             LocationInfo info = toLocationInfo(location);
 
             info.timeCost = timeCost;
+            info.costFromBegin = costFromBegin;
             if(!isFromLastKnowLocation){
                 info.millsOldWhenSaved = (System.currentTimeMillis() - info.timeStamp);
             }
@@ -78,10 +86,10 @@ public class LocationSync {
             }
             saveExtraToLocation(location, info);
 
-            if(provider != null){
+            //if(provider != null){
                 // info.providerInfo = new ProviderInfo();
                 // info.providerInfo.initByProvider(provider);
-            }
+           // }
             boolean shouldSave = sortBeforeAdd(info, cachedLocations);
             if(!shouldSave){
                 return;
@@ -141,11 +149,13 @@ public class LocationSync {
             bundle.putString("calledMethod", info.calledMethod);
             bundle.putLong("millsOldWhenSaved", info.millsOldWhenSaved);
             bundle.putLong("timeCost", info.timeCost);
+            bundle.putLong("costFromBegin", info.costFromBegin);
             location.setExtras(bundle);
         }else {
             bundle.putString("calledMethod", info.calledMethod);
             bundle.putLong("millsOldWhenSaved", info.millsOldWhenSaved);
             bundle.putLong("timeCost", info.timeCost);
+            bundle.putLong("costFromBegin", info.costFromBegin);
         }
     }
 
@@ -353,6 +363,7 @@ public class LocationSync {
             info.calledMethod = bundle.getString("calledMethod", "");
             info.millsOldWhenSaved = bundle.getLong("millsOldWhenSaved", -1);
             info.timeCost = bundle.getLong("timeCost", 0);
+            info.costFromBegin = bundle.getLong("costFromBegin", -1);
         }
         return info;
     }

@@ -1,8 +1,11 @@
 package com.hss01248.location;
 
+import android.app.ProgressDialog;
 import android.location.Location;
 
+import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.LogUtils;
+import com.blankj.utilcode.util.ThreadUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,10 +21,33 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
     private  volatile boolean hasCallbacked = false;
     private long start;
 
+    ProgressDialog dialog;
     @Override
     public void onBeforeReallyRequest() {
         MyLocationCallback.super.onBeforeReallyRequest();
         start = System.currentTimeMillis();
+        if(configShowLoadingDialog()){
+            ThreadUtils.getMainHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    dialog = new ProgressDialog(ActivityUtils.getTopActivity());
+                    dialog.show();
+                }
+            });
+        }
+    }
+    void dismissDialog(){
+        if(dialog == null){
+            return;
+        }
+        ThreadUtils.getMainHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                if(dialog != null){
+                    dialog.dismiss();
+                }
+            }
+        });
     }
 
     @Override
@@ -32,6 +58,7 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
         }
         hasCallbacked = true;
         onReport(location,msg,true);
+        dismissDialog();
         onSuccessFast(location,msg);
     }
 
@@ -55,6 +82,7 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
         }
         hasCallbacked = true;
         onReport(location,provider,true);
+        dismissDialog();
         onSuccessFast(location,"from real_time sys api");
 
     }
@@ -79,6 +107,7 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
         }
         hasCallbacked = true;
         onReport(null,msg,false);
+        dismissDialog();
         onFinalFail(type, msg,isFailBeforeReallyRequest);
         /*LocationInfo fullLocationInfo = LocationSync.getFullLocationInfo();
         if(fullLocationInfo == null){
