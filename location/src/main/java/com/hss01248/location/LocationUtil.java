@@ -66,7 +66,7 @@ public class LocationUtil {
         new QuietLocationUtil().getLocation(Utils.getApp(), (int) timeoutMills,callback);
     }
 
-    public static  void getLocationFast(long timeoutMills,MyLocationCallback callback){
+    public static  void getLocationFast(long timeoutMills,MyLocationFastCallback callback){
         LocationUtil.getLocation(Utils.getApp(), false, (int) timeoutMills, false, false,callback);
     }
     /**
