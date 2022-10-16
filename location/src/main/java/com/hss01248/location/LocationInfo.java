@@ -33,6 +33,8 @@ public class LocationInfo {
 
     public  long costFromBegin;
 
+    public boolean hasFineLocationPermission;
+
     /**
      * 海拔高度
      */
@@ -83,6 +85,7 @@ public class LocationInfo {
                 ", timeStamp=" + timeStamp +
                 ", timeStampStr='" + timeStampStr + '\'' +
                 ", locale='" + locale + '\'' +
+                ", hasFineLocationPermission='" + hasFineLocationPermission + '\'' +
                 ", millsOldWhenSaved=" + millsOldWhenSaved +
                 ", realProvider='" + realProvider + '\'' +
                 ", calledMethod='" + calledMethod + '\'' +

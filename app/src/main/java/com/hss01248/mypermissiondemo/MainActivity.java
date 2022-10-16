@@ -134,6 +134,11 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
+            public boolean configShowLoadingDialog() {
+                return true;
+            }
+
+            @Override
             public boolean configUseSpCache() {
                 return false;
             }
@@ -486,6 +491,11 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public boolean configAcceptOnlyCoarseLocationPermission() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean configShowLoadingDialog() {
                         return true;
                     }
 

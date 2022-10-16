@@ -19,10 +19,17 @@ public interface MyLocationCallback {
 
     default void onEachLocationStart(String provider){}
 
+    /**
+     * 用于埋点
+     */
     default void onGmsSwitchDialogShow(){}
-
+    /**
+     * 用于埋点
+     */
     default void onGmsDialogOkClicked(){}
-
+    /**
+     * 用于埋点
+     */
     default void onGmsDialogCancelClicked(){}
 
     default void onBeforeReallyRequest(){}

@@ -1,5 +1,6 @@
 package com.hss01248.location;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
@@ -17,6 +18,7 @@ import androidx.appcompat.app.AlertDialog;
 import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.GsonUtils;
 import com.blankj.utilcode.util.LogUtils;
+import com.blankj.utilcode.util.PermissionUtils;
 import com.blankj.utilcode.util.ScreenUtils;
 import com.blankj.utilcode.util.ThreadUtils;
 import com.blankj.utilcode.util.Utils;
@@ -84,6 +86,9 @@ public class LocationSync {
             }else {
                 info.calledMethod = startProviderName;
             }
+            info.hasFineLocationPermission = PermissionUtils.isGranted(Manifest.permission.ACCESS_FINE_LOCATION);
+
+
             saveExtraToLocation(location, info);
 
             //if(provider != null){
@@ -105,6 +110,7 @@ public class LocationSync {
             }catch (Throwable throwable){
                 LogUtils.w(throwable);
             }
+
 
         }catch (Throwable throwable){
             LogUtils.w(throwable);
@@ -150,12 +156,14 @@ public class LocationSync {
             bundle.putLong("millsOldWhenSaved", info.millsOldWhenSaved);
             bundle.putLong("timeCost", info.timeCost);
             bundle.putLong("costFromBegin", info.costFromBegin);
+            bundle.putBoolean("hasFineLocationPermission", info.hasFineLocationPermission);
             location.setExtras(bundle);
         }else {
             bundle.putString("calledMethod", info.calledMethod);
             bundle.putLong("millsOldWhenSaved", info.millsOldWhenSaved);
             bundle.putLong("timeCost", info.timeCost);
             bundle.putLong("costFromBegin", info.costFromBegin);
+            bundle.putBoolean("hasFineLocationPermission", info.hasFineLocationPermission);
         }
     }
 
@@ -364,6 +372,7 @@ public class LocationSync {
             info.millsOldWhenSaved = bundle.getLong("millsOldWhenSaved", -1);
             info.timeCost = bundle.getLong("timeCost", 0);
             info.costFromBegin = bundle.getLong("costFromBegin", -1);
+            info.hasFineLocationPermission = bundle.getBoolean("hasFineLocationPermission");
         }
         return info;
     }
