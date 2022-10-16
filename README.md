@@ -33,11 +33,55 @@ MyPermission.requestByMostEffort(Manifest.permission.READ_EXTERNAL_STORAGE, null
 
 
 
+# 定位功能
+
+基础知识:
+
+ [Android GPS初涉](https://www.runoob.com/w3cnote/android-tutorial-gps.html?from_wecom=1)
+
+## 一些概念和范畴
+
+### 定位数据-Location类
+
+- float **getAccuracy**()：获得定位信息的精度
+- double **getAltitude**()：获得定位信息的高度
+- float **getBearing**()：获得定位信息的方向
+- double **getLatitude**()：获得定位信息的纬度
+- double **getLongitude**()：获得定位信息的精度
+- String **getProvider**()：获得提供该定位信息的LocationProvider----> 真正的provider
+- float **getSpeed**()：获得定位信息的速度
+
+### 定位提供者-provider
+
+区分:
+
+* 发起者: network,gps,fused, passive,以及通过gms发起定位.
+* 真正的provider: 相当于硬件上是哪些定位器, 只有network,gps,fused
+
+### 定位权限
+
+* 精确定位权限
+* 模糊定位权限: android12的手机,app的targetsdk>=31时,权限界面会提供两者的区分,否则不区分.
+
+### 定位精准度到底由谁决定?
+
+并不是由provider决定,而是由是否为精确定位权限决定.
+
+有精确定位权限时,哪种provider都很准
+
+只有模糊定位权限时,所有provider都偏差几千米
+
+### 坐标系
+
+见下方定位坐标系模块
+
+
+
 ## 获取定位: LocationUtil
 
 > 饱和式救援
 
-三/四种常用模式:
+### 三/四种常用模式:
 
 * 快速模式
 * 静默模式
