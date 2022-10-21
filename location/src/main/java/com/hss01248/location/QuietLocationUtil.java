@@ -279,6 +279,7 @@ public class QuietLocationUtil {
                                 List<Location> map, MyLocationCallback listener, long startFromBeginning) {
         try {
             listener.onEachLocationStart("gms");
+            long start0 = System.currentTimeMillis();
             FusedLocationProviderClient fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
             gmsRunnable = new Runnable() {
 
@@ -298,7 +299,7 @@ public class QuietLocationUtil {
                                 LogUtils.i("gms", "get last location:" + lastLocation1);
                                 //没有finelocation权限时,locationManager.getProvider(gps)会抛异常
                                 // locationManager.getProvider(lastLocation1.getProvider())
-                                LocationSync.putToCache(lastLocation1,"gms",true,0,null);
+                                LocationSync.putToCache(lastLocation1,"gms",true,System.currentTimeMillis()- start0,System.currentTimeMillis() - startFromBeginning);
                                 /*map.put(lastLocation1.getProvider(), lastLocation1);
                                 if(LocationSync.getLongitude() ==0){
                                     LocationSync.save(lastLocation1.getLatitude(), lastLocation1.getLongitude());
@@ -326,7 +327,7 @@ public class QuietLocationUtil {
                                         (System.currentTimeMillis() - start),"距最初耗时(ms)",System.currentTimeMillis() - startFromBeginning);
 
                                 for (Location location1 : locations) {
-                                    LocationSync.putToCache(location1,"gms",false,0,null);
+                                    LocationSync.putToCache(location1,"gms",false,System.currentTimeMillis() - start,System.currentTimeMillis() - startFromBeginning);
                                 }
                                 long maxTime = 30000;//listener.useCacheInTimeOfMills()
                                 for (Location location : locations) {
@@ -335,13 +336,13 @@ public class QuietLocationUtil {
                                         listener.onEachLocationChanged(location,"gms",System.currentTimeMillis() - start,System.currentTimeMillis() - startFromBeginning);
                                     }else {
                                         LogUtils.e("gmsLocation","gms返回的定位超过了配置的定位有效期,坑爹的gms:"+(System.currentTimeMillis() - location.getTime())/1000+"s之前的数据");
-                                        try {
+                                        /*try {
                                             if(LocationUtil.getLocationMetric() != null){
                                                 LocationUtil.getLocationMetric().reportEachLocationChanged(location,"gms",location.getProvider(),System.currentTimeMillis() - start,System.currentTimeMillis() - startFromBeginning);
                                             }
                                         }catch (Throwable throwable){
                                             LogUtils.w(throwable);
-                                        }
+                                        }*/
 
                                     }
                                 }
@@ -483,7 +484,7 @@ public class QuietLocationUtil {
                     LogUtils.d("lastKnownLocation", lastKnownLocation, provider, "耗时(ms):", (System.currentTimeMillis() - start)
                             ,"距最初耗时(ms)",System.currentTimeMillis() - startFromBeginning);
                     //map.put(lastKnownLocation.getProvider(), lastKnownLocation);
-                    LocationSync.putToCache(lastKnownLocation,provider,true,System.currentTimeMillis() - start,null);
+                    LocationSync.putToCache(lastKnownLocation,provider,true,System.currentTimeMillis() - start,System.currentTimeMillis() - startFromBeginning);
                 }
                // }
 
@@ -493,7 +494,7 @@ public class QuietLocationUtil {
                         LogUtils.i("onLocationChanged", location,location.getTime(), provider, "耗时(ms):",
                                 (System.currentTimeMillis() - start),"距最初耗时(ms)",System.currentTimeMillis() - startFromBeginning);
                         if(location != null){
-                            LocationSync.putToCache(location,provider,false,System.currentTimeMillis() - start,null);
+                            LocationSync.putToCache(location,provider,false,System.currentTimeMillis() - start,System.currentTimeMillis() - startFromBeginning);
                             listener.onEachLocationChanged(location,provider,System.currentTimeMillis() - start,System.currentTimeMillis() - startFromBeginning);
                         }
                         countSet.remove(provider);

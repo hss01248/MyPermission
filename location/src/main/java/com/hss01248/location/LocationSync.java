@@ -1,5 +1,6 @@
 package com.hss01248.location;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
@@ -17,6 +18,7 @@ import androidx.appcompat.app.AlertDialog;
 import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.GsonUtils;
 import com.blankj.utilcode.util.LogUtils;
+import com.blankj.utilcode.util.PermissionUtils;
 import com.blankj.utilcode.util.ScreenUtils;
 import com.blankj.utilcode.util.ThreadUtils;
 import com.blankj.utilcode.util.Utils;
@@ -57,7 +59,14 @@ public class LocationSync {
     public static void putToCache(Location location, String startProviderName,
                                   boolean isFromLastKnowLocation,
                                   long timeCost,
-                                 @Nullable LocationProvider provider){
+                                  @Nullable LocationProvider provider){
+        putToCache(location,startProviderName,isFromLastKnowLocation,timeCost,-1);
+    }
+
+    public static void putToCache(Location location, String startProviderName,
+                                  boolean isFromLastKnowLocation,
+                                  long timeCost,
+                                 long costFromBegin){
         if(location == null){
             return;
         }
@@ -66,6 +75,7 @@ public class LocationSync {
             LocationInfo info = toLocationInfo(location);
 
             info.timeCost = timeCost;
+            info.costFromBegin = costFromBegin;
             if(!isFromLastKnowLocation){
                 info.millsOldWhenSaved = (System.currentTimeMillis() - info.timeStamp);
             }
@@ -76,12 +86,15 @@ public class LocationSync {
             }else {
                 info.calledMethod = startProviderName;
             }
+            info.hasFineLocationPermission = PermissionUtils.isGranted(Manifest.permission.ACCESS_FINE_LOCATION);
+
+
             saveExtraToLocation(location, info);
 
-            if(provider != null){
+            //if(provider != null){
                 // info.providerInfo = new ProviderInfo();
                 // info.providerInfo.initByProvider(provider);
-            }
+           // }
             boolean shouldSave = sortBeforeAdd(info, cachedLocations);
             if(!shouldSave){
                 return;
@@ -97,6 +110,7 @@ public class LocationSync {
             }catch (Throwable throwable){
                 LogUtils.w(throwable);
             }
+
 
         }catch (Throwable throwable){
             LogUtils.w(throwable);
@@ -141,11 +155,15 @@ public class LocationSync {
             bundle.putString("calledMethod", info.calledMethod);
             bundle.putLong("millsOldWhenSaved", info.millsOldWhenSaved);
             bundle.putLong("timeCost", info.timeCost);
+            bundle.putLong("costFromBegin", info.costFromBegin);
+            bundle.putBoolean("hasFineLocationPermission", info.hasFineLocationPermission);
             location.setExtras(bundle);
         }else {
             bundle.putString("calledMethod", info.calledMethod);
             bundle.putLong("millsOldWhenSaved", info.millsOldWhenSaved);
             bundle.putLong("timeCost", info.timeCost);
+            bundle.putLong("costFromBegin", info.costFromBegin);
+            bundle.putBoolean("hasFineLocationPermission", info.hasFineLocationPermission);
         }
     }
 
@@ -353,6 +371,8 @@ public class LocationSync {
             info.calledMethod = bundle.getString("calledMethod", "");
             info.millsOldWhenSaved = bundle.getLong("millsOldWhenSaved", -1);
             info.timeCost = bundle.getLong("timeCost", 0);
+            info.costFromBegin = bundle.getLong("costFromBegin", -1);
+            info.hasFineLocationPermission = bundle.getBoolean("hasFineLocationPermission");
         }
         return info;
     }

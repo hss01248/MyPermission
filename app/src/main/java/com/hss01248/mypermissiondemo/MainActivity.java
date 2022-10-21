@@ -134,6 +134,11 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
+            public boolean configShowLoadingDialog() {
+                return true;
+            }
+
+            @Override
             public boolean configUseSpCache() {
                 return false;
             }
@@ -246,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getLocationFast(View view) {
-        LocationUtil.getLocation(this, false, 15000, false, false,
+        LocationUtil.getLocationFast( 15000,
                 new MyLocationFastCallback() {
 
                     @Override
@@ -261,12 +266,6 @@ public class MainActivity extends AppCompatActivity {
                         ToastUtils.showLong(type + "," + msg);
                         LogUtils.w(msg, type);
                     }
-
-          /* @Override
-           public long useCacheInTimeOfMills() {
-                //5min内有效
-               return 5*60*1000;
-           }*/
                 });
     }
 
@@ -338,7 +337,7 @@ public class MainActivity extends AppCompatActivity {
     public void getLocationSilent(View view) {
 
 
-        new QuietLocationUtil().getLocation(getApplication(), 10000, new MyLocationCallback() {
+       LocationUtil.getLocationSilent( 10000, new MyLocationCallback() {
             @Override
             public void onSuccess(Location location, String msg) {
                 //ToastUtils.showLong("success," + msg + ", location:" + location);
@@ -484,5 +483,34 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+    }
+
+    public void coarseLocationOnly(View view) {
+        LocationUtil.getLocationFast( 15000,
+                new MyLocationFastCallback() {
+
+                    @Override
+                    public boolean configAcceptOnlyCoarseLocationPermission() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean configShowLoadingDialog() {
+                        return true;
+                    }
+
+                    @Override
+                    public void onSuccessFast(Location location, String msg) {
+                        //ToastUtils.showLong("success," + msg + ", location:" + location);
+                        LogUtils.i(msg, location);
+                        showFormatedLocationInfoInDialog(location);
+                    }
+
+                    @Override
+                    public void onFinalFail(int type, String msg, boolean isFailBeforeReallyRequest) {
+                        ToastUtils.showLong(type + "," + msg);
+                        LogUtils.w(msg, type);
+                    }
+                });
     }
 }
