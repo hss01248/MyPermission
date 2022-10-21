@@ -451,7 +451,7 @@ public class MainActivity extends AppCompatActivity {
 
     private  void goMap(double lattidude,double longtitude) {
         try {
-            String url = "https://www.hss01248.tech/mapsdemo2022.html?lat="+ lattidude+"&lng="+ longtitude+"&from=gps";
+            String url = "https://www.hss01248.tech/baidumap.html?lat="+ lattidude+"&lng="+ longtitude+"&from=gps";
            /* Uri uri = Uri.parse(url);
             Intent intent = new Intent(Intent.ACTION_VIEW, uri);
             startActivity(intent);*/
