@@ -1,5 +1,6 @@
 package com.hss01248.permission;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -170,17 +171,22 @@ public class MyPermissions {
                             //如何区分一个本身永久拒绝,一个本次允许的情况?
 
                             Collection intersection = CollectionUtils.intersection(deniedForeverList, deniedForever);
+                           /* if(deniedForever.contains(Manifest.permission.ACCESS_FINE_LOCATION)  ){
+                                boolean
+                            }*/
                             if(intersection.isEmpty()){
                                 LogUtils.i("deniedForeverList和deniedForever的交集为空,则说明权限状态都是本次处理的,这时就开始下一步");
                                 checkIfRetryAfterFirstTimeRequest(deniedForever,denied);
                             }else {
                                 LogUtils.w("deniedForeverList和deniedForever的交集不为空,则说明有权限本身就永久拒绝,这时就跳去设置页面");
+                                LogUtils.w("但不适用于精确和模糊定位同时请求,且拒绝了精确,选择了模糊定位权限的情况,此时如果选择了not show after dialog,也会走到这里,需要做兼容处理");
                                 goSettingFirstTimeWrapper(false, deniedForever);
                             }
 
                         } else {
                             isGoSettingFirstTime = true;
                             LogUtils.w("第一次_全部都是永久拒绝_直接gosetting_小于1s,说明没有显示系统权限弹窗,直接调用了denied,且全部是deniedForever,或者没有在manifest里声明权限");
+                            //LogUtils.w("但不适用于精确和模糊定位同时请求,且拒绝了精确,选择了模糊定位权限的情况,此时如果选择了not show after dialog,也会走到这里,需要做兼容处理");
                             goSettingFirstTimeWrapper(true, deniedForever);
                         }
                     }
@@ -219,7 +225,7 @@ public class MyPermissions {
      */
     private static boolean dealDeniedList(List<String> deniedForever, List<String> denied, long sysPermissionDialogShowTime) {
         long duration = System.currentTimeMillis() - sysPermissionDialogShowTime;
-        boolean hasShowSysDialog = duration > 1000;
+        boolean hasShowSysDialog = duration > 500;
         if (!hasShowSysDialog) {
             //当一个权限没有声明在manifest里,这个权限不会被放到deniedForever里,那需要处理成deniedForever
             deniedForever.clear();

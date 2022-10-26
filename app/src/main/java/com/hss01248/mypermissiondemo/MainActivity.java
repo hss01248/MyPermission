@@ -515,7 +515,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onlySwitch(View view) {
-        LocationUtil.getLocation(this, new MyLocationCallback() {
+        LocationUtil.getLocation(this,false, 10000, false, false, new MyLocationCallback() {
             @Override
             public boolean configJustAskPermissionAndSwitch() {
                 return true;
@@ -523,13 +523,15 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onSuccess(Location location, String msg) {
-                ToastUtils.showShort("success");
+                ToastUtils.showShort(msg);
+                LogUtils.i(msg);
 
             }
 
             @Override
             public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
                 ToastUtils.showShort(msg);
+                LogUtils.w(msg);
             }
         });
     }
