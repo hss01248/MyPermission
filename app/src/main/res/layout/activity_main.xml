@@ -64,6 +64,7 @@
           android:text="拒绝后弹窗"
           android:onClick="afterDenied"
           android:layout_height="wrap_content"/>
+
       <Button
           android:layout_width="wrap_content"
           android:text="请求前拒绝后都弹窗"
@@ -93,6 +94,13 @@
           android:layout_width="wrap_content"
           android:text="获取定位-locationManager"
           android:onClick="getLocationByLocationManager"
+          android:textAllCaps="false"
+          android:layout_height="wrap_content"/>
+
+      <Button
+          android:layout_width="wrap_content"
+          android:text="仅申请权限和打开gps开关,不发起定位"
+          android:onClick="onlySwitch"
           android:textAllCaps="false"
           android:layout_height="wrap_content"/>
 

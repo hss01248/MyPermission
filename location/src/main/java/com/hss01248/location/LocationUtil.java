@@ -67,7 +67,7 @@ public class LocationUtil {
     }
 
     public static  void getLocationFast(long timeoutMills,MyLocationFastCallback callback){
-        LocationUtil.getLocation(Utils.getApp(), false, (int) timeoutMills, false, false,callback);
+        LocationUtil.getLocation(Utils.getApp(), false, (int) timeoutMills, false, true,callback);
     }
     /**
      * 默认版 拒绝权限后有一次挽回行为
@@ -77,7 +77,7 @@ public class LocationUtil {
      */
     public static void getLocation(Context context, MyLocationCallback callback) {
         getLocation(context, false, 10000, false,
-                false, callback);
+                true, callback);
     }
 
     public static Location getLocation() {
@@ -93,7 +93,12 @@ public class LocationUtil {
     }
 
     public static void getLocation(Context context, boolean silent, int timeoutMills, boolean showBeforeRequest, boolean showAfterRequest, MyLocationCallback callback) {
-        callback = new WrappedLocationCallback(callback);
+        if(callback instanceof WrappedLocationCallback){
+
+        }else {
+            callback = new WrappedLocationCallback(callback);
+        }
+
         getLocation(context, silent, timeoutMills, showBeforeRequest, showAfterRequest, true,false,false,false, callback);
     }
 
@@ -324,7 +329,6 @@ public class LocationUtil {
                            }else {
                                callback.onFailed(1, "no permission",true);
                            }
-
                         }
                     }, Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION);
             //
@@ -338,6 +342,8 @@ public class LocationUtil {
         if(!callback.configJustAskPermissionAndSwitch()){
             callback.onBeforeReallyRequest();
             new QuietLocationUtil().getLocation(context, timeout,withoutGms, callback);
+        }else {
+            callback.onSuccess(null,"permission granted");
         }
     }
 }

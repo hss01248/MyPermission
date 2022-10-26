@@ -513,4 +513,24 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
     }
+
+    public void onlySwitch(View view) {
+        LocationUtil.getLocation(this, new MyLocationCallback() {
+            @Override
+            public boolean configJustAskPermissionAndSwitch() {
+                return true;
+            }
+
+            @Override
+            public void onSuccess(Location location, String msg) {
+                ToastUtils.showShort("success");
+
+            }
+
+            @Override
+            public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
+                ToastUtils.showShort(msg);
+            }
+        });
+    }
 }

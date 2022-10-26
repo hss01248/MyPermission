@@ -53,7 +53,7 @@ public class WrappedLocationCallback implements MyLocationCallback{
 
     @Override
     public boolean configAcceptOnlyCoarseLocationPermission() {
-        return callback.configAcceptOnlyCoarseLocationPermission();
+        return callback.configAcceptOnlyCoarseLocationPermission() || configJustAskPermissionAndSwitch();
     }
 
     @Override
