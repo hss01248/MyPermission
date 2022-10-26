@@ -36,6 +36,12 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
             });
         }
     }
+
+    @Override
+    public boolean configAcceptOnlyCoarseLocationPermission() {
+        return false;
+    }
+
     void dismissDialog(){
         if(dialog == null){
             return;

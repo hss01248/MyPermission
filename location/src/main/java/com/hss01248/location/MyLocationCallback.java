@@ -99,7 +99,7 @@ public interface MyLocationCallback {
      * @return
      */
     default boolean configAcceptOnlyCoarseLocationPermission(){
-        return false;
+        return true;
     }
 
     /**
