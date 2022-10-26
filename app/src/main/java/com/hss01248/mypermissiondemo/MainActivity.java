@@ -533,4 +533,18 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+    public void quickLocationNoAfterDialog(View view) {
+        LocationUtil.getLocation(this, false, 10000, false, false, new MyLocationCallback() {
+            @Override
+            public void onSuccess(Location location, String msg) {
+                showFormatedLocationInfoInDialog(location);
+            }
+
+            @Override
+            public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
+                ToastUtils.showLong(type + "," + msg);
+            }
+        });
+    }
 }
