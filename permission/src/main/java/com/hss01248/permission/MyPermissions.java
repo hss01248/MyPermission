@@ -26,6 +26,8 @@ import java.util.List;
 
 public class MyPermissions {
 
+    public static boolean showDialogIfOnlyCoarseLocationGranted = true;
+
     public static  boolean isStateInManifest(String permission){
         try {
             if(TextUtils.isEmpty(permission)){
