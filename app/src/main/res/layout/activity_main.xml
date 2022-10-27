@@ -105,7 +105,7 @@
           android:layout_height="wrap_content"/>
       <Button
           android:layout_width="wrap_content"
-          android:text="快速定位-无后置权限引导弹窗"
+          android:text="定位-无后置权限引导弹窗"
           android:onClick="quickLocationNoAfterDialog"
           android:textAllCaps="false"
           android:layout_height="wrap_content"/>

@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
@@ -26,7 +27,11 @@ import java.util.List;
 
 public class MyPermissions {
 
-    public static boolean showDialogIfOnlyCoarseLocationGranted = true;
+    public static void setCanAcceptOnlyCoarseLocationPermission(boolean canAcceptOnlyCoarseLocationPermission) {
+        MyPermissions.canAcceptOnlyCoarseLocationPermission = canAcceptOnlyCoarseLocationPermission;
+    }
+
+    public static   boolean canAcceptOnlyCoarseLocationPermission = false;
 
     public static  boolean isStateInManifest(String permission){
         try {
@@ -142,6 +147,11 @@ public class MyPermissions {
         return deniedForever;
     }
 
+    private  boolean isOnlyLocation(){
+        return  permissionsList.size() ==2
+                && permissionsList.contains(Manifest.permission.ACCESS_COARSE_LOCATION)
+                && permissionsList.contains(Manifest.permission.ACCESS_FINE_LOCATION);
+    }
     private void requestPermissionFirstTime() {
 
         List<String> deniedForeverList = getDeniedForeverList(permissions);
@@ -173,9 +183,17 @@ public class MyPermissions {
                             //如何区分一个本身永久拒绝,一个本次允许的情况?
 
                             Collection intersection = CollectionUtils.intersection(deniedForeverList, deniedForever);
-                           /* if(deniedForever.contains(Manifest.permission.ACCESS_FINE_LOCATION)  ){
-                                boolean
-                            }*/
+                            //精确和模糊定位同时请求,且拒绝了精确,选择了模糊定位权限的情况
+                            if(canAcceptOnlyCoarseLocationPermission
+                                    &&Build.VERSION.SDK_INT > Build.VERSION_CODES.R
+                                    && isOnlyLocation()
+                                    && PermissionUtils.isGranted(Manifest.permission.ACCESS_COARSE_LOCATION)){
+                                if(!showAfterRequest){
+                                    callback.onDenied(deniedForever,denied);
+                                    return;
+                                }
+                            }
+
                             if(intersection.isEmpty()){
                                 LogUtils.i("deniedForeverList和deniedForever的交集为空,则说明权限状态都是本次处理的,这时就开始下一步");
                                 checkIfRetryAfterFirstTimeRequest(deniedForever,denied);
@@ -186,6 +204,16 @@ public class MyPermissions {
                             }
 
                         } else {
+                            if(canAcceptOnlyCoarseLocationPermission
+                                    &&Build.VERSION.SDK_INT > Build.VERSION_CODES.R
+                                    && isOnlyLocation()
+                                    && PermissionUtils.isGranted(Manifest.permission.ACCESS_COARSE_LOCATION)){
+                                if(!showAfterRequest){
+                                    callback.onDenied(deniedForever,denied);
+                                    return;
+                                }
+                            }
+
                             isGoSettingFirstTime = true;
                             LogUtils.w("第一次_全部都是永久拒绝_直接gosetting_小于1s,说明没有显示系统权限弹窗,直接调用了denied,且全部是deniedForever,或者没有在manifest里声明权限");
                             //LogUtils.w("但不适用于精确和模糊定位同时请求,且拒绝了精确,选择了模糊定位权限的情况,此时如果选择了not show after dialog,也会走到这里,需要做兼容处理");

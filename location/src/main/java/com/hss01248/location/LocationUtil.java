@@ -305,6 +305,7 @@ public class LocationUtil {
             PermissionUtils.isGranted(Manifest.permission.ACCESS_COARSE_LOCATION )){
             doRequestLocation(context, timeout,withoutGms, callback);
         } else {
+            MyPermissions.setCanAcceptOnlyCoarseLocationPermission(callback.configAcceptOnlyCoarseLocationPermission());
             MyPermissions.requestByMostEffort(
                     showBeforeRequest,
                     showAfterRequest,

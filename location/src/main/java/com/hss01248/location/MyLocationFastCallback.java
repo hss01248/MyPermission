@@ -6,6 +6,7 @@ import android.location.Location;
 import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.ThreadUtils;
+import com.hss01248.permission.MyPermissions;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +23,9 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
     private long start;
 
     ProgressDialog dialog;
+
+
+
     @Override
     public void onBeforeReallyRequest() {
         MyLocationCallback.super.onBeforeReallyRequest();

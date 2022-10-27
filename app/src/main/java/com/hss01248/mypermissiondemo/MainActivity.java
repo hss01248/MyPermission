@@ -537,6 +537,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void quickLocationNoAfterDialog(View view) {
+        //MyPermissions.setCanAcceptOnlyCoarseLocationPermission(true);
         LocationUtil.getLocation(this, false, 10000, false, false, new MyLocationCallback() {
             @Override
             public void onSuccess(Location location, String msg) {
