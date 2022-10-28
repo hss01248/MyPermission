@@ -6,5 +6,5 @@
     <string name="mypermission_cancel">cancel</string>
     <string name="mypermission_location_title">request location</string>
     <string name="mypermission_location_switch">the location service is off, please open it to continue</string>
-    <string name="mypermission_go_settings">please permit the permissions in -permissions- module</string>
+    <string name="mypermission_go_settings">please grant the permissions in -permissions- module</string>
 </resources>
