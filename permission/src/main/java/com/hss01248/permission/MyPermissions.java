@@ -31,19 +31,19 @@ public class MyPermissions {
         MyPermissions.canAcceptOnlyCoarseLocationPermission = canAcceptOnlyCoarseLocationPermission;
     }
 
-    public static   boolean canAcceptOnlyCoarseLocationPermission = false;
+    public static boolean canAcceptOnlyCoarseLocationPermission = false;
 
-    public static  boolean isStateInManifest(String permission){
+    public static boolean isStateInManifest(String permission) {
         try {
-            if(TextUtils.isEmpty(permission)){
+            if (TextUtils.isEmpty(permission)) {
                 return false;
             }
             PackageInfo packageInfo = Utils.getApp().getPackageManager().getPackageInfo(AppUtils.getAppPackageName(), PackageManager.GET_PERMISSIONS);
             //Utils.getApp().getPackageManager()
-            LogUtils.i("permissioninfo",packageInfo.permissions,packageInfo.requestedPermissions);
-            if(packageInfo.requestedPermissions != null){
+            LogUtils.i("permissioninfo", packageInfo.permissions, packageInfo.requestedPermissions);
+            if (packageInfo.requestedPermissions != null) {
                 for (String requestedPermission : packageInfo.requestedPermissions) {
-                    if(permission.equals(requestedPermission)){
+                    if (permission.equals(requestedPermission)) {
                         return true;
                     }
                 }
@@ -61,10 +61,11 @@ public class MyPermissions {
     public static IPermissionDialog defaultPermissionDialog = new DefaultPermissionDialog();
 
     public static void request(PermissionUtils.FullCallback callback,
-                                           String... permission){
-        requestByMostEffort(false,false,callback,permission);
+                               String... permission) {
+        requestByMostEffort(false, false, callback, permission);
 
     }
+
     public static void requestByMostEffort(boolean showBeforeRequest, boolean showAfterRequest,
                                            PermissionUtils.FullCallback callback,
                                            String... permission) {
@@ -104,7 +105,7 @@ public class MyPermissions {
         //经过了一次请求后,这两个判断才准确
         List<String> deniedForeverList = getDeniedForeverList(permission);
         List<String> deniedTemporary = getDeniedTemporary(permission);
-       // LogUtils.i("首次请求权限,原始权限状态(永久拒绝,暂时拒绝)", deniedForeverList, deniedTemporary);
+        // LogUtils.i("首次请求权限,原始权限状态(永久拒绝,暂时拒绝)", deniedForeverList, deniedTemporary);
 
 
         if (showBeforeRequest) {
@@ -147,11 +148,12 @@ public class MyPermissions {
         return deniedForever;
     }
 
-    private  boolean isOnlyLocation(){
-        return  permissionsList.size() ==2
+    private boolean isOnlyLocation() {
+        return permissionsList.size() == 2
                 && permissionsList.contains(Manifest.permission.ACCESS_COARSE_LOCATION)
                 && permissionsList.contains(Manifest.permission.ACCESS_FINE_LOCATION);
     }
+
     private void requestPermissionFirstTime() {
 
         List<String> deniedForeverList = getDeniedForeverList(permissions);
@@ -184,32 +186,33 @@ public class MyPermissions {
 
                             Collection intersection = CollectionUtils.intersection(deniedForeverList, deniedForever);
                             //精确和模糊定位同时请求,且拒绝了精确,选择了模糊定位权限的情况
-                            if(canAcceptOnlyCoarseLocationPermission
-                                    &&Build.VERSION.SDK_INT > Build.VERSION_CODES.R
+                            if (canAcceptOnlyCoarseLocationPermission
+                                    && Build.VERSION.SDK_INT > Build.VERSION_CODES.R
                                     && isOnlyLocation()
-                                    && PermissionUtils.isGranted(Manifest.permission.ACCESS_COARSE_LOCATION)){
-                                if(!showAfterRequest){
-                                    callback.onDenied(deniedForever,denied);
+                                    && PermissionUtils.isGranted(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                                if (!showAfterRequest) {
+                                    callback.onDenied(deniedForever, denied);
                                     return;
                                 }
                             }
 
-                            if(intersection.isEmpty()){
+                            if (intersection.isEmpty()) {
                                 LogUtils.i("deniedForeverList和deniedForever的交集为空,则说明权限状态都是本次处理的,这时就开始下一步");
-                                checkIfRetryAfterFirstTimeRequest(deniedForever,denied);
-                            }else {
+                                checkIfRetryAfterFirstTimeRequest(deniedForever, denied);
+                            } else {
                                 LogUtils.w("deniedForeverList和deniedForever的交集不为空,则说明有权限本身就永久拒绝,这时就跳去设置页面");
                                 LogUtils.w("但不适用于精确和模糊定位同时请求,且拒绝了精确,选择了模糊定位权限的情况,此时如果选择了not show after dialog,也会走到这里,需要做兼容处理");
                                 goSettingFirstTimeWrapper(false, deniedForever);
                             }
 
                         } else {
-                            if(canAcceptOnlyCoarseLocationPermission
-                                    &&Build.VERSION.SDK_INT > Build.VERSION_CODES.R
+                            if (canAcceptOnlyCoarseLocationPermission
+                                    && Build.VERSION.SDK_INT > Build.VERSION_CODES.R
                                     && isOnlyLocation()
-                                    && PermissionUtils.isGranted(Manifest.permission.ACCESS_COARSE_LOCATION)){
-                                if(!showAfterRequest){
-                                    callback.onDenied(deniedForever,denied);
+                                    && PermissionUtils.isGranted(Manifest.permission.ACCESS_COARSE_LOCATION)
+                                    && !PermissionUtils.isGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                                if (!showAfterRequest && !showBeforeRequest) {
+                                    callback.onDenied(deniedForever, denied);
                                     return;
                                 }
                             }
@@ -283,9 +286,9 @@ public class MyPermissions {
                     List<String> deniedTemporary = getDeniedTemporary(permissions);
                     LogUtils.i("还有这些没有被允许:", deniedForeverList, deniedTemporary);
                     //相当于显示了系统权限弹窗
-                    if(canShowAfterIfSettingFailed){
-                        checkIfRetryAfterFirstTimeRequest(deniedForeverList,deniedTemporary);
-                    }else {
+                    if (canShowAfterIfSettingFailed) {
+                        checkIfRetryAfterFirstTimeRequest(deniedForeverList, deniedTemporary);
+                    } else {
                         LogUtils.w("第一次有系统弹窗,有go setting,则不再处理后置dialog");
                         callback.onDenied(deniedForeverList, deniedTemporary);
                     }
@@ -304,7 +307,7 @@ public class MyPermissions {
         });
     }
 
-    private  void goSettingsSecondTime() {
+    private void goSettingsSecondTime() {
         Intent intent = IntentUtils.getLaunchAppDetailsSettingsIntent(Utils.getApp().getPackageName(), false);
         StartActivityUtil.goOutAppForResult(ActivityUtils.getTopActivity(), intent, new ActivityResultListener() {
             @Override
@@ -336,7 +339,7 @@ public class MyPermissions {
         //准备重试
        /* List<String> deniedForeverList = getDeniedForeverList(permissions);
         List<String> deniedTemporary = getDeniedTemporary(permissions);*/
-        if(isGoSettingFirstTime){
+        if (isGoSettingFirstTime) {
             //如果第一次已经是直接跳设置页,那么回来后没有全部给权限,就不再挽回了,即使配置了showAfterRequest也不挽回
             showAfterRequest = false;
         }
