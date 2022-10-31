@@ -306,6 +306,18 @@ public class LocationUtil {
             doRequestLocation(context, timeout,withoutGms, callback);
         } else {
             MyPermissions.setCanAcceptOnlyCoarseLocationPermission(callback.configAcceptOnlyCoarseLocationPermission());
+            if(PermissionUtils.isGranted(Manifest.permission.ACCESS_COARSE_LOCATION)
+                    && !PermissionUtils.isGranted(Manifest.permission.ACCESS_FINE_LOCATION)){
+                if(callback.configAcceptOnlyCoarseLocationPermission()){
+                    if(!showBeforeRequest && !showAfterRequest){
+                        //能接受模糊权限,且只有模糊权限时,如果配置不要权限前置和后置弹窗,那么直接去定位,不发起权限请求.
+                        //为项目特殊要求,因项目中用其他权限框架预先请求了定位权限,此处再弹会导致多次权限弹窗
+                        //真实使用中,其实应该再请求一下
+                        doRequestLocation(context, timeout,withoutGms, callback);
+                        return;
+                    }
+                }
+            }
             MyPermissions.requestByMostEffort(
                     showBeforeRequest,
                     showAfterRequest,
