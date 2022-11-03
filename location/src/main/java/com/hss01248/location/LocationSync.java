@@ -8,6 +8,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.location.Address;
 import android.location.Location;
 import android.location.LocationProvider;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.WindowManager;
@@ -89,6 +90,9 @@ public class LocationSync {
             info.hasFineLocationPermission = PermissionUtils.isGranted(Manifest.permission.ACCESS_FINE_LOCATION);
 
 
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                info.isFromMockProvider = location.isFromMockProvider();
+            }
             saveExtraToLocation(location, info);
 
             //if(provider != null){
@@ -102,8 +106,12 @@ public class LocationSync {
             //AndroidBus.postByTag("location",cachedLocations);
             try {
                 if(LogUtils.getConfig().isLogSwitch()){
+                    if(location.getExtras() != null){
+                        LogUtils.i(location.getExtras());
+                    }
                     String json = new GsonBuilder().serializeNulls().setPrettyPrinting().create().toJson(cachedLocations);
                     LogUtils.json(json);
+
                 }
 
                 saveAsync();
@@ -153,6 +161,7 @@ public class LocationSync {
         if(bundle == null){
             bundle = new Bundle();
             bundle.putString("calledMethod", info.calledMethod);
+            bundle.putBoolean("isFromMockProvider", info.isFromMockProvider);
             bundle.putLong("millsOldWhenSaved", info.millsOldWhenSaved);
             bundle.putLong("timeCost", info.timeCost);
             bundle.putLong("costFromBegin", info.costFromBegin);
@@ -160,6 +169,7 @@ public class LocationSync {
             location.setExtras(bundle);
         }else {
             bundle.putString("calledMethod", info.calledMethod);
+            bundle.putBoolean("isFromMockProvider", info.isFromMockProvider);
             bundle.putLong("millsOldWhenSaved", info.millsOldWhenSaved);
             bundle.putLong("timeCost", info.timeCost);
             bundle.putLong("costFromBegin", info.costFromBegin);
@@ -344,6 +354,9 @@ public class LocationSync {
         location.setLatitude(info.lattidude);
         location.setBearing(info.bearing);
         location.setSpeed(info.speed);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            location.setElapsedRealtimeNanos(info.elapsedRealtimeNanos);
+        }
         saveExtraToLocation(location, info);
         return location;
     }
@@ -365,6 +378,12 @@ public class LocationSync {
         info.bearing = location.getBearing();
         info.speed = location.getSpeed();
         info.realProvider = location.getProvider();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            info.elapsedRealtimeNanos = location.getElapsedRealtimeNanos();
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            info.isFromMockProvider = location.isFromMockProvider();
+        }
 
         Bundle bundle = location.getExtras();
         if(bundle != null){
@@ -373,6 +392,11 @@ public class LocationSync {
             info.timeCost = bundle.getLong("timeCost", 0);
             info.costFromBegin = bundle.getLong("costFromBegin", -1);
             info.hasFineLocationPermission = bundle.getBoolean("hasFineLocationPermission");
+            if(!info.isFromMockProvider){
+                if(bundle.getBoolean("isFromMockProvider",false)){
+                    info.isFromMockProvider = true;
+                }
+            }
         }
         return info;
     }

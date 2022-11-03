@@ -17,6 +17,8 @@ public class LocationInfo {
     public double longtitude;
     public double lattidude;
     public long timeStamp;
+    public long elapsedRealtimeNanos;
+    //public long elapsedRealtimeNanosOfSave;
     public String timeStampStr;
     public String locale;
 
@@ -28,6 +30,8 @@ public class LocationInfo {
     public String realProvider;
     public String calledMethod;
     public ProviderInfo providerInfo;
+
+    public boolean isFromMockProvider;
 
     public long timeCost;
 
@@ -83,12 +87,14 @@ public class LocationInfo {
                 "longtitude=" + longtitude +
                 ", lattidude=" + lattidude +
                 ", timeStamp=" + timeStamp +
+                ", elapsedRealtimeNanos=" + elapsedRealtimeNanos +
                 ", timeStampStr='" + timeStampStr + '\'' +
                 ", locale='" + locale + '\'' +
                 ", hasFineLocationPermission='" + hasFineLocationPermission + '\'' +
                 ", millsOldWhenSaved=" + millsOldWhenSaved +
                 ", realProvider='" + realProvider + '\'' +
                 ", calledMethod='" + calledMethod + '\'' +
+                ", isFromMockProvider='" + isFromMockProvider + '\'' +
                 ", providerInfo=" + providerInfo +
                 ", timeCost=" + timeCost +
                 ", costFromBegin=" + costFromBegin +
