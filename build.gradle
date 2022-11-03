@@ -8,8 +8,6 @@ buildscript {
         groupId='com.github.hss01248.MyPermission'
         versionCode = '2.1.9'
         isPublisToLocal=false
-
-
     }
 
 
