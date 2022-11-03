@@ -10,6 +10,7 @@ import android.location.Location;
 import android.location.LocationProvider;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.text.TextUtils;
 import android.view.WindowManager;
 
@@ -78,7 +79,9 @@ public class LocationSync {
             info.timeCost = timeCost;
             info.costFromBegin = costFromBegin;
             if(!isFromLastKnowLocation){
-                info.millsOldWhenSaved = (System.currentTimeMillis() - info.timeStamp);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                    info.millsOldWhenSaved = (SystemClock.elapsedRealtimeNanos() - info.elapsedRealtimeNanos)/1000000;
+                }
             }
 
             //location.getSpeedAccuracyMetersPerSecond()
