@@ -110,14 +110,17 @@ public class LocationUtil {
      * @param callback
      */
     private static void getLocation(Context context, boolean silent, int timeout, boolean showBeforeRequest,
-                                    boolean showAfterRequest, boolean requestGmsDialog, boolean asQuickAsPossible,boolean useLastKnownLocation,boolean withoutGms,MyLocationCallback callback) {
+                                    boolean showAfterRequest, boolean requestGmsDialog, boolean asQuickAsPossible,
+                                    boolean useLastKnownLocation,boolean withoutGms,MyLocationCallback callback) {
 
 
         if (silent) {
             doRequestLocation(context, timeout,withoutGms, callback);
             return;
         }
-        LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        //有的手机getSystemService抛异常
+
+        LocationManager locationManager = (LocationManager) context.getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
 
         //如果谷歌服务可用,则直接申请谷歌:
         if (QuietLocationUtil.isGmsAvaiable(context) && requestGmsDialog) {
@@ -129,6 +132,14 @@ public class LocationUtil {
             checkPermission(context, timeout, showBeforeRequest, showAfterRequest,withoutGms, callback);
             return;
         }
+
+        askGpsSwitchDialog(locationManager,context,timeout,showBeforeRequest,showAfterRequest,withoutGms,callback);
+
+    }
+
+    private static void askGpsSwitchDialog(LocationManager locationManager,Context context,
+                                         int timeout, boolean showBeforeRequest, boolean showAfterRequest,
+                                          boolean withoutGms,MyLocationCallback callback) {
         callback.onGmsSwitchDialogShow();
         //开关关闭,就去申请打开开关
         AlertDialog alertDialog = new AlertDialog.Builder(ActivityUtils.getTopActivity())
@@ -167,8 +178,6 @@ public class LocationUtil {
         alertDialog.setCanceledOnTouchOutside(false);
         alertDialog.setCancelable(false);
         alertDialog.show();
-
-
     }
 
     private static void checkSwitchByGms(Context context, boolean silent, int timeout, boolean showBeforeRequest,
@@ -237,12 +246,17 @@ public class LocationUtil {
                                 requestGmsSwitch(context, silent, timeout, showAfterRequest, showAfterRequest, asQuickAsPossible,useLastKnownLocation ,callback, result);
                             } else {
                                 callback.onGmsDialogCancelClicked();
-                                LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-                                if(locationManager != null && QuietLocationUtil.isLocationEnabled(locationManager)){
+                                LocationManager locationManager = (LocationManager) context.getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+                                if(locationManager != null
+                                        && QuietLocationUtil.isLocationEnabled(locationManager)
+                                        && callback.configAcceptOnlyCoarseLocationPermission()){
                                     Log.w("gms", "不同意gms弹窗,且定位开关开启,那么绕过gms,请求原生定位");
                                     getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false,asQuickAsPossible,useLastKnownLocation ,true, callback);
                                 }else {
-                                    callback.onFailed(2, "location switch off-gms",true);
+                                    Log.w("gms", "不同意gms弹窗,且定位开关开启,那么绕过gms,请求原生定位");
+                                    askGpsSwitchDialog(locationManager,context,timeout,showBeforeRequest,showAfterRequest,false,callback);
+                                    //使用自定义弹窗
+                                    //callback.onFailed(2, "location switch off-gms",true);
                                 }
                             }
                             break;
@@ -290,7 +304,13 @@ public class LocationUtil {
             @Override
             public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
                 //再次检查
-                checkSwitchByGms(context, silent, timeout, showBeforeRequest, showAfterRequest,asQuickAsPossible,useLastKnownLocation , callback, false);
+                ThreadUtils.getMainHandler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        checkSwitchByGms(context, silent, timeout, showBeforeRequest, showAfterRequest,asQuickAsPossible,useLastKnownLocation , callback, false);
+                    }
+                },200);
+
             }
 
             @Override

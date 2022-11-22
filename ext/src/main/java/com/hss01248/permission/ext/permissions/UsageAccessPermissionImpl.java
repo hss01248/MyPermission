@@ -30,7 +30,7 @@ public class UsageAccessPermissionImpl implements IExtPermission {
     public boolean checkPermission(Activity activity) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
             //"usagestats"  Context.USAGE_STATS_SERVICE
-            UsageStatsManager usm=(UsageStatsManager)activity.getSystemService(Context.USAGE_STATS_SERVICE);
+            UsageStatsManager usm=(UsageStatsManager)activity.getApplicationContext().getSystemService(Context.USAGE_STATS_SERVICE);
             if(usm == null){
                 return false;
             }

@@ -102,7 +102,7 @@ public class QuietLocationUtil {
             listener.onFailed(1, "no permission");
             return;
         }
-        LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        LocationManager locationManager = (LocationManager) context.getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         if (locationManager == null) {
             listener.onFailed(6, "locationManager is null");
             return;
