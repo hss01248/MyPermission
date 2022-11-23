@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -196,6 +197,10 @@ public class QuietLocationUtil {
         requestGPS(finalContext,locationManager, finalListener1);*/
     }
 
+
+
+
+
     public static boolean isLocationEnabled(LocationManager locationManager) {
         try {
             if (locationManager == null) {
@@ -207,11 +212,17 @@ public class QuietLocationUtil {
             if (locationEnabled) {
                 return locationEnabled;
             }*/
-            boolean locationEnabled3 = isLocationEnabled3();
+           /* boolean locationEnabled3 = isLocationEnabled3();
             if (locationEnabled3) {
                 return true;
-            }
+            }*/
             List<String> allProviders = locationManager.getProviders(true);
+            //如果只有几个passive,那么判定开关关闭
+            if(allProviders != null && allProviders.size() ==1){
+                if("passive".equals(allProviders.get(0))){
+                    return false;
+                }
+            }
             LogUtils.d("providers:", allProviders);
             if (allProviders != null && !allProviders.isEmpty()) {
                 for (String provider : allProviders) {

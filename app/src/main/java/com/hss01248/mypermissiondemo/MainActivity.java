@@ -39,6 +39,8 @@ import com.hss01248.basewebview.BaseWebviewActivity;
 import com.hss01248.bus.AndroidBus;
 import com.hss01248.bus.ContextBusObserver;
 import com.hss01248.location.LocationInfo;
+import com.hss01248.location.LocationStateInfo;
+import com.hss01248.location.LocationStateUtil;
 import com.hss01248.location.LocationSync;
 import com.hss01248.location.LocationUtil;
 import com.hss01248.location.MyLocationCallback;
@@ -57,6 +59,8 @@ import com.hss01248.permission.ext.permissions.UsageAccessPermissionImpl;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+
+import io.reactivex.functions.Consumer;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -549,5 +553,31 @@ public class MainActivity extends AppCompatActivity {
                 ToastUtils.showLong(type + "," + msg);
             }
         });
+    }
+
+    public void locationState(View view) {
+
+        LocationStateUtil.getLocationState(new Consumer<LocationStateInfo>() {
+            @Override
+            public void accept(LocationStateInfo locationStateInfo) throws Exception {
+                ThreadUtils.getMainHandler().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        String json = new GsonBuilder().setPrettyPrinting().create().toJson(locationStateInfo);
+
+                        AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
+                                .setTitle("定位状态")
+                                .setMessage(json)
+                                .setPositiveButton("ok",null)
+                                .create();
+                        dialog.show();
+                    }
+                });
+            }
+        });
+
+
+
+
     }
 }

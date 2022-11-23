@@ -96,6 +96,12 @@
           android:onClick="getLocationByLocationManager"
           android:textAllCaps="false"
           android:layout_height="wrap_content"/>
+      <Button
+          android:layout_width="wrap_content"
+          android:text="定位权限和开关状态"
+          android:onClick="locationState"
+          android:textAllCaps="false"
+          android:layout_height="wrap_content"/>
 
       <Button
           android:layout_width="wrap_content"

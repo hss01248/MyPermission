@@ -181,8 +181,9 @@ public class LocationUtil {
     }
 
     private static void checkSwitchByGms(Context context, boolean silent, int timeout, boolean showBeforeRequest,
-                                         boolean showAfterRequest,boolean asQuickAsPossible,boolean useLastKnownLocation, MyLocationCallback callback, boolean isFirstIn) {
-
+                                         boolean showAfterRequest,boolean asQuickAsPossible,boolean useLastKnownLocation,
+                                         MyLocationCallback callback, boolean isFirstIn) {
+        boolean[] haveCallbacked = new boolean[]{false};
         try {
             GoogleApiClient googleApiClient = new GoogleApiClient.Builder(context)
                     .addApi(LocationServices.API).build();
@@ -196,7 +197,7 @@ public class LocationUtil {
             LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder().addLocationRequest(locationRequest);
             builder.setAlwaysShow(true);
 
-            boolean[] haveCallbacked = new boolean[]{false};
+
             //超时处理
             ThreadUtils.executeBySingleWithDelay(new ThreadUtils.SimpleTask<Object>() {
                 @Override
@@ -211,7 +212,9 @@ public class LocationUtil {
                     }
                     haveCallbacked[0] = true;
                     LogUtils.w("gms 判断状态超时,辣鸡gms: LocationServices.SettingsApi.checkLocationSettings");
-                    getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false,asQuickAsPossible,useLastKnownLocation ,true,callback);
+                    checkIfShowGpsSwitchDialog( context,  silent,  timeout,  showBeforeRequest,
+                            showAfterRequest, asQuickAsPossible, useLastKnownLocation, callback,  isFirstIn);
+                    //getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false,asQuickAsPossible,useLastKnownLocation ,true,callback);
                 }
             },2000, TimeUnit.MILLISECONDS);
 
@@ -246,38 +249,56 @@ public class LocationUtil {
                                 requestGmsSwitch(context, silent, timeout, showAfterRequest, showAfterRequest, asQuickAsPossible,useLastKnownLocation ,callback, result);
                             } else {
                                 callback.onGmsDialogCancelClicked();
-                                LocationManager locationManager = (LocationManager) context.getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
-                                if(locationManager != null
-                                        && QuietLocationUtil.isLocationEnabled(locationManager)
-                                        && callback.configAcceptOnlyCoarseLocationPermission()){
-                                    Log.w("gms", "不同意gms弹窗,且定位开关开启,那么绕过gms,请求原生定位");
-                                    getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false,asQuickAsPossible,useLastKnownLocation ,true, callback);
-                                }else {
-                                    Log.w("gms", "不同意gms弹窗,且定位开关开启,那么绕过gms,请求原生定位");
-                                    askGpsSwitchDialog(locationManager,context,timeout,showBeforeRequest,showAfterRequest,false,callback);
-                                    //使用自定义弹窗
-                                    //callback.onFailed(2, "location switch off-gms",true);
-                                }
+                                Log.w("gms", "不同意gms弹窗,且定位开关开启,那么看是否要弹原生dialog");
+                                //miui9上,即使gms点击了同意,再查看状态时还是RESOLUTION_REQUIRED,精确位置开关被miui控制
+                                checkIfShowGpsSwitchDialog( context,  silent,  timeout,  showBeforeRequest,
+                                        showAfterRequest, asQuickAsPossible, useLastKnownLocation, callback,  isFirstIn);
                             }
                             break;
                         case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
                             //Location settings are inadequate, and cannot be fixed here. Dialog not created.
                             //todo
                             Log.w("gms", "Error enabling location. Please try again");
-                            getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false,asQuickAsPossible,useLastKnownLocation ,true, callback);
+                            checkIfShowGpsSwitchDialog( context,  silent,  timeout,  showBeforeRequest,
+                                    showAfterRequest, asQuickAsPossible, useLastKnownLocation, callback,  isFirstIn);
                             break;
                         default:
                             //todo
                             Log.w("gms", "Error enabling location. Please try again2");
-                            getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false, asQuickAsPossible,useLastKnownLocation ,true,callback);
+                            checkIfShowGpsSwitchDialog( context,  silent,  timeout,  showBeforeRequest,
+                                    showAfterRequest, asQuickAsPossible, useLastKnownLocation, callback,  isFirstIn);
                             break;
                     }
                 }
             });
         } catch (Throwable throwable) {
             throwable.printStackTrace();
+            if(haveCallbacked[0]){
+                return;
+            }
+            haveCallbacked[0] = true;
+            checkIfShowGpsSwitchDialog( context,  silent,  timeout,  showBeforeRequest,
+                    showAfterRequest, asQuickAsPossible, useLastKnownLocation, callback,  isFirstIn);
         }
 
+    }
+
+    private static void checkIfShowGpsSwitchDialog(Context context, boolean silent, int timeout, boolean showBeforeRequest,
+                                                   boolean showAfterRequest,boolean asQuickAsPossible,boolean useLastKnownLocation,
+                                                   MyLocationCallback callback, boolean isFirstIn) {
+        LocationManager locationManager = (LocationManager) context.getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+        if(LocationStateUtil.isPreciseLocationSwitchEnabled(locationManager)){
+            Log.w("gms", "不同意gms弹窗,但gps可用,那么请求原生定位");
+            getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false,asQuickAsPossible,useLastKnownLocation ,true, callback);
+            return;
+        }
+        if(QuietLocationUtil.isLocationEnabled(locationManager) && callback.configAcceptOnlyCoarseLocationPermission()){
+            Log.w("gms", "不同意gms弹窗,+gps不可用,但定位开关开启+允许模糊定位,那么绕过gms,请求原生定位");
+            getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false,asQuickAsPossible,useLastKnownLocation ,true, callback);
+            return;
+        }
+        Log.w("gms", "不同意gms弹窗,且定位开关关闭,那么再挽回一次,弹出原生定位开关引导弹窗");
+        askGpsSwitchDialog(locationManager,context,timeout,showBeforeRequest,showAfterRequest,false,callback);
     }
 
     private static void requestGmsSwitch(Context context, boolean silent, int timeout, boolean showBeforeRequest, boolean showAfterRequest,
