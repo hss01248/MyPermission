@@ -92,7 +92,7 @@ public class LocationStateUtil {
     }
 
     public static boolean isPreciseLocationSwitchEnabled(LocationManager manager){
-       return manager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+       return manager.isProviderEnabled(LocationManager.GPS_PROVIDER) || manager.isProviderEnabled("fused");
     }
 
     private static void checkGmsSwitchState(Context context, Runnable open,Runnable toOpen,Runnable error) {
