@@ -458,7 +458,8 @@ public class MainActivity extends AppCompatActivity {
            /* Uri uri = Uri.parse(url);
             Intent intent = new Intent(Intent.ACTION_VIEW, uri);
             startActivity(intent);*/
-            BaseWebviewActivity.start(this,url);
+            //BaseWebviewActivity.start(this,url);
+            LocationStateUtil.viewLocationOnMap(lattidude,longtitude);
         }catch (Throwable throwable){
             ToastUtils.showShort(throwable.getMessage());
         }
