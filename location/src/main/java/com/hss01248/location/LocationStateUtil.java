@@ -2,12 +2,16 @@ package com.hss01248.location;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.util.Log;
 
+import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.PermissionUtils;
 import com.blankj.utilcode.util.ThreadUtils;
+import com.blankj.utilcode.util.ToastUtils;
 import com.blankj.utilcode.util.Utils;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -89,6 +93,22 @@ public class LocationStateUtil {
                     }
                 });
 
+    }
+
+    public static String buildViewGpsInMapUrl(double lattidude,double longtitude){
+        String url = "https://www.hss01248.tech/baidumap.html?lat="+ lattidude+"&lng="+ longtitude+"&from=gps";
+        return url;
+    }
+    public static void viewLocationOnMap(double lattidude,double longtitude){
+        String url = buildViewGpsInMapUrl(lattidude, longtitude);
+        try {
+            Intent intent = new Intent();
+            intent.setAction(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse(url));
+            ActivityUtils.getTopActivity().startActivity(intent);
+        }catch (Throwable throwable){
+            ToastUtils.showLong(throwable.getMessage());
+        }
     }
 
     public static boolean isPreciseLocationSwitchEnabled(LocationManager manager){
