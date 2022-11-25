@@ -145,6 +145,10 @@ public class WrappedLocationCallback implements MyLocationCallback{
 
     @Override
     public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
+        if(configJustAskPermissionAndSwitch()){
+            callback.onFailed(type, msg, isFailBeforeReallyRequest);
+            return;
+        }
         LocationInfo fullLocationInfo = LocationSync.getFullLocationInfo();
         if(fullLocationInfo == null){
             dismissDialog();
