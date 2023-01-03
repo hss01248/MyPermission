@@ -17,6 +17,7 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
+import androidx.core.location.LocationManagerCompat;
 
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.StringUtils;
@@ -198,9 +199,12 @@ public class QuietLocationUtil {
     }
 
 
-
-
-
+    /**
+     * 要先申请权限再判断开关,如果没有权限,那么即使开关是打开的,这里的locationManager.getProviders(true)也返回0
+     * 下面的2和3不受定位权限的限制
+     * @param locationManager
+     * @return
+     */
     public static boolean isLocationEnabled(LocationManager locationManager) {
         try {
             if (locationManager == null) {
@@ -216,11 +220,12 @@ public class QuietLocationUtil {
             if (locationEnabled3) {
                 return true;
             }*/
+            //要先申请权限再判断开关,如果没有权限,那么即使开关是打开的,这里的getProviders也返回0
             List<String> allProviders = locationManager.getProviders(true);
             //如果只有几个passive,那么判定开关关闭
             if(allProviders != null && allProviders.size() ==1){
                 if("passive".equals(allProviders.get(0))){
-                    return false;
+                    return  isLocationEnabled3() || isLocationEnabled2(locationManager);
                 }
             }
             LogUtils.d("providers:", allProviders);
@@ -232,15 +237,23 @@ public class QuietLocationUtil {
                     }
                 }
             }
-            return false;
+            return isLocationEnabled3() || isLocationEnabled2(locationManager);
         } catch (Throwable throwable) {
             LogUtils.w("isLocationEnabled", throwable);
-            return false;
+            try {
+                return isLocationEnabled3() || isLocationEnabled2(locationManager);
+            }catch (Throwable throwable1){
+                LogUtils.w(throwable1);
+                return false;
+            }
         }
-
     }
 
-    static boolean isLocationEnabled3() {
+    public static boolean isLocationEnabled2(LocationManager locationManager){
+       return LocationManagerCompat.isLocationEnabled(locationManager);
+    }
+
+   public static boolean isLocationEnabled3() {
         try {
             int locationMode = 0;
             String locationProviders;
@@ -248,7 +261,7 @@ public class QuietLocationUtil {
                 try {
                     locationMode = Settings.Secure.getInt(Utils.getApp().getContentResolver(), Settings.Secure.LOCATION_MODE);
                 } catch (Settings.SettingNotFoundException e) {
-                    e.printStackTrace();
+                   LogUtils.w(e);
                     return false;
                 }
                 return locationMode != Settings.Secure.LOCATION_MODE_OFF;
@@ -257,7 +270,7 @@ public class QuietLocationUtil {
                 return !TextUtils.isEmpty(locationProviders);
             }
         } catch (Throwable throwable) {
-            throwable.printStackTrace();
+            LogUtils.w(throwable);
             return false;
         }
 

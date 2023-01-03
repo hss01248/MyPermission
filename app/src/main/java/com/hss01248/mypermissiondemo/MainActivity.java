@@ -581,4 +581,16 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+
+    public void isLocationEnabled1(View view) {
+        LogUtils.w("isEnabled: "+ QuietLocationUtil.isLocationEnabled((LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE)));
+    }
+
+    public void isLocationEnabled2(View view) {
+        LogUtils.w("isEnabled2: "+ QuietLocationUtil.isLocationEnabled2((LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE)));
+    }
+
+    public void isLocationEnabled3(View view) {
+        LogUtils.w("isEnabled3: "+ QuietLocationUtil.isLocationEnabled3());
+    }
 }

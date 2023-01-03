@@ -154,5 +154,20 @@
           android:text="测试并发读写"
           android:onClick="concurrentModify"
           android:layout_height="wrap_content"/>
+      <Button
+          android:layout_width="wrap_content"
+          android:text="判断定位开关是否打开-1"
+          android:onClick="isLocationEnabled1"
+          android:layout_height="wrap_content"/>
+      <Button
+          android:layout_width="wrap_content"
+          android:text="判断定位开关是否打开-2"
+          android:onClick="isLocationEnabled2"
+          android:layout_height="wrap_content"/>
+      <Button
+          android:layout_width="wrap_content"
+          android:text="判断定位开关是否打开-3"
+          android:onClick="isLocationEnabled3"
+          android:layout_height="wrap_content"/>
    </com.google.android.flexbox.FlexboxLayout>
 </ScrollView>
