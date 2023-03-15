@@ -310,11 +310,10 @@ public class LocationUtil {
                     @Override
                     public void run() {
                         try {
+                            //ActivityUtils.getTopActivity()某种情况下为空
                             result.getStatus().startResolutionForResult(ActivityUtils.getTopActivity(), requestCode);
-                        } catch (IntentSender.SendIntentException e) {
-                            Log.i("location", "PendingIntent unable to execute request.");
-                            e.printStackTrace();
-                            //todo
+                        } catch (Exception e) {
+                            LogUtils.w("location", "PendingIntent unable to execute request.",e);
                             getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false, asQuickAsPossible,useLastKnownLocation ,true,callback);
                         }
                     }
