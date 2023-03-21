@@ -59,6 +59,7 @@ public class MyPermissions {
     }
 
     public static IPermissionDialog defaultPermissionDialog = new DefaultPermissionDialog();
+    public static IAlertDialog defaultAlertDialog = new DefaultAlertDialogImpl();
 
     public static void request(PermissionUtils.FullCallback callback,
                                String... permission) {

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="mypermission_title">权限请求</string>
-    <string name="mypermission_msg">需要以下权限来继续</string>
+    <string name="mypermission_title">权限申请</string>
+    <string name="mypermission_msg">需要以下权限来继续后续流程</string>
     <string name="mypermission_ok">好的</string>
     <string name="mypermission_cancel">取消</string>
     <string name="mypermission_location_title">请求定位</string>

@@ -2,6 +2,8 @@ package com.hss01248.location;
 
 import android.content.Context;
 
+import com.hss01248.permission.IPermissionDialog;
+
 /**
  * @Despciption todo
  * @Author hss
@@ -12,15 +14,37 @@ public class LocationRequestConfig {
 
    public Context context;
    boolean silent;
-   int timeout;
+   int timeoutMills;
    boolean showDialogBeforeRequestPermission;
     boolean showDialogAfterPermissionDenied;
     boolean requestGmsDialogIfGmsAvaiable = true;
     boolean asQuickAsPossible;
     boolean useLastKnownLocationOrCache;
 
+    String gpsText;
+    String afterPermissionText;
+    String goSettingText;
+    IPermissionDialog alertDialog;
+
     public Context getContext() {
         return context;
+    }
+
+    public LocationRequestConfig setGpsText(String gpsText) {
+        this.gpsText = gpsText;
+        return this;
+    }
+    public LocationRequestConfig setAfterPermissionText(String afterPermissionText) {
+        this.afterPermissionText = afterPermissionText;
+        return this;
+    }
+    public LocationRequestConfig setGoSettingText(String goSettingText) {
+        this.goSettingText = goSettingText;
+        return this;
+    }
+    public LocationRequestConfig setAlertDialog(Context context) {
+        this.context = context;
+        return this;
     }
 
     public LocationRequestConfig setContext(Context context) {
@@ -37,12 +61,12 @@ public class LocationRequestConfig {
         return this;
     }
 
-    public int getTimeout() {
-        return timeout;
+    public int getTimeoutMills() {
+        return timeoutMills;
     }
 
-    public LocationRequestConfig setTimeout(int timeout) {
-        this.timeout = timeout;
+    public LocationRequestConfig setTimeoutMills(int timeoutMills) {
+        this.timeoutMills = timeoutMills;
         return this;
     }
 

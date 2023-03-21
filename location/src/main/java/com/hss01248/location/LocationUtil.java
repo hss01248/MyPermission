@@ -35,6 +35,7 @@ import com.hss01248.activityresult.ActivityResultListener;
 import com.hss01248.activityresult.GoOutOfAppForResultFragment;
 import com.hss01248.activityresult.StartActivityUtil;
 import com.hss01248.activityresult.TheActivityListener;
+import com.hss01248.permission.IPermissionDialog;
 import com.hss01248.permission.MyPermissions;
 
 
@@ -92,14 +93,23 @@ public class LocationUtil {
         getLocation(context,true,timeoutMills,false,false,callback);
     }
 
-    public static void getLocation(Context context, boolean silent, int timeoutMills, boolean showBeforeRequest, boolean showAfterRequest, MyLocationCallback callback) {
+    public static void getLocation(IPermissionDialog alertDialog, Context context, boolean silent, int timeoutMills,
+                                   boolean showBeforeRequest, boolean showAfterRequest,
+                                   MyLocationCallback callback){
         if(callback instanceof WrappedLocationCallback){
 
         }else {
             callback = new WrappedLocationCallback(callback);
         }
 
-        getLocation(context, silent, timeoutMills, showBeforeRequest, showAfterRequest, true,false,false,false, callback);
+        getLocation(context, silent, timeoutMills, showBeforeRequest, showAfterRequest,
+                true,false,false,false, callback);
+    }
+
+    public static void getLocation(Context context, boolean silent, int timeoutMills,
+                                   boolean showBeforeRequest, boolean showAfterRequest,
+                                   MyLocationCallback callback) {
+
     }
 
     /**
