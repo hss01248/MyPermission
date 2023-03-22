@@ -44,7 +44,7 @@ public class DefaultPermissionDialog implements IPermissionDialog {
             }
         }
         if(TextUtils.isEmpty(msg)){
-            msg = getDefalutMsg();
+            msg = getDefalutMsg(isGuideToSetting,permissions);
             if (TextUtils.isEmpty(msg)) {
                 msg = StringUtils.getString(R.string.mypermission_msg) + ":\n"
                         + Arrays.toString(permissionsNotGranted.toArray())
@@ -60,7 +60,7 @@ public class DefaultPermissionDialog implements IPermissionDialog {
 
 
         if(title == null){
-            title = getDefalutTitle();
+            title = getDefalutTitle(isGuideToSetting,permissions);
             if(TextUtils.isEmpty(title)){
                 title = StringUtils.getString(R.string.mypermission_title);
             }

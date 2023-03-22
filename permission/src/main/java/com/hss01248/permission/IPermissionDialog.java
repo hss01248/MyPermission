@@ -13,10 +13,10 @@ public interface IPermissionDialog {
               List<String> permissions,
               IPermissionDialogBtnClickListener listener);
 
-    default String getDefalutMsg(){
+    default String getDefalutMsg(boolean isGuideToSetting,List<String> permissions){
         return null;
     }
-    default String getDefalutTitle(){
+    default String getDefalutTitle(boolean isGuideToSetting,List<String> permissions){
         return null;
     }
 }
