@@ -24,7 +24,41 @@ public class LocationRequestConfig {
     String gpsText;
     String afterPermissionText;
     String goSettingText;
-    IPermissionDialog alertDialog;
+    IPermissionDialog permissionDialog;
+
+    boolean showLoadingDialog;
+    boolean justAskPermissionAndSwitch;
+    boolean acceptOnlyCoarseLocationPermission = true;
+
+    /**
+     * 缓存有效时间:
+     * 默认一年,约等于永久 , 每次都可以单独配置
+     * 逻辑:  实时定位失败/超时后,从缓存读取,如果System.currentTimeMills-缓存定位里的time < useCacheInTimeOfMills,
+     * 则使用该缓存,否则不使用该缓存
+     */
+    long useCacheInTimeOfMills = 365*24*60*60*1000L;
+
+
+    public LocationRequestConfig useCacheInTimeOfMills(long useCacheInTimeOfMills) {
+        this.useCacheInTimeOfMills = useCacheInTimeOfMills;
+        return this;
+    }
+    public LocationRequestConfig showLoadingDialog(boolean showLoadingDialog) {
+        this.showLoadingDialog = showLoadingDialog;
+        return this;
+    }
+    public LocationRequestConfig justAskPermissionAndSwitch(boolean justAskPermissionAndSwitch) {
+        this.justAskPermissionAndSwitch = justAskPermissionAndSwitch;
+        return this;
+    }
+    /**
+     * 是否支持仅模糊定位. 经纬度会偏差几千米
+     * @return
+     */
+    public LocationRequestConfig acceptOnlyCoarseLocationPermission(boolean acceptOnlyCoarseLocationPermission) {
+        this.acceptOnlyCoarseLocationPermission = acceptOnlyCoarseLocationPermission;
+        return this;
+    }
 
     public Context getContext() {
         return context;
@@ -42,8 +76,8 @@ public class LocationRequestConfig {
         this.goSettingText = goSettingText;
         return this;
     }
-    public LocationRequestConfig setAlertDialog(Context context) {
-        this.context = context;
+    public LocationRequestConfig setPermissionDialog(IPermissionDialog permissionDialog) {
+        this.permissionDialog = permissionDialog;
         return this;
     }
 
