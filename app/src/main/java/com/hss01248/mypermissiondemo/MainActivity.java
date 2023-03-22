@@ -100,7 +100,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void afterDenied(View view) {
-        MyPermissions.requestByMostEffort(false, true, new PermissionUtils.FullCallback() {
+        MyPermissions.create()
+                .setAfterPermissionMsg("after msg")
+                .setGuideToSettingMsg("guide to settings")
+                .setPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA, Manifest.permission.CALL_PHONE})
+                .setShowAfterRequest(true)
+                .setShowBeforeRequest(false)
+                .callback(new PermissionUtils.FullCallback() {
             @Override
             public void onGranted(@NonNull List<String> granted) {
                 ToastUtils.showShort("onGranted:" + Arrays.toString(granted.toArray()));
@@ -110,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
             public void onDenied(@NonNull List<String> deniedForever, @NonNull List<String> denied) {
                 ToastUtils.showShort("onDenied:" + Arrays.toString(deniedForever.toArray()) + "\n" + Arrays.toString(denied.toArray()));
             }
-        }, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA, Manifest.permission.CALL_PHONE);
+        });
     }
 
     public void both(View view) {

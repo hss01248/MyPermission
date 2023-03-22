@@ -31,6 +31,10 @@ public class MyPermissions {
         MyPermissions.canAcceptOnlyCoarseLocationPermission = canAcceptOnlyCoarseLocationPermission;
     }
 
+    public static MyPermissions create(){
+        return new MyPermissions();
+    }
+
     public static boolean canAcceptOnlyCoarseLocationPermission = false;
 
     public static boolean isStateInManifest(String permission) {
@@ -75,13 +79,110 @@ public class MyPermissions {
 
     IPermissionDialog dialog = defaultPermissionDialog;
     boolean showBeforeRequest;
+
+    public MyPermissions setShowBeforeRequest(boolean showBeforeRequest) {
+        this.showBeforeRequest = showBeforeRequest;
+        return this;
+    }
+
+    public MyPermissions setShowAfterRequest(boolean showAfterRequest) {
+        this.showAfterRequest = showAfterRequest;
+        return this;
+    }
+
+    public void callback(PermissionUtils.FullCallback callback) {
+        this.callback = callback;
+        startReqeust();
+    }
+
+    private void startReqeust() {
+        LogUtils.i("首次请求权限", permissions);
+        permissionsList = new ArrayList<>();
+        for (String s : permissions) {
+            permissionsList.add(s);
+        }
+        if (PermissionUtils.isGranted(permissions)) {
+            callback.onGranted(permissionsList);
+            return;
+        }
+        //经过了一次请求后,这两个判断才准确
+        List<String> deniedForeverList = getDeniedForeverList(permissions);
+        List<String> deniedTemporary = getDeniedTemporary(permissions);
+        // LogUtils.i("首次请求权限,原始权限状态(永久拒绝,暂时拒绝)", deniedForeverList, deniedTemporary);
+
+
+        if (showBeforeRequest) {
+            dialog.show(false,
+                    afterDialogTitle,
+                    afterPermissionMsg,
+                    guideToSettingMsg,
+                    permissionsList,
+                    new IPermissionDialogBtnClickListener() {
+                        @Override
+                        public void onPositive() {
+                            requestPermissionFirstTime();
+                        }
+
+                        @Override
+                        public void onNegtivite() {
+                            callback.onDenied(deniedForeverList, deniedTemporary);
+                        }
+                    });
+        } else {
+            requestPermissionFirstTime();
+        }
+    }
+
+    public MyPermissions setPermissions(String[] permissions) {
+        this.permissions = permissions;
+        return this;
+    }
+
+    public MyPermissions setPermissionsList(List<String> permissionsList) {
+        this.permissionsList = permissionsList;
+        return this;
+    }
+
+    public static void setDefaultAlertDialog(IAlertDialog defaultAlertDialog) {
+        MyPermissions.defaultAlertDialog = defaultAlertDialog;
+    }
+
+    public MyPermissions setDialog(IPermissionDialog dialog) {
+        this.dialog = dialog;
+        return this;
+    }
+
+    public MyPermissions setGoSettingFirstTime(boolean goSettingFirstTime) {
+        isGoSettingFirstTime = goSettingFirstTime;
+        return this;
+    }
+
     boolean showAfterRequest;
     PermissionUtils.FullCallback callback;
     String[] permissions;
     List<String> permissionsList;
     boolean isGoSettingFirstTime;
 
-    public void requestByMostEffort(IPermissionDialog alertDialog,
+    public MyPermissions setAfterDialogTitle(@Nullable String afterDialogTitle) {
+        this.afterDialogTitle = afterDialogTitle;
+        return  this;
+    }
+
+    public MyPermissions setAfterPermissionMsg(@Nullable String afterPermissionMsg) {
+        this.afterPermissionMsg = afterPermissionMsg;
+        return  this;
+    }
+
+    public MyPermissions setGuideToSettingMsg(@Nullable String guideToSettingMsg) {
+        this.guideToSettingMsg = guideToSettingMsg;
+        return  this;
+    }
+
+    @Nullable String afterDialogTitle;//""--> 不要title,  null -> 使用默认title
+    @Nullable String afterPermissionMsg;
+    @Nullable String guideToSettingMsg;
+
+    public void requestByMostEffort(@Nullable  IPermissionDialog alertDialog,
                                     boolean showBeforeRequest, boolean showAfterRequest,
                                     PermissionUtils.FullCallback callback,
                                     String... permission) {
@@ -92,40 +193,7 @@ public class MyPermissions {
         this.showBeforeRequest = showBeforeRequest;
         this.callback = callback;
         this.permissions = permission;
-
-
-        LogUtils.i("首次请求权限", permission);
-        permissionsList = new ArrayList<>();
-        for (String s : permission) {
-            permissionsList.add(s);
-        }
-        if (PermissionUtils.isGranted(permission)) {
-            callback.onGranted(permissionsList);
-            return;
-        }
-        //经过了一次请求后,这两个判断才准确
-        List<String> deniedForeverList = getDeniedForeverList(permission);
-        List<String> deniedTemporary = getDeniedTemporary(permission);
-        // LogUtils.i("首次请求权限,原始权限状态(永久拒绝,暂时拒绝)", deniedForeverList, deniedTemporary);
-
-
-        if (showBeforeRequest) {
-            dialog.show(false, permissionsList, new IPermissionDialogBtnClickListener() {
-                @Override
-                public void onPositive() {
-                    requestPermissionFirstTime();
-                }
-
-                @Override
-                public void onNegtivite() {
-                    callback.onDenied(deniedForeverList, deniedTemporary);
-                }
-            });
-        } else {
-            requestPermissionFirstTime();
-        }
-
-
+        startReqeust();
     }
 
     private static List<String> getDeniedForeverList(String[] permission) {
@@ -233,7 +301,11 @@ public class MyPermissions {
                                            List<String> deniedForeverList) {
         if (!showBeforeRequest || !canShowAfterIfSettingFailed) {
             LogUtils.i("第一次_需要gosettings_没有弹出前置弹窗,那么就试着弹出拒绝后弹窗, 用来引导:");
-            dialog.show(true, permissionsList, new IPermissionDialogBtnClickListener() {
+            dialog.show(true,
+                    afterDialogTitle,
+                    afterPermissionMsg,
+                    guideToSettingMsg,
+                    permissionsList, new IPermissionDialogBtnClickListener() {
                 @Override
                 public void onPositive() {
                     goSettingsFirstTime(canShowAfterIfSettingFailed);
@@ -349,7 +421,11 @@ public class MyPermissions {
             callback.onDenied(deniedForeverList, deniedTemporary);
         } else {
 
-            dialog.show(deniedTemporary.isEmpty(), permissionsList, new IPermissionDialogBtnClickListener() {
+            dialog.show(deniedTemporary.isEmpty(),
+                    afterDialogTitle,
+                    afterPermissionMsg,
+                    guideToSettingMsg,
+                    permissionsList, new IPermissionDialogBtnClickListener() {
                 @Override
                 public void onPositive() {
                     if (deniedTemporary.isEmpty()) {
@@ -392,7 +468,11 @@ public class MyPermissions {
                                 }
                                 return;
                             }
-                            dialog.show(true, permissionsList, new IPermissionDialogBtnClickListener() {
+                            dialog.show(true,
+                                    afterDialogTitle,
+                                    afterPermissionMsg,
+                                    guideToSettingMsg,
+                                    permissionsList, new IPermissionDialogBtnClickListener() {
                                 @Override
                                 public void onPositive() {
                                     goSettingsSecondTime();

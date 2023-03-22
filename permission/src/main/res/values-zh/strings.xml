@@ -3,8 +3,9 @@
     <string name="mypermission_title">权限申请</string>
     <string name="mypermission_msg">需要以下权限来继续后续流程</string>
     <string name="mypermission_ok">好的</string>
+    <string name="mypermission_go_settings_btn">去设置页</string>
     <string name="mypermission_cancel">取消</string>
     <string name="mypermission_location_title">请求定位</string>
-    <string name="mypermission_location_switch">定位服务已经关闭,请打开以继续</string>
+    <string name="mypermission_location_switch">定位服务已经关闭,请打开以继续后续流程</string>
     <string name="mypermission_go_settings">请在应用信息->权限 里打开上述权限</string>
 </resources>

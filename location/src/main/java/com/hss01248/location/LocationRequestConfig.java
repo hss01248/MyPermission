@@ -3,6 +3,7 @@ package com.hss01248.location;
 import android.content.Context;
 
 import com.hss01248.permission.IPermissionDialog;
+import com.hss01248.permission.PermissionConfig;
 
 /**
  * @Despciption todo
@@ -10,7 +11,7 @@ import com.hss01248.permission.IPermissionDialog;
  * @Date 02/04/2022 17:31
  * @Version 1.0
  */
-public class LocationRequestConfig {
+public class LocationRequestConfig extends PermissionConfig {
 
    public Context context;
    boolean silent;

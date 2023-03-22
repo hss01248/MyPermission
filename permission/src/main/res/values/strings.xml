@@ -2,8 +2,9 @@
 <resources>
     <string name="mypermission_title">request permission</string>
     <string name="mypermission_msg">we need the following permissions to continue process</string>
-    <string name="mypermission_ok">ok</string>
-    <string name="mypermission_cancel">cancel</string>
+    <string name="mypermission_ok">OK</string>
+    <string name="mypermission_go_settings_btn">Go to Settings</string>
+    <string name="mypermission_cancel">Cancel</string>
     <string name="mypermission_location_title">request location</string>
     <string name="mypermission_location_switch">the location service is off, please open it to continue</string>
     <string name="mypermission_go_settings">please grant the permissions in -permissions- module</string>

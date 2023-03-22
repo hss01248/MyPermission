@@ -2,7 +2,8 @@
 <resources>
     <string name="mypermission_title">permintaan akses</string>
     <string name="mypermission_msg">kami memerlukan izin berikut untuk melanjutkan proses</string>
-    <string name="mypermission_ok">ok</string>
+    <string name="mypermission_ok">OK</string>
+    <string name="mypermission_go_settings_btn">Ke Pengaturan</string>
     <string name="mypermission_cancel">membatalkan</string>
     <string name="mypermission_location_title">minta lokasi</string>
     <string name="mypermission_location_switch">Layanan Lokasi dimatikan, silakan hidupkan untuk melanjutkan</string>

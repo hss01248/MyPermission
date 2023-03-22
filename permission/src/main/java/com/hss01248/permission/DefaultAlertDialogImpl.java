@@ -41,7 +41,7 @@ public class DefaultAlertDialogImpl implements IAlertDialog{
             });
         }
         if(!TextUtils.isEmpty(negativeText)){
-            builder.setNegativeButton(positiveText, new DialogInterface.OnClickListener() {
+            builder.setNegativeButton(negativeText, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     if(negativeOnClick !=null){
