@@ -12,4 +12,11 @@ public interface IPermissionDialog {
               @Nullable String guideToSettingMsg,
               List<String> permissions,
               IPermissionDialogBtnClickListener listener);
+
+    default String getDefalutMsg(){
+        return null;
+    }
+    default String getDefalutTitle(){
+        return null;
+    }
 }

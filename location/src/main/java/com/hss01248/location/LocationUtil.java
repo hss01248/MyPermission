@@ -22,6 +22,7 @@ import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.PermissionUtils;
 import com.blankj.utilcode.util.StringUtils;
 import com.blankj.utilcode.util.ThreadUtils;
+import com.blankj.utilcode.util.ToastUtils;
 import com.blankj.utilcode.util.Utils;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -41,6 +42,7 @@ import com.hss01248.permission.MyPermissions;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -379,11 +381,19 @@ public class LocationUtil {
                     }
                 }
             }
-            new MyPermissions().requestByMostEffort(
-                    permissionDialog,
-                    showBeforeRequest,
-                    showAfterRequest,
-                    new PermissionUtils.FullCallback() {
+            //
+            //只有ACCESS_COARSE_LOCATION时,  模糊定位,accuracy=2000米, 中心点随机偏差几千米
+            //只有ACCESS_FINE_LOCATION时,精确定位 android12也会跳出模糊定位的选项.
+
+            MyPermissions.create()
+                    //.setAfterPermissionMsg("after msg")
+                    //.setGuideToSettingMsg("guide to settings")
+                    .setDialog(permissionDialog)
+                    .setPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION})
+                    .setShowAfterRequest(true)
+                    .setShowBeforeRequest(false)
+                    .callback(new PermissionUtils.FullCallback() {
                         @Override
                         public void onGranted(@NonNull List<String> granted) {
                             doRequestLocation(context, timeout, withoutGms, callback);
@@ -391,6 +401,7 @@ public class LocationUtil {
 
                         @Override
                         public void onDenied(@NonNull List<String> deniedForever, @NonNull List<String> denied) {
+                            //ToastUtils.showShort("onDenied:" + Arrays.toString(deniedForever.toArray()) + "\n" + Arrays.toString(denied.toArray()));
                             if (callback.configAcceptOnlyCoarseLocationPermission()) {
                                 List<String> list = new ArrayList<>();
                                 list.addAll(deniedForever);
@@ -405,10 +416,7 @@ public class LocationUtil {
                                 callback.onFailed(1, "no permission", true);
                             }
                         }
-                    }, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION);
-            //
-            //只有ACCESS_COARSE_LOCATION时,  模糊定位,accuracy=2000米, 中心点随机偏差几千米
-            //只有ACCESS_FINE_LOCATION时,精确定位 android12也会跳出模糊定位的选项.
+                    });
         }
     }
 

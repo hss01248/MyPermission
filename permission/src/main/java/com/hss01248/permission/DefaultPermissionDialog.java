@@ -44,17 +44,26 @@ public class DefaultPermissionDialog implements IPermissionDialog {
             }
         }
         if(TextUtils.isEmpty(msg)){
-            msg = StringUtils.getString(R.string.mypermission_msg) + ":\n" + Arrays.toString(permissionsNotGranted.toArray())
-                    .toLowerCase()
-                    .replaceAll("android\\.permission\\.", "")
-                    .replaceAll("\\[", "")
-                    .replaceAll("\\]", "")
-                    .replaceAll(",", "\n") + (isGuideToSetting ? "\n" + StringUtils.getString(R.string.mypermission_go_settings) : "");
+            msg = getDefalutMsg();
+            if (TextUtils.isEmpty(msg)) {
+                msg = StringUtils.getString(R.string.mypermission_msg) + ":\n"
+                        + Arrays.toString(permissionsNotGranted.toArray())
+                        .toLowerCase()
+                        .replaceAll("android\\.permission\\.", "")
+                        .replaceAll("\\[", "")
+                        .replaceAll("\\]", "")
+                        .replaceAll(",", "\n") +
+                        (isGuideToSetting ? "\n" + StringUtils.getString(R.string.mypermission_go_settings) : "");
+
+            }
         }
 
 
         if(title == null){
-            title = StringUtils.getString(R.string.mypermission_title);
+            title = getDefalutTitle();
+            if(TextUtils.isEmpty(title)){
+                title = StringUtils.getString(R.string.mypermission_title);
+            }
         }
 
         MyPermissions.defaultAlertDialog
