@@ -113,7 +113,7 @@ public class LocationUtil {
     public static void getLocation(Context context, boolean silent, int timeoutMills,
                                    boolean showBeforeRequest, boolean showAfterRequest,
                                    MyLocationCallback callback) {
-
+            getLocation(null,context,silent,timeoutMills,showBeforeRequest,showAfterRequest,callback);
     }
 
     /**
@@ -123,7 +123,7 @@ public class LocationUtil {
      * @param timeout
      * @param callback
      */
-    private static void getLocation(IPermissionDialog permissionDialog,Context context, boolean silent, int timeout, boolean showBeforeRequest,
+    public static void getLocation(IPermissionDialog permissionDialog,Context context, boolean silent, int timeout, boolean showBeforeRequest,
                                     boolean showAfterRequest, boolean requestGmsDialog, boolean asQuickAsPossible,
                                     boolean useLastKnownLocation, boolean withoutGms, MyLocationCallback callback) {
 
