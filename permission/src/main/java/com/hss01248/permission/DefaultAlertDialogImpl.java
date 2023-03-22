@@ -18,10 +18,11 @@ import com.blankj.utilcode.util.ActivityUtils;
 public class DefaultAlertDialogImpl implements IAlertDialog{
     @Override
     public Dialog showAlert(String title, String msg, String positiveText, String negativeText,
-                            DialogInterface.OnClickListener positiveOnClick,
-                            DialogInterface.OnClickListener negativeOnClick,
                             boolean cancelable,
-                            boolean outsideCancelable) {
+                            boolean outsideCancelable,
+                            DialogInterface.OnClickListener positiveOnClick,
+                            DialogInterface.OnClickListener negativeOnClick
+                           ) {
         AlertDialog.Builder builder = new AlertDialog.Builder(ActivityUtils.getTopActivity());
         if(!TextUtils.isEmpty(title)){
             builder.setTitle(title);
