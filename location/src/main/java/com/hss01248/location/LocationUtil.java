@@ -37,6 +37,7 @@ import com.hss01248.activityresult.ActivityResultListener;
 import com.hss01248.activityresult.GoOutOfAppForResultFragment;
 import com.hss01248.activityresult.StartActivityUtil;
 import com.hss01248.activityresult.TheActivityListener;
+import com.hss01248.permission.DefaultPermissionDialog;
 import com.hss01248.permission.IPermissionDialog;
 import com.hss01248.permission.MyPermissions;
 
@@ -158,10 +159,10 @@ public class LocationUtil {
         callback.onGmsSwitchDialogShow();
         //开关关闭,就去申请打开开关
         MyPermissions.defaultAlertDialog.showAlert(
-                StringUtils.getString(R.string.location_tip),
-                StringUtils.getString(R.string.location_msg_gps),
-                StringUtils.getString(R.string.location_ok),
-                StringUtils.getString(R.string.location_cancel),
+                DefaultPermissionDialog.getString(R.string.location_tip),
+                DefaultPermissionDialog.getString(R.string.location_msg_gps),
+                DefaultPermissionDialog.getString(R.string.location_ok),
+                DefaultPermissionDialog.getString(R.string.location_cancel),
                 false, false,
                 new DialogInterface.OnClickListener() {
                     @Override

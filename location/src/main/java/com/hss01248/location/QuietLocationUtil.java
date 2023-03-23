@@ -33,6 +33,7 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.hss01248.permission.DefaultPermissionDialog;
 
 
 import java.util.ArrayList;
@@ -139,7 +140,7 @@ public class QuietLocationUtil {
                 timeoutRun = new Runnable() {
                     @Override
                     public void run() {
-                        callback(map, timeOut/1000 + "s "+ StringUtils.getString(R.string.location_timeout_msg), true, finalListener1);
+                        callback(map, timeOut/1000 + "s "+ DefaultPermissionDialog.getString(R.string.location_timeout_msg), true, finalListener1);
                     }
                 };
                 handler.postDelayed(timeoutRun, timeOut);

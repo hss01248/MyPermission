@@ -6,6 +6,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -17,6 +18,7 @@ import com.blankj.utilcode.util.CollectionUtils;
 import com.blankj.utilcode.util.IntentUtils;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.PermissionUtils;
+import com.blankj.utilcode.util.ResourceUtils;
 import com.blankj.utilcode.util.Utils;
 import com.hss01248.activityresult.ActivityResultListener;
 import com.hss01248.activityresult.StartActivityUtil;
@@ -162,6 +164,8 @@ public class MyPermissions {
     String[] permissions;
     List<String> permissionsList;
     boolean isGoSettingFirstTime;
+
+
 
     public MyPermissions setAfterDialogTitle(@Nullable String afterDialogTitle) {
         this.afterDialogTitle = afterDialogTitle;
