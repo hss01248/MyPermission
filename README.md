@@ -1,6 +1,11 @@
 # 权限工具
 
-> 基于utilcode的permissionUtils进行增强
+> 基于utilcode的permissionUtils进行增强, 完善的产品级库,开箱即用
+
+所做的优化:
+
+* 整合权限请求流程, 添加引导弹窗和引导到设置的弹窗,同时避免了连续的自定义弹窗
+* 文案,样式高度自定义
 
 
 
@@ -11,6 +16,8 @@
 
 
 ## 权限请求:MyPermission
+
+> 静态方法
 
 ```java
 //api: 可自由配置前置dialog,后置dialog
@@ -30,6 +37,87 @@ MyPermission.requestByMostEffort(Manifest.permission.READ_EXTERNAL_STORAGE, null
             }
         });
 ```
+
+> 完全的配置方法(推荐)
+
+```java
+MyPermissions.create()
+                .setAfterPermissionMsg("after msg")
+                .setGuideToSettingMsg("guide to settings")
+                .setPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, 
+                        Manifest.permission.CAMERA, Manifest.permission.CALL_PHONE})
+                .setShowAfterRequest(true)
+                .setShowBeforeRequest(false)
+                .callback(new PermissionUtils.FullCallback() {
+            @Override
+            public void onGranted(@NonNull List<String> granted) {
+                ToastUtils.showShort("onGranted:" + Arrays.toString(granted.toArray()));
+            }
+
+            @Override
+            public void onDenied(@NonNull List<String> deniedForever, @NonNull List<String> denied) {
+                ToastUtils.showShort("onDenied:" + Arrays.toString(deniedForever.toArray()) + "\n" + Arrays.toString(denied.toArray()));
+            }
+        });
+```
+
+![image-20230417100117906](https://cdn.jsdelivr.net/gh/shuiniuhss/myimages@main/imagemac3/image-20230417100117906.png)
+
+>  流程中的dialog设定:
+
+1 首先是全局默认dialog样式的设置:
+
+![image-20230417100623365](https://cdn.jsdelivr.net/gh/shuiniuhss/myimages@main/imagemac3/image-20230417100623365.png)
+
+IAlertDialog接口: 
+
+```java
+public Dialog showAlert(String title, String msg, String positiveText, String negativeText,
+                            boolean cancelable,
+                            boolean outsideCancelable,
+                            DialogInterface.OnClickListener positiveOnClick,
+                            DialogInterface.OnClickListener negativeOnClick
+                           )
+```
+
+默认实现为系统的alertdialog样式:
+
+可以设置自己的全局样式
+
+```java
+public static IAlertDialog defaultAlertDialog = new DefaultAlertDialogImpl();
+```
+
+
+
+2 权限申请流程中,申请前,申请后,引导到设置页的三个弹窗的样式和回调处理:
+
+```java
+public interface IPermissionDialog {
+
+    void show(boolean isGuideToSetting,
+              @Nullable String title,//""--> 不要title,  null -> 使用默认title
+              @Nullable String afterPermissionMsg,
+              @Nullable String guideToSettingMsg,
+              List<String> permissions,
+              IPermissionDialogBtnClickListener listener);
+
+    default String getDefalutMsg(boolean isGuideToSetting,List<String> permissions){
+        return null;
+    }
+    default String getDefalutTitle(boolean isGuideToSetting,List<String> permissions){
+        return null;
+    }
+}
+```
+
+![image-20230417100509631](https://cdn.jsdelivr.net/gh/shuiniuhss/myimages@main/imagemac3/image-20230417100509631.png)
+
+默认实现为DefaultPermissionDialog.
+
+> 其文案三级配置:
+
+setXXXMsg/Title  > getDefalutMsg/getDefalutTitle > DefaultPermissionDialog里的默认实现
 
 
 

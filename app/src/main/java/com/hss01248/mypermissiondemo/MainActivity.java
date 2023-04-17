@@ -1,6 +1,7 @@
 package com.hss01248.mypermissiondemo;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -46,6 +47,8 @@ import com.hss01248.location.LocationUtil;
 import com.hss01248.location.MyLocationCallback;
 import com.hss01248.location.MyLocationFastCallback;
 import com.hss01248.location.QuietLocationUtil;
+import com.hss01248.permission.IPermissionDialog;
+import com.hss01248.permission.IPermissionDialogBtnClickListener;
 import com.hss01248.permission.MyPermissions;
 import com.hss01248.permission.ext.IExtPermission;
 import com.hss01248.permission.ext.IExtPermissionCallback;
@@ -100,12 +103,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void afterDenied(View view) {
+        ///MyPermissions.setDefaultAlertDialog();
         MyPermissions.create()
                 .setAfterPermissionMsg("after msg")
                 .setGuideToSettingMsg("guide to settings")
-                .setPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA, Manifest.permission.CALL_PHONE})
+                .setAfterDialogTitle("permission request")
+                .setPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.CAMERA, Manifest.permission.CALL_PHONE})
                 .setShowAfterRequest(true)
                 .setShowBeforeRequest(false)
+                .setDialog(new IPermissionDialog() {
+                    @Override
+                    public void show(boolean isGuideToSetting, @Nullable String title,
+                                     @Nullable String afterPermissionMsg, @Nullable String guideToSettingMsg,
+                                     List<String> permissions, IPermissionDialogBtnClickListener listener) {
+
+                    }
+                })
                 .callback(new PermissionUtils.FullCallback() {
             @Override
             public void onGranted(@NonNull List<String> granted) {
