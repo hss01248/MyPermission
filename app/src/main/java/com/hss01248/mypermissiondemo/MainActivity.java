@@ -112,14 +112,14 @@ public class MainActivity extends AppCompatActivity {
                         Manifest.permission.CAMERA, Manifest.permission.CALL_PHONE})
                 .setShowAfterRequest(true)
                 .setShowBeforeRequest(false)
-                .setDialog(new IPermissionDialog() {
+/*                .setDialog(new IPermissionDialog() {
                     @Override
                     public void show(boolean isGuideToSetting, @Nullable String title,
                                      @Nullable String afterPermissionMsg, @Nullable String guideToSettingMsg,
                                      List<String> permissions, IPermissionDialogBtnClickListener listener) {
 
                     }
-                })
+                })*/
                 .callback(new PermissionUtils.FullCallback() {
             @Override
             public void onGranted(@NonNull List<String> granted) {

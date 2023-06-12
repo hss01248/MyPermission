@@ -128,6 +128,9 @@ public class LocationUtil {
                                     boolean showAfterRequest, boolean requestGmsDialog, boolean asQuickAsPossible,
                                     boolean useLastKnownLocation, boolean withoutGms, MyLocationCallback callback) {
 
+        if(permissionDialog ==null){
+            permissionDialog = MyPermissions.defaultPermissionDialog;
+        }
 
         if (silent) {
             doRequestLocation(context, timeout, withoutGms, callback);
