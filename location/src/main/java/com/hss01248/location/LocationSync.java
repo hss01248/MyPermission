@@ -111,6 +111,9 @@ public class LocationSync {
                 if(LogUtils.getConfig().isLogSwitch()){
                     if(location.getExtras() != null){
                         LogUtils.i(location.getExtras());
+                        //Bundle { timeCost=744, hasFineLocationPermission=true, satellites=0, //卫星数量
+                        // costFromBegin=874, maxCn0=0, QUICKGPS=true, millsOldWhenSaved=61,
+                        // isFromMockProvider=false, calledMethod=gps, SourceType=128, meanCn0=0 }
                     }
                     String json = new GsonBuilder().serializeNulls().setPrettyPrinting().create().toJson(cachedLocations);
                     LogUtils.json(json);
