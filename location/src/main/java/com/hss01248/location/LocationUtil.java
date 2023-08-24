@@ -5,8 +5,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.Build;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
@@ -14,6 +16,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 
@@ -367,6 +370,12 @@ public class LocationUtil {
         });
     }
 
+    private static boolean isGranted(final String permission) {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M
+                || PackageManager.PERMISSION_GRANTED
+                == ContextCompat.checkSelfPermission(Utils.getApp(), permission);
+    }
+
     private static void checkPermission(IPermissionDialog permissionDialog,Context context, int timeout, boolean showBeforeRequest, boolean showAfterRequest, boolean withoutGms, MyLocationCallback callback) {
         if (PermissionUtils.isGranted(Manifest.permission.ACCESS_FINE_LOCATION) &&
                 PermissionUtils.isGranted(Manifest.permission.ACCESS_COARSE_LOCATION)) {
@@ -400,6 +409,17 @@ public class LocationUtil {
                     .callback(new PermissionUtils.FullCallback() {
                         @Override
                         public void onGranted(@NonNull List<String> granted) {
+                            if(isGranted(Manifest.permission.ACCESS_FINE_LOCATION)){
+                                LogUtils.w("fine location granted");
+                            }else {
+                                LogUtils.w("fine location reject");
+                            }
+                            if (!callback.configAcceptOnlyCoarseLocationPermission()) {
+                                if(!isGranted(Manifest.permission.ACCESS_FINE_LOCATION)){
+                                    callback.onFailed(1, "no permission", true);
+                                    return;
+                                }
+                            }
                             doRequestLocation(context, timeout, withoutGms, callback);
                         }
 

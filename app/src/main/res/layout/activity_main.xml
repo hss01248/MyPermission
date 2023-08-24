@@ -80,7 +80,7 @@
           android:layout_height="wrap_content"/>
       <Button
           android:layout_width="wrap_content"
-          android:text="获取定位-locationUtil-fast模式(自带2min缓存,可覆写)\n LocationUtil.getLocation(xx,xxx,..., new new MyLocationFastCallback() {})"
+          android:text="获取定位-locationUtil-fast模式(自带2min缓存,可覆写)+不允许模糊定位\n LocationUtil.getLocation(xx,xxx,..., new new MyLocationFastCallback() {})"
           android:onClick="getLocationFast"
           android:textAllCaps="false"
           android:layout_height="wrap_content"/>

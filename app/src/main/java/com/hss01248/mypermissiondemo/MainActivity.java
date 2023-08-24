@@ -277,6 +277,10 @@ public class MainActivity extends AppCompatActivity {
     public void getLocationFast(View view) {
         LocationUtil.getLocationFast( 15000,
                 new MyLocationFastCallback() {
+                    @Override
+                    public boolean configAcceptOnlyCoarseLocationPermission() {
+                        return false;
+                    }
 
                     @Override
                     public void onSuccessFast(Location location, String msg) {
