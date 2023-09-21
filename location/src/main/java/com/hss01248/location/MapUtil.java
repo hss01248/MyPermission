@@ -76,7 +76,7 @@ public class MapUtil {
                             can = openGoogleMap(lat, lon);
                         }
                         if(can){
-                            //dialog.dismiss();
+                            dialog.dismiss();
                         }
 
                     }
