@@ -44,6 +44,7 @@ import com.hss01248.location.LocationStateInfo;
 import com.hss01248.location.LocationStateUtil;
 import com.hss01248.location.LocationSync;
 import com.hss01248.location.LocationUtil;
+import com.hss01248.location.MapUtil;
 import com.hss01248.location.MyLocationCallback;
 import com.hss01248.location.MyLocationFastCallback;
 import com.hss01248.location.QuietLocationUtil;
@@ -473,45 +474,13 @@ public class MainActivity extends AppCompatActivity {
             ToastUtils.showShort("没有缓存数据");
             return;
         }
-        goMap(info.lattidude,info.longtitude);
+      MapUtil.showMapChooseDialog(info.lattidude,info.longtitude);
     }
 
-    private  void goMap(double lattidude,double longtitude) {
-        try {
-            String url = "https://www.hss01248.tech/baidumap.html?lat="+ lattidude+"&lng="+ longtitude+"&from=gps";
-           /* Uri uri = Uri.parse(url);
-            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-            startActivity(intent);*/
-            //BaseWebviewActivity.start(this,url);
-            LocationStateUtil.viewLocationOnMap(lattidude,longtitude);
-        }catch (Throwable throwable){
-            ToastUtils.showShort(throwable.getMessage());
-        }
-    }
+
 
     public  void showFormatedLocationInfoInDialog(Location location){
-        ThreadUtils.getMainHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                LocationInfo info = LocationSync.toLocationInfo(location);
-                String json = new GsonBuilder().setPrettyPrinting().create().toJson(info);
-
-                AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
-                        .setTitle("定位结果")
-                        .setMessage(json)
-                        .setPositiveButton("跳到地图", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                goMap(location.getLatitude(),location.getLongitude());
-                            }
-                        })
-                        .setNegativeButton("取消", null)
-                        .create();
-                dialog.show();
-            }
-        });
-
-
+        MapUtil.showFormatedLocationInfoInDialog(location);
     }
 
     public void coarseLocationOnly(View view) {
