@@ -61,7 +61,7 @@ public class MapUtil {
     }
 
     public static void showMapChooseDialog(double lat,double lon){
-        CharSequence[] maps = {"百度地图","高德地图","谷歌地图"};
+        CharSequence[] maps = {"百度地图(一键回来)","高德地图(切换任务栏回来)","谷歌地图(国内有偏移)"};
         AlertDialog dialog = new AlertDialog.Builder(ActivityUtils.getTopActivity())
                 .setTitle("选择在一个地图上显示经纬度")
                 .setSingleChoiceItems(maps, 0, new DialogInterface.OnClickListener() {
