@@ -1,15 +1,23 @@
 package com.hss01248.permission.ext;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.Settings;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.blankj.utilcode.util.AppUtils;
+import com.blankj.utilcode.util.LogUtils;
+import com.blankj.utilcode.util.PermissionUtils;
 import com.hss01248.activityresult.ActivityResultListener;
 import com.hss01248.activityresult.StartActivityUtil;
+import com.hss01248.permission.ext.permissions.NotificationPermission;
+
+import java.util.List;
 
 /**
  * @Despciption todo
@@ -24,6 +32,32 @@ public class MyPermissionsExt {
         if(havePermission){
             callback.onGranted(permissionImpl.name());
         }else {
+            if(permissionImpl instanceof NotificationPermission){
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+                    if(PermissionUtils.isGranted(Manifest.permission.POST_NOTIFICATIONS)){
+                        callback.onGranted(permissionImpl.name());
+                        return;
+                    }
+
+                    PermissionUtils.permission(Manifest.permission.POST_NOTIFICATIONS)
+                            .callback(new PermissionUtils.SimpleCallback() {
+                                @Override
+                                public void onGranted() {
+                                    //回调有bug
+                                    //LogUtils.d("onGranted-->");
+                                    callback.onGranted(permissionImpl.name());
+                                }
+
+                                @Override
+                                public void onDenied() {
+                                    //LogUtils.d("onDenied-->");
+                                    callback.onDenied(permissionImpl.name());
+                                }
+                            }).request();
+                    return;
+                }
+            }
+            //todo 弹窗引导
             //Uri packageURI = Uri.parse("package:" + AppUtils.getAppPackageName());
             Intent intent = permissionImpl.intentToRequestPermission(activity);
             //intent.setData(packageURI);

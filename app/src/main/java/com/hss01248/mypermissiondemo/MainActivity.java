@@ -194,11 +194,13 @@ public class MainActivity extends AppCompatActivity {
         MyPermissionsExt.askPermission(this, permission, new IExtPermissionCallback() {
             @Override
             public void onGranted(String name) {
+                LogUtils.i("onGranted",permission.toString());
                 ToastUtils.showShort("onGranted " + name);
             }
 
             @Override
             public void onDenied(String name) {
+                LogUtils.w("onGranted",permission.toString());
                 ToastUtils.showShort("onDenied " + name);
             }
         });

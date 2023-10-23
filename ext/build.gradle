@@ -3,12 +3,12 @@ plugins {
 }
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 33
     buildToolsVersion "30.0.0"
 
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 30
+        targetSdkVersion 33
         versionCode 1
         versionName "1.0"
 
@@ -37,7 +37,6 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
     api 'com.github.hss01248.HttpUtil2:openuri:3.0.5'
-    api 'com.github.hss01248.StartActivityResult:activityresult:1.1.4'
+    api 'com.github.hss01248.StartActivityResult:activityresult:1.1.7'
     api  'com.blankj:utilcodex:1.30.0'
-    api 'com.github.hss01248.HttpUtil2:openuri:3.0.5'
 }
