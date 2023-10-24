@@ -43,14 +43,11 @@ public class MyPermissionsExt {
                             .callback(new PermissionUtils.SimpleCallback() {
                                 @Override
                                 public void onGranted() {
-                                    //回调有bug
-                                    //LogUtils.d("onGranted-->");
                                     callback.onGranted(permissionImpl.name());
                                 }
 
                                 @Override
                                 public void onDenied() {
-                                    //LogUtils.d("onDenied-->");
                                     callback.onDenied(permissionImpl.name());
                                 }
                             }).request();
