@@ -439,3 +439,25 @@ LocationUtil.setLocationMetric(ILocationMetric locationMetric)
 ![image-20230921111921674](https://cdn.jsdelivr.net/gh/shuiniuhss/myimages@main/imagemac3/image-20230921111921674.png)
 
 ![image-20230921111940102](https://cdn.jsdelivr.net/gh/shuiniuhss/myimages@main/imagemac3/image-20230921111940102.png)
+
+# 针对有的设备没有network provider的处理
+
+callback里增加两个配置:
+
+```java
+/**
+ * 只有gps,没有networkprovider时,使用新的超时时间,默认4min
+ * @return
+ */
+default long configTimeoutWhenOnlyGpsProvider(){
+    return 4*60*1000;
+}
+
+/**
+ * 主要用于测试没有network的情况
+ * @return
+ */
+default  boolean configForceUseOnlyGpsProvider(){
+    return false;
+}
+```

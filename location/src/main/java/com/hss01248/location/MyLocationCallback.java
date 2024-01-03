@@ -95,6 +95,22 @@ public interface MyLocationCallback {
     }
 
     /**
+     * 只有gps,没有networkprovider时,使用新的超时时间,默认4min
+     * @return
+     */
+    default long configTimeoutWhenOnlyGpsProvider(){
+        return 4*60*1000;
+    }
+
+    /**
+     * 主要用于测试没有network的情况
+     * @return
+     */
+    default  boolean configForceUseOnlyGpsProvider(){
+        return false;
+    }
+
+    /**
      * 是否支持仅模糊定位. 经纬度会偏差几千米
      * @return
      */

@@ -286,6 +286,11 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     @Override
+                    public boolean configForceUseOnlyGpsProvider() {
+                        return false;
+                    }
+
+                    @Override
                     public void onSuccessFast(Location location, String msg) {
                         //ToastUtils.showLong("success," + msg + ", location:" + location);
                         LogUtils.i(msg, location);

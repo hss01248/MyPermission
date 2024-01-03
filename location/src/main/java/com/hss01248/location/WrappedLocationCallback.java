@@ -81,6 +81,16 @@ public class WrappedLocationCallback implements MyLocationCallback{
        callback.onGmsDialogCancelClicked();
     }
 
+    @Override
+    public long configTimeoutWhenOnlyGpsProvider() {
+        return callback.configTimeoutWhenOnlyGpsProvider();
+    }
+
+    @Override
+    public boolean configForceUseOnlyGpsProvider() {
+        return callback.configForceUseOnlyGpsProvider();
+    }
+
     ProgressDialog dialog;
     @Override
     public void onBeforeReallyRequest() {

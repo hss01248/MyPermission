@@ -120,6 +120,16 @@ public class QuietLocationUtil {
         LogUtils.i("getAllProviders-enabled:", locationManager.getProviders(true));
         // [passive, network, fused, gps]
 
+        if(!locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)){
+            LogUtils.w("该设备没有network定位模块,重新设置定位超时时间",listener.configTimeoutWhenOnlyGpsProvider());
+            timeOut = (int) listener.configTimeoutWhenOnlyGpsProvider();
+        }else {
+            if(listener.configForceUseOnlyGpsProvider()){
+                LogUtils.w("配置了强制使用gps,不使用network",listener.configTimeoutWhenOnlyGpsProvider());
+                timeOut = (int) listener.configTimeoutWhenOnlyGpsProvider();
+            }
+        }
+
         Context finalContext = context;
         MyLocationCallback finalListener1 = listener;
         long startFromBeginning = System.currentTimeMillis();
@@ -150,38 +160,42 @@ public class QuietLocationUtil {
                     return;
                 }*/
                 try {
-                    if(!finalListener1.configNoNetworkProvider()){
+                    boolean canUseNetwork = !finalListener1.configNoNetworkProvider() && !finalListener1.configForceUseOnlyGpsProvider();
+                    if(canUseNetwork){
                         requestByType(LocationManager.NETWORK_PROVIDER, locationManager, map, countSet, finalListener1,startFromBeginning);
                     }
                     requestByType(LocationManager.GPS_PROVIDER, locationManager, map, countSet, finalListener1,startFromBeginning);
-                    //if(!listener.configNoNetworkProvider()){
+                    if(canUseNetwork){
                         requestByType(LocationManager.PASSIVE_PROVIDER, locationManager, map, countSet, finalListener1,startFromBeginning);
-                   // }
-                    requestByType("fused", locationManager, map, countSet, finalListener1,startFromBeginning);
-                    if (!withoutGms && isGmsAvaiable(finalContext)) {
-                        GmsLocationUtil.hasGmsGranted(finalContext, new GmsLocationUtil.IGmsSettingsStateCallback() {
-                            @Override
-                            public void open() {
-                                requestGmsLocation(finalContext, locationManager, map, countSet, finalListener1,startFromBeginning);
-                            }
+                        requestByType("fused", locationManager, map, countSet, finalListener1,startFromBeginning);
 
-                            @Override
-                            public void close(String msg) {
-                                LogUtils.w("gms state wrong:"+msg);
-                            }
-                        });
+                        if (!withoutGms && isGmsAvaiable(finalContext)) {
+                            GmsLocationUtil.hasGmsGranted(finalContext, new GmsLocationUtil.IGmsSettingsStateCallback() {
+                                @Override
+                                public void open() {
+                                    requestGmsLocation(finalContext, locationManager, map, countSet, finalListener1,startFromBeginning);
+                                }
 
-                        //return;
-                    }
+                                @Override
+                                public void close(String msg) {
+                                    LogUtils.w("gms state wrong:"+msg);
+                                }
+                            });
+
+                            //return;
+                        }
+                   }
+                    //
+
                 } catch (Throwable throwable) {
-                    throwable.printStackTrace();
+                    LogUtils.w("定位异常1",throwable);
                 }
 
 
                 try {
                     Looper.loop();
                 } catch (Throwable throwable) {
-                    throwable.printStackTrace();
+                    LogUtils.w("定位异常2",throwable);
                 }
 
             }

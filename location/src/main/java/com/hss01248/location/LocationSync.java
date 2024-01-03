@@ -74,6 +74,7 @@ public class LocationSync {
         }
         long start = System.currentTimeMillis();
         try {
+            printLocationInfo(location);
             LocationInfo info = toLocationInfo(location);
 
             info.timeCost = timeCost;
@@ -97,6 +98,12 @@ public class LocationSync {
                 info.isFromMockProvider = location.isFromMockProvider();
             }
             saveExtraToLocation(location, info);
+
+            ///Location[gps 23******,114****** hAcc=33 et=+86d23h14m3s610ms alt=0.0 vel=0.0 bear=0.0
+            // vAcc=??? sAcc=??? bAcc=??? {Bundle[{timeCost=656,
+            // hasFineLocationPermission=true, satellites=0, costFromBegin=659, maxCn0=0,
+            // QUICKGPS=true, millsOldWhenSaved=64, isFromMockProvider=false, calledMethod=gps,
+            // SourceType=128, meanCn0=0}]}]
 
             //if(provider != null){
                 // info.providerInfo = new ProviderInfo();
@@ -135,6 +142,10 @@ public class LocationSync {
             }
         }
 
+    }
+
+    private static void printLocationInfo(Location location) {
+       // LogUtils.i(location.getExtras());
     }
 
     public static String getFormatedLocationInfos(){
