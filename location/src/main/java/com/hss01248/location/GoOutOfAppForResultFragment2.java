@@ -44,7 +44,7 @@ public class GoOutOfAppForResultFragment2 extends BaseTransFragment<Intent> {
             if(listener != null){
                 listener.onActivityNotFound(throwable);
             }
-            finish();
+            finish(this);
         }
     }
 
@@ -96,7 +96,7 @@ public class GoOutOfAppForResultFragment2 extends BaseTransFragment<Intent> {
         if (StartActivityUtil.debugable) {
             Log.i("onActivityResult2", "req:" + requestCode + ",result:onStartOfResultBack,data:null");
         }
-        finish();
+        finish(this);
 
     }
 }
