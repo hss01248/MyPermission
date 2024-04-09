@@ -55,6 +55,7 @@ import com.hss01248.permission.ext.IExtPermission;
 import com.hss01248.permission.ext.IExtPermissionCallback;
 import com.hss01248.permission.ext.MyPermissionsExt;
 import com.hss01248.permission.ext.permissions.ApkPermissionImpl;
+import com.hss01248.permission.ext.permissions.ManageMediaPermission;
 import com.hss01248.permission.ext.permissions.NotificationListenerPermissionImpl;
 import com.hss01248.permission.ext.permissions.NotificationPermission;
 import com.hss01248.permission.ext.permissions.StorageManagerPermissionImpl;
@@ -592,5 +593,20 @@ public class MainActivity extends AppCompatActivity {
 
     public void isLocationEnabled3(View view) {
         LogUtils.w("isEnabled3: "+ QuietLocationUtil.isLocationEnabled3());
+    }
+
+    public void askManageMedia(View view) {
+        MyPermissionsExt.askPermission(this, new ManageMediaPermission(),
+                new IExtPermissionCallback() {
+                    @Override
+                    public void onGranted(String name) {
+                        ToastUtils.showShort("已经允许:"+name);
+                    }
+
+                    @Override
+                    public void onDenied(String name) {
+                        ToastUtils.showShort("已经拒绝:"+name);
+                    }
+                });
     }
 }

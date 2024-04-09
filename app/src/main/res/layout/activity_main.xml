@@ -20,7 +20,11 @@
           android:text="权限是否声明在manifest里"
           android:onClick="isInManifest"
           android:layout_height="wrap_content"/>
-
+      <Button
+          android:layout_width="wrap_content"
+          android:text="申请manage media 权限(>=Android12)"
+          android:onClick="askManageMedia"
+          android:layout_height="wrap_content"/>
       <Button
           android:layout_width="wrap_content"
           android:text="申请apk安装权限"
