@@ -556,6 +556,7 @@ public class QuietLocationUtil {
                             },handler);
                 }*/
 
+
                 locationManager.requestSingleUpdate(provider, new LocationListener() {
                     @Override
                     public void onLocationChanged(@NonNull Location location) {
