@@ -4,7 +4,11 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.location.GnssClock;
+import android.location.GnssMeasurement;
+import android.location.GnssMeasurementsEvent;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.os.Build;
@@ -37,6 +41,7 @@ import com.hss01248.permission.DefaultPermissionDialog;
 
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -44,6 +49,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 
 /**
@@ -526,8 +533,30 @@ public class QuietLocationUtil {
                     LocationSync.putToCache(lastKnownLocation,provider,true,System.currentTimeMillis() - start,System.currentTimeMillis() - startFromBeginning);
                 }
                // }
+                //todo 原始数据计算
+                /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+                        && LocationManager.GPS_PROVIDER.equals(provider)) {
+                    locationManager.registerGnssMeasurementsCallback(
+                            new GnssMeasurementsEvent.Callback() {
+                                @Override
+                                public void onGnssMeasurementsReceived(GnssMeasurementsEvent eventArgs) {
+                                    super.onGnssMeasurementsReceived(eventArgs);
+                                    GnssClock clock = eventArgs.getClock();
+                                    LogUtils.d(clock);
+                                    Collection<GnssMeasurement> measurements = eventArgs.getMeasurements();
+                                    for(GnssMeasurement measurement : measurements){
+                                        LogUtils.d(measurement);
+                                    }
+                                }
 
-                locationManager.requestSingleUpdate(provider, new android.location.LocationListener() {
+                                @Override
+                                public void onStatusChanged(int status) {
+                                    super.onStatusChanged(status);
+                                }
+                            },handler);
+                }*/
+
+                locationManager.requestSingleUpdate(provider, new LocationListener() {
                     @Override
                     public void onLocationChanged(@NonNull Location location) {
                         LogUtils.i("onLocationChanged", location,location.getTime(), provider, "耗时(ms):",
