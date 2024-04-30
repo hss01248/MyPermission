@@ -191,7 +191,7 @@ public class GpsSatelliteActivity extends AppCompatActivity {
                     public void run() {
                         requestLocation2(start);
                     }
-                },2000);
+                },1000);
             }
 
             @Override
@@ -313,11 +313,13 @@ public class GpsSatelliteActivity extends AppCompatActivity {
         binding.table.setTableData(tableData);
     }*/
 
+    int locationUpdateCount = 0;
     private void showLocationInfo(Location location) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                String text = "点击可跳到地图查看\n"+locationToString(location);
+                locationUpdateCount++;
+                String text = "点击可跳到地图查看---> locationUpdateCount: "+locationUpdateCount+"\n"+locationToString(location);
                 binding.tvLocationInfo.setText(text);
                 binding.tvLocationInfo.setOnClickListener(new View.OnClickListener() {
                     @Override
