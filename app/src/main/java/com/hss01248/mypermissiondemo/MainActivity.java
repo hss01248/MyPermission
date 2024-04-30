@@ -42,6 +42,7 @@ import com.google.gson.GsonBuilder;
 import com.hss01248.basewebview.BaseWebviewActivity;
 import com.hss01248.bus.AndroidBus;
 import com.hss01248.bus.ContextBusObserver;
+import com.hss01248.location.GpsSatelliteActivity;
 import com.hss01248.location.LocationInfo;
 import com.hss01248.location.LocationStateInfo;
 import com.hss01248.location.LocationStateUtil;
@@ -415,48 +416,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void gpsOnly(View view) {
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            long start = System.currentTimeMillis();
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,1000,1, new LocationListener() {
-                    @Override
-                    public void onLocationChanged(@NonNull Location location) {
-                        //ToastUtils.showLong( "cost(s):"+(System.currentTimeMillis() - start)/1000+", location:" + location);
-                        LogUtils.i( location,"cost(s):"+(System.currentTimeMillis() - start)/1000,
-                                "old:"+(System.currentTimeMillis() - location.getTime()));
-                        showFormatedLocationInfoInDialog(location);
-                    }
-
-                    @Override
-                    public void onProviderDisabled(@NonNull String provider) {
-                        LocationListener.super.onProviderDisabled(provider);
-                        LogUtils.w("onProviderDisabled",provider);
-                    }
-
-                    @Override
-                    public void onStatusChanged(String provider, int status, Bundle extras) {
-                        LocationListener.super.onStatusChanged(provider, status, extras);
-                        LogUtils.w("onStatusChanged",provider,status,extras);
-                    }
-                }, Looper.getMainLooper());
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                locationManager.registerGnssStatusCallback(new GnssStatus.Callback() {
-                    @Override
-                    public void onSatelliteStatusChanged(@NonNull GnssStatus status) {
-                        super.onSatelliteStatusChanged(status);
-                        LogUtils.i("onSatelliteStatusChanged",status.getSatelliteCount());
-                       /* for (int i = 0; i < status.getSatelliteCount(); i++) {
-                            LogUtils.i(i,status.get);
-                        }*/
-                    }
-                },new Handler(Looper.getMainLooper()));
-            }
-        }else {
-            ToastUtils.showShort("no permission");
-        }
+        GpsSatelliteActivity.start();
 
     }
 
