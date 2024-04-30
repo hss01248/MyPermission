@@ -102,7 +102,7 @@ public class GpsSatelliteActivity extends AppCompatActivity {
                 }
             });
             thread2.start();*/
-            requestLocation(start);
+            requestLocation2(start);
 
 
 
@@ -175,6 +175,30 @@ public class GpsSatelliteActivity extends AppCompatActivity {
         } else {
             ToastUtils.showShort("no permission");
         }
+    }
+
+    private void requestLocation2(long start) {
+        LocationUtil.getLocationFast(10000, new MyLocationFastCallback() {
+            @Override
+            public void onSuccessFast(Location location, String msg) {
+                if(isDestroyed()){
+                    return;
+                }
+                showLocationInfo(location);
+
+                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        requestLocation2(start);
+                    }
+                },2000);
+            }
+
+            @Override
+            public void onFinalFail(int type, String msg, boolean isFailBeforeReallyRequest) {
+
+            }
+        });
     }
 
     @SuppressLint("MissingPermission")
@@ -290,14 +314,20 @@ public class GpsSatelliteActivity extends AppCompatActivity {
     }*/
 
     private void showLocationInfo(Location location) {
-        String text = "点击可跳到地图查看\n"+locationToString(location);
-        binding.tvLocationInfo.setText(text);
-        binding.tvLocationInfo.setOnClickListener(new View.OnClickListener() {
+        runOnUiThread(new Runnable() {
             @Override
-            public void onClick(View v) {
-                MapUtil.showFormatedLocationInfoInDialog(location);
+            public void run() {
+                String text = "点击可跳到地图查看\n"+locationToString(location);
+                binding.tvLocationInfo.setText(text);
+                binding.tvLocationInfo.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        MapUtil.showFormatedLocationInfoInDialog(location);
+                    }
+                });
             }
         });
+
     }
 
     public static String locationToString(Location location) {
