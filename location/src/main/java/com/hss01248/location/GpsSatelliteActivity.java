@@ -65,6 +65,7 @@ public class GpsSatelliteActivity extends AppCompatActivity {
 
                             @Override
                             public void onSuccess(Location location, String msg) {
+
                                 initGps();
                             }
 
@@ -90,7 +91,7 @@ public class GpsSatelliteActivity extends AppCompatActivity {
                 == PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             long start = System.currentTimeMillis();
-
+            showProviderInfo();
 
             /*Thread thread2 = new Thread(new Runnable() {
                 @SuppressLint("MissingPermission")
@@ -128,6 +129,34 @@ public class GpsSatelliteActivity extends AppCompatActivity {
                     public void onFirstFix(int ttffMillis) {
                         super.onFirstFix(ttffMillis);
                         LogUtils.i("GnssStatus-onFirstFix", ttffMillis);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                binding.tvSatellitesInfo.setText("GnssStatus-onFirstFix "+ttffMillis);
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onStopped() {
+                        super.onStopped();
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                binding.tvSatellitesInfo.setText("stopped connect satellites");
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onStarted() {
+                        super.onStarted();
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                binding.tvSatellitesInfo.setText("start connecting satellites...");
+                            }
+                        });
                     }
                 };
                  thread = new Thread(new Runnable() {
@@ -177,6 +206,45 @@ public class GpsSatelliteActivity extends AppCompatActivity {
         }
     }
 
+    private void showProviderInfo() {
+        if(isDestroyed()){
+            return;
+        }
+        List<String> allProviders = locationManager.getAllProviders();
+        StringBuilder sb = new StringBuilder("AllProviders:\n");
+        if(allProviders ==null ){
+            sb.append("locationManager.getAllProviders() is null !!!! \n then check manually by code:\n\n");
+            allProviders = new ArrayList<>();
+            allProviders.add(LocationManager.GPS_PROVIDER);//这里抛空指针
+            allProviders.add(LocationManager.NETWORK_PROVIDER);
+            allProviders.add(LocationManager.PASSIVE_PROVIDER);
+            allProviders.add("fused");
+            /*sb.append("LocationManager.GPS_PROVIDER: ").append(LocationManager.GPS_PROVIDER).append("\n");
+            sb.append("LocationManager.NETWORK_PROVIDER: ").append(LocationManager.NETWORK_PROVIDER).append("\n");
+            sb.append("LocationManager.PASSIVE_PROVIDER: ").append(LocationManager.PASSIVE_PROVIDER).append("\n");*/
+            for (String allProvider : allProviders) {
+                sb.append(allProvider).append(" -avaiable: ").append(locationManager.isProviderEnabled(allProvider)).append("\n");
+            }
+
+        }else if(allProviders.isEmpty()){
+            sb.append("locationManager.getAllProviders() is empty");
+        }else{
+            for (String allProvider : allProviders) {
+                sb.append(allProvider).append(" -avaiable: ").append(locationManager.isProviderEnabled(allProvider)).append("\n");
+            }
+        }
+
+        binding.tvLocationProviders.setText(sb.toString());
+
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                showProviderInfo();
+            }
+        },1000);
+
+    }
+
     private void requestLocation2(long start) {
         LocationUtil.getLocationFast(10000, new MyLocationFastCallback() {
             @Override
@@ -197,6 +265,12 @@ public class GpsSatelliteActivity extends AppCompatActivity {
             @Override
             public void onFinalFail(int type, String msg, boolean isFailBeforeReallyRequest) {
 
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        binding.tvLocationInfo.setText("type: "+type+"\nmsg:"+msg+"\nisFailBeforeReallyRequest:"+isFailBeforeReallyRequest);
+                    }
+                });
             }
         });
     }
