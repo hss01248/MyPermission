@@ -16,11 +16,14 @@ import android.content.pm.PackageManager;
 import android.content.pm.PermissionInfo;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.location.GnssStatus;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
 import android.view.WindowManager;
@@ -412,12 +415,12 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void gpsOnly(View view) {
-        android.location.LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             long start = System.currentTimeMillis();
-                locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, new LocationListener() {
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,1000,1, new LocationListener() {
                     @Override
                     public void onLocationChanged(@NonNull Location location) {
                         //ToastUtils.showLong( "cost(s):"+(System.currentTimeMillis() - start)/1000+", location:" + location);
@@ -438,6 +441,19 @@ public class MainActivity extends AppCompatActivity {
                         LogUtils.w("onStatusChanged",provider,status,extras);
                     }
                 }, Looper.getMainLooper());
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                locationManager.registerGnssStatusCallback(new GnssStatus.Callback() {
+                    @Override
+                    public void onSatelliteStatusChanged(@NonNull GnssStatus status) {
+                        super.onSatelliteStatusChanged(status);
+                        LogUtils.i("onSatelliteStatusChanged",status.getSatelliteCount());
+                       /* for (int i = 0; i < status.getSatelliteCount(); i++) {
+                            LogUtils.i(i,status.get);
+                        }*/
+                    }
+                },new Handler(Looper.getMainLooper()));
+            }
         }else {
             ToastUtils.showShort("no permission");
         }
