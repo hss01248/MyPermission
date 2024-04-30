@@ -87,6 +87,8 @@
           android:text="获取定位-locationUtil-fast模式(自带2min缓存,可覆写)+不允许模糊定位\n LocationUtil.getLocation(xx,xxx,..., new new MyLocationFastCallback() {})"
           android:onClick="getLocationFast"
           android:textAllCaps="false"
+          android:textColor="@color/white"
+          android:backgroundTint="@color/colorAccent"
           android:layout_height="wrap_content"/>
       <Button
           android:layout_width="wrap_content"
@@ -137,8 +139,9 @@
 
       <Button
           android:layout_width="wrap_content"
-          android:text="单独请求gps"
+          android:text="单独请求gps,以及监测gps卫星状态"
           android:onClick="gpsOnly"
+          android:backgroundTint="@color/colorAccent"
           android:layout_height="wrap_content"/>
 
       <Button

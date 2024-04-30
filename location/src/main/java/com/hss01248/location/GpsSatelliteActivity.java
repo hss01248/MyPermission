@@ -1,11 +1,10 @@
 package com.hss01248.location;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.GnssAntennaInfo;
-import android.location.GnssMeasurementsEvent;
 import android.location.GnssStatus;
 import android.location.Location;
 import android.location.LocationListener;
@@ -15,7 +14,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -33,8 +31,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 /**
  * @Despciption todo
@@ -84,8 +80,9 @@ public class GpsSatelliteActivity extends AppCompatActivity {
     }
 
     GnssStatus.Callback gnssCallback;
-    LocationListener listener;
+
     LocationManager locationManager;
+    Thread thread;
 
     private void initGps() {
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -93,37 +90,21 @@ public class GpsSatelliteActivity extends AppCompatActivity {
                 == PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             long start = System.currentTimeMillis();
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 1, new LocationListener() {
-                @Override
-                public void onLocationChanged(@NonNull Location location) {
 
-                    LogUtils.i(location, "cost(s):" + (System.currentTimeMillis() - start) / 1000,
-                            "old:" + (System.currentTimeMillis() - location.getTime()));
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                        if (isDestroyed()) {
-                            return;
-                        }
-                    }
-                    showLocationInfo(location);
-                }
 
+            /*Thread thread2 = new Thread(new Runnable() {
+                @SuppressLint("MissingPermission")
                 @Override
-                public void onProviderDisabled(@NonNull String provider) {
-                    LocationListener.super.onProviderDisabled(provider);
-                    LogUtils.w("onProviderDisabled", provider);
+                public void run() {
+                    Looper.prepare();
+                    requestLocation(start);
+                    Looper.loop();
                 }
+            });
+            thread2.start();*/
+            requestLocation(start);
 
-                @Override
-                public void onStatusChanged(String provider, int status, Bundle extras) {
-                    LocationListener.super.onStatusChanged(provider, status, extras);
-                    LogUtils.w("onStatusChanged", provider, status, extras);
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                        if (isDestroyed()) {
-                            return;
-                        }
-                    }
-                }
-            }, Looper.getMainLooper());
+
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 gnssCallback = new GnssStatus.Callback() {
@@ -131,10 +112,16 @@ public class GpsSatelliteActivity extends AppCompatActivity {
                     public void onSatelliteStatusChanged(@NonNull GnssStatus status) {
                         super.onSatelliteStatusChanged(status);
                         //LogUtils.i("onSatelliteStatusChanged", status.getSatelliteCount());
-                        showSatelliteInfo(status);
-                       /* for (int i = 0; i < status.getSatelliteCount(); i++) {
-                            LogUtils.i(i,status.get);
-                        }*/
+                        if(isDestroyed()){
+                            Looper.myLooper().quitSafely();
+                            return;
+                        }
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                showSatelliteInfo(status);
+                            }
+                        });
                     }
 
                     @Override
@@ -143,10 +130,20 @@ public class GpsSatelliteActivity extends AppCompatActivity {
                         LogUtils.i("GnssStatus-onFirstFix", ttffMillis);
                     }
                 };
-                locationManager.registerGnssStatusCallback(gnssCallback, new Handler(Looper.getMainLooper()));
+                 thread = new Thread(new Runnable() {
+                    @SuppressLint("MissingPermission")
+                    @Override
+                    public void run() {
+                        Looper.prepare();
+                        locationManager.registerGnssStatusCallback(gnssCallback, new Handler(Looper.myLooper()));
+                        Looper.loop();
+                    }
+                });
+                thread.start();
+
             }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 locationManager.registerGnssMeasurementsCallback(new GnssMeasurementsEvent.Callback() {
                     @Override
                     public void onGnssMeasurementsReceived(GnssMeasurementsEvent eventArgs) {
@@ -160,7 +157,7 @@ public class GpsSatelliteActivity extends AppCompatActivity {
                         LogUtils.i("onGnssMeasurementsReceived", status);
                     }
                 }, new Handler(Looper.getMainLooper()));
-            }
+            }*/
 
             /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 locationManager.registerAntennaInfoListener(new Executor() {
@@ -178,6 +175,47 @@ public class GpsSatelliteActivity extends AppCompatActivity {
         } else {
             ToastUtils.showShort("no permission");
         }
+    }
+
+    @SuppressLint("MissingPermission")
+    private void requestLocation(long start) {
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 1,
+                new LocationListener() {
+                    @Override
+                    public void onLocationChanged(@NonNull Location location) {
+
+                        LogUtils.i(location, "cost(s):" + (System.currentTimeMillis() - start) / 1000,
+                                "old:" + (System.currentTimeMillis() - location.getTime()));
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                            if (isDestroyed()) {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                                    //Looper.myLooper().quitSafely();
+                                }
+                                return;
+                            }
+                        }
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                showLocationInfo(location);
+                            }
+                        });
+
+                    }
+
+                    @Override
+                    public void onProviderDisabled(@NonNull String provider) {
+                        LocationListener.super.onProviderDisabled(provider);
+                        LogUtils.w("onProviderDisabled", provider);
+                    }
+
+                    @Override
+                    public void onStatusChanged(String provider, int status, Bundle extras) {
+                        LocationListener.super.onStatusChanged(provider, status, extras);
+                        LogUtils.w("onStatusChanged", provider, status, extras);
+
+                    }
+                });
     }
 
     int updateCount = 0;
@@ -307,6 +345,9 @@ public class GpsSatelliteActivity extends AppCompatActivity {
         super.onDestroy();
         if (locationManager == null) {
             return;
+        }
+        if(thread !=null){
+            thread = null;
         }
         if (gnssCallback != null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
