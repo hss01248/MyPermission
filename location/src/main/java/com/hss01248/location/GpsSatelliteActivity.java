@@ -4,6 +4,8 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.GnssAntennaInfo;
+import android.location.GnssMeasurementsEvent;
 import android.location.GnssStatus;
 import android.location.Location;
 import android.location.LocationListener;
@@ -31,6 +33,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * @Despciption todo
@@ -126,25 +130,65 @@ public class GpsSatelliteActivity extends AppCompatActivity {
                     @Override
                     public void onSatelliteStatusChanged(@NonNull GnssStatus status) {
                         super.onSatelliteStatusChanged(status);
-                        LogUtils.i("onSatelliteStatusChanged", status.getSatelliteCount());
+                        //LogUtils.i("onSatelliteStatusChanged", status.getSatelliteCount());
                         showSatelliteInfo(status);
                        /* for (int i = 0; i < status.getSatelliteCount(); i++) {
                             LogUtils.i(i,status.get);
                         }*/
                     }
+
+                    @Override
+                    public void onFirstFix(int ttffMillis) {
+                        super.onFirstFix(ttffMillis);
+                        LogUtils.i("GnssStatus-onFirstFix", ttffMillis);
+                    }
                 };
                 locationManager.registerGnssStatusCallback(gnssCallback, new Handler(Looper.getMainLooper()));
             }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                locationManager.registerGnssMeasurementsCallback(new GnssMeasurementsEvent.Callback() {
+                    @Override
+                    public void onGnssMeasurementsReceived(GnssMeasurementsEvent eventArgs) {
+                        super.onGnssMeasurementsReceived(eventArgs);
+                        LogUtils.i("onGnssMeasurementsReceived", eventArgs);
+                    }
+
+                    @Override
+                    public void onStatusChanged(int status) {
+                        super.onStatusChanged(status);
+                        LogUtils.i("onGnssMeasurementsReceived", status);
+                    }
+                }, new Handler(Looper.getMainLooper()));
+            }
+
+            /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                locationManager.registerAntennaInfoListener(new Executor() {
+                    @Override
+                    public void execute(Runnable command) {
+                        command.run();
+                    }
+                }, new GnssAntennaInfo.Listener() {
+                    @Override
+                    public void onGnssAntennaInfoReceived(@NonNull List<GnssAntennaInfo> gnssAntennaInfos) {
+                        LogUtils.i("onGnssAntennaInfoReceived", gnssAntennaInfos);
+                    }
+                });
+            }*/
         } else {
             ToastUtils.showShort("no permission");
         }
     }
 
+    int updateCount = 0;
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void showSatelliteInfo(GnssStatus status) {
+        updateCount++;
         StringBuilder builder = new StringBuilder();
         builder.append("Satellite count: ");
         builder.append(status.getSatelliteCount());
+        builder.append(",    update count: ");
+        builder.append(updateCount);
         //先排序:
         List<Map<String,Object>> list = new ArrayList<>();
 
