@@ -46,7 +46,7 @@ dependencies {
     api "io.reactivex.rxjava2:rxandroid:2.1.1"
     api "io.reactivex.rxjava2:rxjava:2.2.9"
     api "com.google.code.gson:gson:2.8.5"
-
+    api "com.squareup.okhttp3:okhttp:3.12.12"
 
     //api  'com.github.huangyanbin:SmartTable:2.2.0'
 

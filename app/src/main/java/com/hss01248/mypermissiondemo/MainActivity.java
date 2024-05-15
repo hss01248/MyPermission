@@ -52,6 +52,10 @@ import com.hss01248.location.MapUtil;
 import com.hss01248.location.MyLocationCallback;
 import com.hss01248.location.MyLocationFastCallback;
 import com.hss01248.location.QuietLocationUtil;
+import com.hss01248.location.wifi.WifiCommonCallback;
+import com.hss01248.location.wifi.WifiInfoForList;
+import com.hss01248.location.wifi.WifiListUtil;
+import com.hss01248.location.wifi.WifiToLocationUtil;
 import com.hss01248.permission.IPermissionDialog;
 import com.hss01248.permission.IPermissionDialogBtnClickListener;
 import com.hss01248.permission.MyPermissions;
@@ -584,5 +588,19 @@ public class MainActivity extends AppCompatActivity {
                         ToastUtils.showShort("已经拒绝:"+name);
                     }
                 });
+    }
+
+    public void wifiListLocation(View view) {
+        WifiToLocationUtil.reqeustLocation( new MyLocationCallback() {
+            @Override
+            public void onSuccess(Location location, String msg) {
+                LogUtils.d(location,msg);
+            }
+
+            @Override
+            public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
+                LogUtils.w(type,msg);
+            }
+        });
     }
 }

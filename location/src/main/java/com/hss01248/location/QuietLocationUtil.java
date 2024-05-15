@@ -506,7 +506,7 @@ public class QuietLocationUtil {
 
     }
 
-    static boolean isGmsAvaiable(Context context) {
+   public static boolean isGmsAvaiable(Context context) {
         return GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS;
         /*;
         return client.;*/

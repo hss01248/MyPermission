@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.reactivex.functions.Consumer;
+
 /**
  * @Despciption todo
  * @Author hss
@@ -233,6 +235,14 @@ public class GpsSatelliteActivity extends AppCompatActivity {
                 sb.append(allProvider).append(" -avaiable: ").append(locationManager.isProviderEnabled(allProvider)).append("\n");
             }
         }
+
+        LocationStateUtil.getLocationState(new Consumer<LocationStateInfo>() {
+            @Override
+            public void accept(LocationStateInfo locationStateInfo) throws Exception {
+                sb.append("\n").append(locationStateInfo);
+                binding.tvLocationProviders.setText(sb.toString());
+            }
+        });
 
         binding.tvLocationProviders.setText(sb.toString());
 

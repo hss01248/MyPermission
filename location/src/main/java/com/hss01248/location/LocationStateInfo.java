@@ -19,4 +19,16 @@ public class LocationStateInfo {
 
     boolean gmsAvaliabled;
     boolean gmsLocationSwitchOpened;
+
+    @Override
+    public String toString() {
+        return "LocationStateInfo{" +
+                "preciseLocationSwitchEnabled=" + preciseLocationSwitchEnabled +
+                "\n locationSwitchOpen=" + locationSwitchOpen +
+                "\n coarseLocationPermissionGranted=" + coarseLocationPermissionGranted +
+                "\n fineLocationPermissionGranted=" + fineLocationPermissionGranted +
+                "\n gmsAvaliabled=" + gmsAvaliabled +
+                "\n gmsLocationSwitchOpened=" + gmsLocationSwitchOpened +
+                '}';
+    }
 }
