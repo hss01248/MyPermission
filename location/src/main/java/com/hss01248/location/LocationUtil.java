@@ -42,6 +42,7 @@ import com.hss01248.activityresult.ActivityResultListener;
 import com.hss01248.activityresult.GoOutOfAppForResultFragment;
 import com.hss01248.activityresult.StartActivityUtil;
 import com.hss01248.activityresult.TheActivityListener;
+import com.hss01248.location.sim.CellTowerUtil;
 import com.hss01248.location.wifi.WifiToLocationUtil;
 import com.hss01248.permission.DefaultPermissionDialog;
 import com.hss01248.permission.IPermissionDialog;
@@ -451,9 +452,14 @@ public class LocationUtil {
 
         if (!callback.configJustAskPermissionAndSwitch()) {
             callback.onBeforeReallyRequest();
-            if(WifiToLocationUtil.useHttpApi()){
-                LogUtils.w("network provider不可用,gms不可用,大概率是百富的pos机,直接采用谷歌的api 请求方式");
+            if(callback.configForceWifiGeo()){
                 WifiToLocationUtil.reqeustLocation(callback);
+            }else if(callback.configForceCellTowerGeo()){
+                CellTowerUtil.getLocation(callback);
+            }else if(WifiToLocationUtil.useHttpApi()){
+                LogUtils.w("network provider不可用,gms不可用,大概率是百富的pos机,直接采用谷歌的api 请求方式");
+                //WifiToLocationUtil.reqeustLocation(callback);
+                CellTowerUtil.getLocation(callback);
             }else {
                 new QuietLocationUtil().getLocation(context, timeout, withoutGms, callback);
             }

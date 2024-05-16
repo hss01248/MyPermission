@@ -7,8 +7,10 @@ import android.location.LocationManager;
 import com.blankj.utilcode.util.GsonUtils;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.Utils;
+import com.google.gson.GsonBuilder;
 import com.hss01248.location.MyLocationCallback;
 import com.hss01248.location.QuietLocationUtil;
+import com.hss01248.location.sim.GeoParam;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -34,7 +36,7 @@ import okhttp3.Response;
 public class WifiToLocationUtil {
 
 
-    public static String apiKey = "xxx";
+    public static String apiKey = "uuuu";
     public static boolean useHttpApi(){
         LocationManager locationManager = (LocationManager) Utils.getApp().getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         boolean network = locationManager ==null || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
@@ -81,17 +83,25 @@ public class WifiToLocationUtil {
             point.setSignalToNoiseRatio(info.signalToNoiseRatio);
             wifiAccessPoints.add(point);
         }
-        WifiParams params = new WifiParams();
-        params.setConsiderIp(false);
-        params.setWifiAccessPoints(wifiAccessPoints);
 
+
+        GeoParam param = new GeoParam();
+        param.considerIp = false;
+        param.wifiAccessPoints = wifiAccessPoints;
+
+        requestApi(param,callback);
+
+    }
+
+
+    public static void requestApi(GeoParam param,MyLocationCallback callback){
         String url="https://www.googleapis.com/geolocation/v1/geolocate?key="+apiKey;
 
-         MediaType JSON = MediaType.get("application/json; charset=utf-8");
+        MediaType JSON = MediaType.get("application/json; charset=utf-8");
         OkHttpClient client = new OkHttpClient.Builder()
                 .retryOnConnectionFailure(true)
                 .build();
-        RequestBody body = RequestBody.create(JSON,GsonUtils.toJson(params));
+        RequestBody body = RequestBody.create(JSON,new GsonBuilder().create().toJson(param));
         Request request = new Request.Builder()
                 .url(url)
                 .post(body)
@@ -130,7 +140,6 @@ public class WifiToLocationUtil {
                         }
                     }
                 });
-
     }
 
 

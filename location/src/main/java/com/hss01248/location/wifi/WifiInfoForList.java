@@ -1,7 +1,8 @@
 package com.hss01248.location.wifi;
 
-import com.google.gson.annotations.SerializedName;
+import androidx.annotation.Keep;
 
+@Keep
 public class WifiInfoForList {
 
 

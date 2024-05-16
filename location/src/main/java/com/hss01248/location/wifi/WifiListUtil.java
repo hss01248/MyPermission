@@ -15,11 +15,13 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 
+import androidx.annotation.NonNull;
 import androidx.core.location.LocationManagerCompat;
 
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.PermissionUtils;
 import com.blankj.utilcode.util.Utils;
+import com.hss01248.permission.MyPermissions;
 
 
 import java.util.ArrayList;
@@ -43,31 +45,33 @@ public class WifiListUtil {
         }
 
 
-        LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        boolean isLocationEnable =  LocationManagerCompat.isLocationEnabled(locationManager);
-        LogUtils.w("LocationManagerCompat.isLocationEnabled:"+isLocationEnable);
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
-            if(!PermissionUtils.isGranted(Manifest.permission.ACCESS_FINE_LOCATION)){
-                LogUtils.w("no location permission, get last time wifi scan result");
 
-                callback.onFail("-1","no location permission",null);
-                return;
-            }
-            if(!isLocationEnable){
-                callback.onFail("-1","location switch off",null);
-                return;
-            }
-            if(justSync){
-                LogUtils.w("request wifi results last time in sync");
-                getLastTime(wm,callback);
-                return;
-            }
+        MyPermissions.requestByMostEffort(false, true,
+                new PermissionUtils.FullCallback() {
+                    @Override
+                    public void onGranted(@NonNull List<String> granted) {
+                        LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+                        boolean isLocationEnable =  LocationManagerCompat.isLocationEnabled(locationManager);
+                        LogUtils.w("LocationManagerCompat.isLocationEnabled:"+isLocationEnable);
+                        if(!isLocationEnable){
+                            callback.onFail("-1","location switch off",null);
+                            return;
+                        }
+                        if(justSync){
+                            LogUtils.w("request wifi results last time in sync");
+                            getLastTime(wm,callback);
+                            return;
+                        }
+                        LogUtils.w("requestScan wifi");
+                        requestScan(context,wm,callback);
+                    }
 
-        }
-        LogUtils.w("requestScan wifi");
-        requestScan(context,wm,callback);
-        // getLastTime(wm,callback);
+                    @Override
+                    public void onDenied(@NonNull List<String> deniedForever, @NonNull List<String> denied) {
+                        callback.onFail("-1","no location permission",null);
+                    }
+                },Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION);
 
     }
 

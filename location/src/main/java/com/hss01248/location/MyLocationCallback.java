@@ -82,6 +82,14 @@ public interface MyLocationCallback {
         return true;
     }
 
+    default boolean configForceWifiGeo(){
+        return false;
+    }
+
+    default boolean configForceCellTowerGeo(){
+        return false;
+    }
+
     /**
      * 暂未实现逆geo解析
      * @return

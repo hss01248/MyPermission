@@ -62,7 +62,7 @@ public class MapUtil {
 
     public static void showMapChooseDialog(double lat,double lon){
         CharSequence[] maps = {"百度地图(一键回来)","高德地图(切换任务栏回来)"
-                ,"谷歌地图web(国内有偏移)","谷歌地图app"};
+                ,"谷歌地图web(国内有偏移)","谷歌地图app(国内有偏移)"};
         AlertDialog dialog = new AlertDialog.Builder(ActivityUtils.getTopActivity())
                 .setTitle("选择在一个地图上显示经纬度")
                 .setSingleChoiceItems(maps, 0, new DialogInterface.OnClickListener() {
@@ -195,10 +195,12 @@ public class MapUtil {
     }
     }
 
-    public static boolean openGoogleMapApp(double lat,double lon){
+    public static boolean openGoogleMapApp(double latitude,double longitude){
         try {
-            Uri gmmIntentUri = Uri.parse("geo:"+lat+","+lon);
-            Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+            //Uri gmmIntentUri = Uri.parse("geo:"+lat+","+lon);
+            // 创建一个标记位置的URI
+            Uri locationUri = Uri.parse("geo:" + latitude + "," + longitude + "?q=" + latitude + "," + longitude + "(" + Uri.encode("定位点") + ")");
+            Intent mapIntent = new Intent(Intent.ACTION_VIEW, locationUri);
             mapIntent.setPackage("com.google.android.apps.maps");
             ActivityUtils.getTopActivity().startActivity(mapIntent);
             return true;
