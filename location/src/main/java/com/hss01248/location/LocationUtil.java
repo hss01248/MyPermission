@@ -452,7 +452,7 @@ public class LocationUtil {
 
         if (!callback.configJustAskPermissionAndSwitch()) {
             callback.onBeforeReallyRequest();
-            if(callback.configForceWifiGeo()){
+            /*if(callback.configForceWifiGeo()){
                 WifiToLocationUtil.reqeustLocation(callback);
             }else if(callback.configForceCellTowerGeo()){
                 CellTowerUtil.getLocation(callback);
@@ -462,7 +462,8 @@ public class LocationUtil {
                 CellTowerUtil.getLocation(callback);
             }else {
                 new QuietLocationUtil().getLocation(context, timeout, withoutGms, callback);
-            }
+            }*/
+            new QuietLocationUtil().getLocation(context, timeout, withoutGms, callback);
         } else {
             callback.onSuccess(null, "permission granted");
         }

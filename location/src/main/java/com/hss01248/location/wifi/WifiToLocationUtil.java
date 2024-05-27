@@ -3,6 +3,7 @@ package com.hss01248.location.wifi;
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.SystemClock;
 
 import com.blankj.utilcode.util.GsonUtils;
 import com.blankj.utilcode.util.LogUtils;
@@ -18,6 +19,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -36,7 +38,7 @@ import okhttp3.Response;
 public class WifiToLocationUtil {
 
 
-    public static String apiKey = "uuuu";
+    public static String apiKey = "xxx";
     public static boolean useHttpApi(){
         LocationManager locationManager = (LocationManager) Utils.getApp().getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         boolean network = locationManager ==null || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
@@ -50,7 +52,7 @@ public class WifiToLocationUtil {
     }
 
     public static void reqeustLocation(MyLocationCallback callback){
-        WifiListUtil.getList(Utils.getApp(), false, new WifiCommonCallback<List<WifiInfoForList>>() {
+        WifiListUtil.getList(Utils.getApp(), false, true,new WifiCommonCallback<List<WifiInfoForList>>() {
             @Override
             public void onSuccess(List<WifiInfoForList> wifiInfoForLists) {
                 LogUtils.d(wifiInfoForLists);
@@ -72,9 +74,9 @@ public class WifiToLocationUtil {
      * @param callback
      */
     private static void reqeustGoogleApi(String apiKey,List<WifiInfoForList> wifiInfoForLists,MyLocationCallback callback) {
-        if(wifiInfoForLists.size() > 6){
+       /* if(wifiInfoForLists.size() > 6){
             wifiInfoForLists = wifiInfoForLists.subList(0,7);
-        }
+        }*/
         List<WifiAccessPoint> wifiAccessPoints = new ArrayList<>();
         for (WifiInfoForList info : wifiInfoForLists) {
             WifiAccessPoint point = new WifiAccessPoint();
@@ -97,8 +99,10 @@ public class WifiToLocationUtil {
     public static void requestApi(GeoParam param,MyLocationCallback callback){
         String url="https://www.googleapis.com/geolocation/v1/geolocate?key="+apiKey;
 
+        param.considerIp = false;
         MediaType JSON = MediaType.get("application/json; charset=utf-8");
         OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(10, TimeUnit.SECONDS)
                 .retryOnConnectionFailure(true)
                 .build();
         RequestBody body = RequestBody.create(JSON,new GsonBuilder().create().toJson(param));
@@ -123,17 +127,19 @@ public class WifiToLocationUtil {
                             callback.onFailed(4,"http request 200, but response.body() ==null");
                             return;
                         }
+                        boolean noWifiList = param.wifiAccessPoints==null ||param.wifiAccessPoints.isEmpty();
                         //private Integer status;
                         //    private String result;
                         String json = response.body().string();
                         try {
                             JSONObject jsonObject = new JSONObject(json);
-                            Location location = new Location("network");
+                            Location location = new Location("googleMapGeoApi-"+(noWifiList?"onlyCellTower":"withWifiList"));
                             location.setAccuracy((float) jsonObject.optDouble("accuracy"));
                             JSONObject location1 = jsonObject.getJSONObject("location");
                             location.setLatitude(location1.optDouble("lat"));
                             location.setLongitude(location1.optDouble("lng"));
                             location.setTime(System.currentTimeMillis());
+                            location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
                             callback.onSuccess(location,"from google geo api");
                         } catch (Exception e) {
                             callback.onFailed(4,"http request 200, but response.body not json: \n"+json+"\n\n"+e.getMessage());

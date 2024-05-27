@@ -53,6 +53,7 @@ import com.hss01248.location.MyLocationCallback;
 import com.hss01248.location.MyLocationFastCallback;
 import com.hss01248.location.QuietLocationUtil;
 import com.hss01248.location.sim.CellTowerUtil;
+import com.hss01248.location.sim.WifiAndBaseStationUtil;
 import com.hss01248.location.wifi.WifiCommonCallback;
 import com.hss01248.location.wifi.WifiInfoForList;
 import com.hss01248.location.wifi.WifiListUtil;
@@ -609,6 +610,22 @@ public class MainActivity extends AppCompatActivity {
 
     public void cellTowerLocation(View view) {
         CellTowerUtil.getLocation(new MyLocationCallback() {
+            @Override
+            public void onSuccess(Location location, String msg) {
+                LogUtils.d(location,msg);
+                showFormatedLocationInfoInDialog(location);
+            }
+
+            @Override
+            public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
+                LogUtils.w(type,msg);
+                ToastUtils.showShort(msg);
+            }
+        });
+    }
+
+    public void cellTowerAndWifiLocation(View view) {
+        WifiAndBaseStationUtil.requestLocationSilent(new MyLocationCallback() {
             @Override
             public void onSuccess(Location location, String msg) {
                 LogUtils.d(location,msg);

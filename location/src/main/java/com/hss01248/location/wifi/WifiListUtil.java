@@ -36,35 +36,21 @@ import java.util.List;
  */
 public class WifiListUtil {
 
-    public static void getList(Application context, boolean justSync, WifiCommonCallback<List<WifiInfoForList>> callback){
+    public static void getList(Application context, boolean justSync,
+                               boolean requestPermission,
+                               WifiCommonCallback<List<WifiInfoForList>> callback){
 
-        WifiManager wm = (WifiManager) Utils.getApp().getApplicationContext().getSystemService(WIFI_SERVICE);
-        if (wm == null) {
-            callback.onFail("-1","no wifi manager",null);
-            return ;
+        if(!requestPermission){
+            reqeustScan(callback, context, justSync);
+            return;
         }
-
-
-
 
         MyPermissions.requestByMostEffort(false, true,
                 new PermissionUtils.FullCallback() {
                     @Override
                     public void onGranted(@NonNull List<String> granted) {
-                        LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-                        boolean isLocationEnable =  LocationManagerCompat.isLocationEnabled(locationManager);
-                        LogUtils.w("LocationManagerCompat.isLocationEnabled:"+isLocationEnable);
-                        if(!isLocationEnable){
-                            callback.onFail("-1","location switch off",null);
-                            return;
-                        }
-                        if(justSync){
-                            LogUtils.w("request wifi results last time in sync");
-                            getLastTime(wm,callback);
-                            return;
-                        }
-                        LogUtils.w("requestScan wifi");
-                        requestScan(context,wm,callback);
+
+
                     }
 
                     @Override
@@ -75,7 +61,29 @@ public class WifiListUtil {
 
     }
 
-    private static void requestScan(Application context, WifiManager wm,WifiCommonCallback<List<WifiInfoForList>> callback) {
+    private static void reqeustScan(WifiCommonCallback<List<WifiInfoForList>> callback, Application context, boolean justSync) {
+        WifiManager wm = (WifiManager) Utils.getApp().getApplicationContext().getSystemService(WIFI_SERVICE);
+        if (wm == null) {
+            callback.onFail("-1","no wifi manager",null);
+            return;
+        }
+        LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        boolean isLocationEnable =  LocationManagerCompat.isLocationEnabled(locationManager);
+        LogUtils.w("LocationManagerCompat.isLocationEnabled:"+isLocationEnable);
+        if(!isLocationEnable){
+            callback.onFail("-1","location switch off",null);
+            return;
+        }
+        if(justSync){
+            LogUtils.w("request wifi results last time in sync");
+            getLastTime(wm, callback);
+            return;
+        }
+        LogUtils.w("requestScan wifi");
+        requestScan(context,wm, callback);
+    }
+
+    public static void requestScan(Application context, WifiManager wm,WifiCommonCallback<List<WifiInfoForList>> callback) {
 
         Runnable runnable = new Runnable() {
             @Override
@@ -113,7 +121,7 @@ public class WifiListUtil {
             }
             List<WifiInfoForList> list = new ArrayList<>(scanResults.size());
             for (ScanResult scanResult : scanResults) {
-                LogUtils.d("result",scanResult);
+                //LogUtils.d("result",scanResult);
                 WifiInfoForList info = new WifiInfoForList();
                 info.signal_strength  = scanResult.level;
                 info.wifi_name = scanResult.SSID;

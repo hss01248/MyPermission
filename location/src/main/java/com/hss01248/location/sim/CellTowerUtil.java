@@ -71,7 +71,7 @@ public class CellTowerUtil {
         });
     }
 
-    private static void loadInfo(WifiCommonCallback<GeoParam> callback) {
+    public static void loadInfo(WifiCommonCallback<GeoParam> callback) {
         TelephonyManager tm = (TelephonyManager) Utils.getApp().getSystemService(Context.TELEPHONY_SERVICE);
         if (tm == null) {
             LogUtils.e("TelephonyManager is null");
@@ -101,7 +101,7 @@ public class CellTowerUtil {
         }
         LogUtils.w("基站个数: "+infos.size());
         for (CellInfo info : infos) {
-            LogUtils.d(info);
+            //LogUtils.d(info);
         }
 
         convertCellInfoToCellTower(infos, param);
