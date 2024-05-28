@@ -525,7 +525,7 @@ public class QuietLocationUtil {
     private void requestByGoogleMapGeoApi(String provider,List<Location> map, Set<String> countSet,
                                           MyLocationCallback listener, long startFromBeginning) {
 
-        if(!WifiToLocationUtil.useHttpApi()){
+        if(!WifiAndBaseStationUtil.useHttpApi()){
             return;
         }
 

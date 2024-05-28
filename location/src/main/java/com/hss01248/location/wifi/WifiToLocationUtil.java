@@ -12,6 +12,7 @@ import com.google.gson.GsonBuilder;
 import com.hss01248.location.MyLocationCallback;
 import com.hss01248.location.QuietLocationUtil;
 import com.hss01248.location.sim.GeoParam;
+import com.hss01248.location.sim.WifiAndBaseStationUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -38,25 +39,14 @@ import okhttp3.Response;
 public class WifiToLocationUtil {
 
 
-    public static String apiKey = "xxx";
-    public static boolean useHttpApi(){
-        LocationManager locationManager = (LocationManager) Utils.getApp().getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
-        boolean network = locationManager ==null || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
-        boolean gmsAvaliabled = QuietLocationUtil.isGmsAvaiable(Utils.getApp());
-        if(!network && !gmsAvaliabled){
-            //network不可用,gms不可用. 即使gps模块可用,那也可能硬件有问题,比如百富的pos终端
-            return true;
-        }
-        return false;
-    }
 
     public static void reqeustLocation(MyLocationCallback callback){
         WifiListUtil.getList(Utils.getApp(), false, true,new WifiCommonCallback<List<WifiInfoForList>>() {
             @Override
             public void onSuccess(List<WifiInfoForList> wifiInfoForLists) {
                 LogUtils.d(wifiInfoForLists);
-                reqeustGoogleApi(apiKey,wifiInfoForLists,callback);
+                reqeustGoogleApi(wifiInfoForLists,callback);
             }
 
             @Override
@@ -69,11 +59,10 @@ public class WifiToLocationUtil {
     /**
      * https://developers.google.com/maps/documentation/geolocation/overview?hl=zh-cn
      * https://developers.google.com/maps/documentation/geolocation/requests-geolocation?hl=zh-cn#wifi_access_point_object
-     * @param apiKey
      * @param wifiInfoForLists
      * @param callback
      */
-    private static void reqeustGoogleApi(String apiKey,List<WifiInfoForList> wifiInfoForLists,MyLocationCallback callback) {
+    private static void reqeustGoogleApi(List<WifiInfoForList> wifiInfoForLists,MyLocationCallback callback) {
        /* if(wifiInfoForLists.size() > 6){
             wifiInfoForLists = wifiInfoForLists.subList(0,7);
         }*/
@@ -91,62 +80,12 @@ public class WifiToLocationUtil {
         param.considerIp = false;
         param.wifiAccessPoints = wifiAccessPoints;
 
-        requestApi(param,callback);
+        WifiAndBaseStationUtil.requestApi(param,callback);
 
     }
 
 
-    public static void requestApi(GeoParam param,MyLocationCallback callback){
-        String url="https://www.googleapis.com/geolocation/v1/geolocate?key="+apiKey;
 
-        param.considerIp = false;
-        MediaType JSON = MediaType.get("application/json; charset=utf-8");
-        OkHttpClient client = new OkHttpClient.Builder()
-                .connectTimeout(10, TimeUnit.SECONDS)
-                .retryOnConnectionFailure(true)
-                .build();
-        RequestBody body = RequestBody.create(JSON,new GsonBuilder().create().toJson(param));
-        Request request = new Request.Builder()
-                .url(url)
-                .post(body)
-                .build();
-        client.newCall(request)
-                .enqueue(new Callback() {
-                    @Override
-                    public void onFailure(Call call, IOException e) {
-                        callback.onFailed(4,"http request error: "+ e.getMessage());
-                    }
-
-                    @Override
-                    public void onResponse(Call call, Response response) throws IOException {
-                        if(!response.isSuccessful()){
-                            callback.onFailed(4,"http request error: "+ response.code());
-                            return;
-                        }
-                        if(response.body() ==null){
-                            callback.onFailed(4,"http request 200, but response.body() ==null");
-                            return;
-                        }
-                        boolean noWifiList = param.wifiAccessPoints==null ||param.wifiAccessPoints.isEmpty();
-                        //private Integer status;
-                        //    private String result;
-                        String json = response.body().string();
-                        try {
-                            JSONObject jsonObject = new JSONObject(json);
-                            Location location = new Location("googleMapGeoApi-"+(noWifiList?"onlyCellTower":"withWifiList"));
-                            location.setAccuracy((float) jsonObject.optDouble("accuracy"));
-                            JSONObject location1 = jsonObject.getJSONObject("location");
-                            location.setLatitude(location1.optDouble("lat"));
-                            location.setLongitude(location1.optDouble("lng"));
-                            location.setTime(System.currentTimeMillis());
-                            location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
-                            callback.onSuccess(location,"from google geo api");
-                        } catch (Exception e) {
-                            callback.onFailed(4,"http request 200, but response.body not json: \n"+json+"\n\n"+e.getMessage());
-                        }
-                    }
-                });
-    }
 
 
 }

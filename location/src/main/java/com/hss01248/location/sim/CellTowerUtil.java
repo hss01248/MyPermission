@@ -61,7 +61,7 @@ public class CellTowerUtil {
         getCellTowerInfo(new WifiCommonCallback<GeoParam>() {
             @Override
             public void onSuccess(GeoParam param) {
-                WifiToLocationUtil.requestApi(param, callback);
+                WifiAndBaseStationUtil.requestApi(param, callback);
             }
 
             @Override
