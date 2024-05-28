@@ -47,7 +47,7 @@ public class WifiAndBaseStationUtil {
     //一天内,使用缓存,不调用api
     public static long cacheTime = 24*60*60*1000L;
 
-     static String xxx = "xxxx";
+     public static String xxx = "xxxx";
     public static boolean useHttpApi(){
         LocationManager locationManager = (LocationManager) Utils.getApp().getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         boolean network = locationManager ==null || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
