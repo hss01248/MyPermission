@@ -70,7 +70,7 @@ public class WifiAndBaseStationUtil {
                         //重写时间
                         androidLocation.setTime(System.currentTimeMillis());
                         androidLocation.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
-                        androidLocation.setProvider(androidLocation.getProvider()+"-from-cache");
+                        androidLocation.setProvider(androidLocation.getProvider()+"-fromCache");
                         return androidLocation;
                     }
                 }
