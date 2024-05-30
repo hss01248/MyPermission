@@ -5,6 +5,8 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.GnssAntennaInfo;
+import android.location.GnssMeasurementsEvent;
 import android.location.GnssStatus;
 import android.location.Location;
 import android.location.LocationListener;
@@ -31,6 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 import io.reactivex.functions.Consumer;
 
@@ -95,7 +98,7 @@ public class GpsSatelliteActivity extends AppCompatActivity {
             long start = System.currentTimeMillis();
             showProviderInfo();
 
-            /*Thread thread2 = new Thread(new Runnable() {
+            Thread thread2 = new Thread(new Runnable() {
                 @SuppressLint("MissingPermission")
                 @Override
                 public void run() {
@@ -104,8 +107,8 @@ public class GpsSatelliteActivity extends AppCompatActivity {
                     Looper.loop();
                 }
             });
-            thread2.start();*/
-            requestLocation2(start);
+            thread2.start();
+            //requestLocation2(start);
 
 
 
@@ -134,7 +137,7 @@ public class GpsSatelliteActivity extends AppCompatActivity {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                binding.tvSatellitesInfo.setText("GnssStatus-onFirstFix "+ttffMillis);
+                                binding.tvSatellitesStatus.setText("GnssStatus-onFirstFix "+ttffMillis);
                             }
                         });
                     }
@@ -145,7 +148,7 @@ public class GpsSatelliteActivity extends AppCompatActivity {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                binding.tvSatellitesInfo.setText("stopped connect satellites");
+                                binding.tvSatellitesStatus.setText("stopped connect satellites");
                             }
                         });
                     }
@@ -156,7 +159,7 @@ public class GpsSatelliteActivity extends AppCompatActivity {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                binding.tvSatellitesInfo.setText("start connecting satellites...");
+                                binding.tvSatellitesStatus.setText("start connecting satellites...");
                             }
                         });
                     }
@@ -174,7 +177,7 @@ public class GpsSatelliteActivity extends AppCompatActivity {
 
             }
 
-            /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 locationManager.registerGnssMeasurementsCallback(new GnssMeasurementsEvent.Callback() {
                     @Override
                     public void onGnssMeasurementsReceived(GnssMeasurementsEvent eventArgs) {
@@ -188,9 +191,9 @@ public class GpsSatelliteActivity extends AppCompatActivity {
                         LogUtils.i("onGnssMeasurementsReceived", status);
                     }
                 }, new Handler(Looper.getMainLooper()));
-            }*/
+            }
 
-            /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 locationManager.registerAntennaInfoListener(new Executor() {
                     @Override
                     public void execute(Runnable command) {
@@ -202,7 +205,7 @@ public class GpsSatelliteActivity extends AppCompatActivity {
                         LogUtils.i("onGnssAntennaInfoReceived", gnssAntennaInfos);
                     }
                 });
-            }*/
+            }
         } else {
             ToastUtils.showShort("no permission");
         }
@@ -297,7 +300,7 @@ public class GpsSatelliteActivity extends AppCompatActivity {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
                             if (isDestroyed()) {
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                                    //Looper.myLooper().quitSafely();
+                                    Looper.myLooper().quitSafely();
                                 }
                                 return;
                             }

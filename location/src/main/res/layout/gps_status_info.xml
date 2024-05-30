@@ -24,6 +24,11 @@
         android:text="getting location..."
         android:layout_height="wrap_content"/>
     <TextView
+        android:id="@+id/tv_satellites_status"
+        android:layout_width="match_parent"
+        android:layout_marginBottom="16dp"
+        android:layout_height="wrap_content"/>
+    <TextView
         android:id="@+id/tv_satellites_info"
         android:layout_width="match_parent"
         android:layout_marginBottom="16dp"
