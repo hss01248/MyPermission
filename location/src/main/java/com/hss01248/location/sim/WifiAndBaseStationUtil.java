@@ -103,6 +103,7 @@ public class WifiAndBaseStationUtil {
         Location androidLocation = readCacheLocation(false);
         if(androidLocation !=null){
             callback.onSuccess(androidLocation,"from cache");
+            return;
         }
         
         
