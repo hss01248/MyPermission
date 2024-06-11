@@ -14,7 +14,18 @@
 
        app:alignItems="stretch"
        app:alignContent="stretch">
-
+      <Button
+          android:layout_width="wrap_content"
+          android:text="Build info"
+          android:textAllCaps="false"
+          android:onClick="showBuildInfo"
+          android:layout_height="wrap_content"/>
+      <Button
+          android:layout_width="wrap_content"
+          android:text="settings info"
+          android:textAllCaps="false"
+          android:onClick="showSettingsInfo"
+          android:layout_height="wrap_content"/>
       <Button
           android:layout_width="wrap_content"
           android:text="权限是否声明在manifest里"

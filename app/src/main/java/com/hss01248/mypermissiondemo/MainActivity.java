@@ -25,9 +25,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.blankj.utilcode.util.ActivityUtils;
@@ -35,6 +38,7 @@ import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.PermissionUtils;
 import com.blankj.utilcode.util.ScreenUtils;
+import com.blankj.utilcode.util.SizeUtils;
 import com.blankj.utilcode.util.ThreadUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.blankj.utilcode.util.Utils;
@@ -71,9 +75,12 @@ import com.hss01248.permission.ext.permissions.NotificationPermission;
 import com.hss01248.permission.ext.permissions.StorageManagerPermissionImpl;
 import com.hss01248.permission.ext.permissions.UsageAccessPermissionImpl;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.TreeMap;
 
 import io.reactivex.functions.Consumer;
 
@@ -638,5 +645,82 @@ public class MainActivity extends AppCompatActivity {
                 ToastUtils.showShort(msg);
             }
         });
+    }
+
+    public void showBuildInfo(View view) {
+        Map map = new TreeMap();
+        Field[] fields = Build.class.getDeclaredFields();
+        for (Field field : fields) {
+            try {
+                field.setAccessible(true);
+                Object object = field.get(null);
+                if(object instanceof String[]){
+                    String[] arr = (String[]) object;
+                    map.put(field.getName(), Arrays.toString(arr));
+                }else{
+                    map.put(field.getName(), object+"");
+                }
+
+            } catch (Exception e) {
+                map.put("exception", e.getMessage());
+                //e.printStackTrace();
+            }
+        }
+        showInDialog("Build",map);
+    }
+
+    public void showSettingsInfo(View view) {
+        Map map = new TreeMap();
+        Field[] fields = Settings.System.class.getDeclaredFields();
+        for (Field field : fields) {
+            try {
+                field.setAccessible(true);
+                Object object = field.get(null);
+                if(object instanceof String[]){
+                    String[] arr = (String[]) object;
+                    map.put(field.getName(), Arrays.toString(arr));
+                }else{
+                    map.put(field.getName(), object+"");
+                }
+
+            } catch (Exception e) {
+                map.put("exception", e.getMessage());
+                //e.printStackTrace();
+            }
+        }
+        showInDialog("Settings.System",map);
+    }
+
+    private void showInDialog(String title,Map map) {
+        TextView textView = new TextView(this);
+        textView.setText(new GsonBuilder().setPrettyPrinting().create().toJson(map));
+        ScrollView scrollView = new ScrollView(this);
+        scrollView.addView(textView);
+        int padding = SizeUtils.dp2px(5);
+        textView.setPadding(padding,padding,padding,padding);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setView(scrollView)
+                .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                }).create();
+
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog0) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    dialog.getWindow().setBackgroundBlurRadius(20);
+                }
+                dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.WHITE));
+                WindowManager.LayoutParams attributes = dialog.getWindow().getAttributes();
+                attributes.width = ScreenUtils.getScreenWidth();
+                dialog.getWindow().setAttributes(attributes);
+            }
+        });
+        dialog.show();
     }
 }

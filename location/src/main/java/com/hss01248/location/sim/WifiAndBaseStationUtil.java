@@ -4,6 +4,7 @@ package com.hss01248.location.sim;
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.SystemClock;
 import android.text.TextUtils;
 
@@ -48,16 +49,28 @@ public class WifiAndBaseStationUtil {
     public static long cacheTime = 24*60*60*1000L;
 
      public static String xxx = "xxxx";
-    public static boolean useHttpApi(){
-        LocationManager locationManager = (LocationManager) Utils.getApp().getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
-        boolean network = locationManager ==null || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
-        boolean gmsAvaliabled = QuietLocationUtil.isGmsAvaiable(Utils.getApp());
-        if(!network && !gmsAvaliabled){
-            //network provider不可用,gms不可用. 即使gps模块可用,那也可能硬件有问题,比如百富的pos终端
+     public static boolean forceAlsoUseHttpApi = "PAX".equalsIgnoreCase(Build.MANUFACTURER);
+
+    public static boolean useHttpApi(){
+        if(forceAlsoUseHttpApi){
             return true;
         }
-        return false;
+        try{
+            LocationManager locationManager = (LocationManager) Utils.getApp().getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+            boolean network = locationManager ==null || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+
+            boolean gmsAvaliabled = QuietLocationUtil.isGmsAvaiable(Utils.getApp());
+            if(!network && !gmsAvaliabled){
+                //network provider不可用,gms不可用. 即使gps模块可用,那也可能硬件有问题,比如百富的pos终端
+                return true;
+            }
+            return false;
+        }catch (Throwable throwable){
+            LogUtils.w(throwable);
+            return false;
+        }
+
     }
     public static  Location readCacheLocation( boolean ignoreTime){
         String string = SPStaticUtils.getString("google-geo-cache");
