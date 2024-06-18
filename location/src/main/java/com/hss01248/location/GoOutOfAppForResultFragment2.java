@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 
 import com.hss01248.activityresult.ActivityResultListener;
@@ -44,7 +45,7 @@ public class GoOutOfAppForResultFragment2 extends BaseTransFragment<Intent> {
             if(listener != null){
                 listener.onActivityNotFound(throwable);
             }
-            finish(this);
+            finish2(this);
         }
     }
 
@@ -96,7 +97,15 @@ public class GoOutOfAppForResultFragment2 extends BaseTransFragment<Intent> {
         if (StartActivityUtil.debugable) {
             Log.i("onActivityResult2", "req:" + requestCode + ",result:onStartOfResultBack,data:null");
         }
-        finish(this);
+        finish2(this);
 
+    }
+
+    public static void finish2(Fragment fragment){
+        try {
+            fragment.getActivity().getSupportFragmentManager().beginTransaction().remove(fragment).commitAllowingStateLoss();
+        }catch (Throwable throwable){
+            throwable.printStackTrace();
+        }
     }
 }

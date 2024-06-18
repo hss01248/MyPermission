@@ -48,7 +48,7 @@ public class WifiAndBaseStationUtil {
     //一天内,使用缓存,不调用api
     public static long cacheTime = 24*60*60*1000L;
 
-     public static String xxx = "xxxx";
+     public static String xxx = "xxx";
 
      public static boolean forceAlsoUseHttpApi = "PAX".equalsIgnoreCase(Build.MANUFACTURER);
 
