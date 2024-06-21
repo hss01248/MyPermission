@@ -21,6 +21,29 @@ import java.util.List;
  * @Version 1.0
  */
 public class StoragePermission {
+
+    public static boolean haveReadPermission(){
+        boolean canReadExt = false;
+        //纯粹的读取权限,这样判断:
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S_V2) {
+            canReadExt = Environment.isExternalStorageManager();
+        }else {
+            canReadExt = PermissionUtils.isGranted(Manifest.permission.READ_EXTERNAL_STORAGE);
+        }
+        return canReadExt;
+    }
+
+    public static boolean haveWritePermission(){
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
+                || (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q && Environment.isExternalStorageLegacy())){
+            return PermissionUtils.isGranted(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }else{
+            /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                return  Environment.isExternalStorageManager();
+            }*/
+            return  Environment.isExternalStorageManager();
+        }
+    }
     public static void askWritePermission(IExtPermissionCallback callback){
         Activity activity = ActivityUtils.getTopActivity();
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
