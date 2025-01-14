@@ -2,7 +2,7 @@
 buildscript {
     apply from: 'https://raw.githubusercontent.com/hss01248/flipperUtil/gradle7_5/remote3.gradle'
     //apply from: 'https://raw.githubusercontent.com/hss01248/flipperUtil/gradle7_5/deps/uploadAllByMavenPublish.gradle'
-    apply from: 'uploadAllByMavenPublish.gradle'
+    //apply from: 'uploadAllByMavenPublish.gradle'
     ext {
 // 快照版需要在版本号后面加-SNAPSHOT
         //groupId='com.xxx.yyy.mylib'
