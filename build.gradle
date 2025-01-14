@@ -6,9 +6,9 @@ buildscript {
     ext {
 // 快照版需要在版本号后面加-SNAPSHOT
         //groupId='com.xxx.yyy.mylib'
-       // groupId='com.github.hss01248.MyPermission'
-        versionCode = '2.1.9'
-        isPublisToLocal=false
+        //groupId='com.github.hss01248.MyPermission'
+        versionCode = '2.1.9-local'
+        isPublisToLocal=true
     }
 
 
