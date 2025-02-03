@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
@@ -40,6 +42,8 @@ import com.hss01248.activityresult.ActivityResultListener;
 import com.hss01248.activityresult.GoOutOfAppForResultFragment;
 import com.hss01248.activityresult.StartActivityUtil;
 import com.hss01248.activityresult.TheActivityListener;
+import com.hss01248.location.sim.CellTowerUtil;
+import com.hss01248.location.wifi.WifiToLocationUtil;
 import com.hss01248.permission.DefaultPermissionDialog;
 import com.hss01248.permission.IPermissionDialog;
 import com.hss01248.permission.MyPermissions;
@@ -110,14 +114,14 @@ public class LocationUtil {
             callback = new WrappedLocationCallback(callback);
         }
 
-        getLocation(alertDialog,context, silent, timeoutMills, showBeforeRequest, showAfterRequest,
+        getLocation(alertDialog, context, silent, timeoutMills, showBeforeRequest, showAfterRequest,
                 true, false, false, false, callback);
     }
 
     public static void getLocation(Context context, boolean silent, int timeoutMills,
                                    boolean showBeforeRequest, boolean showAfterRequest,
                                    MyLocationCallback callback) {
-            getLocation(null,context,silent,timeoutMills,showBeforeRequest,showAfterRequest,callback);
+        getLocation(null, context, silent, timeoutMills, showBeforeRequest, showAfterRequest, callback);
     }
 
     /**
@@ -127,11 +131,11 @@ public class LocationUtil {
      * @param timeout
      * @param callback
      */
-    public static void getLocation(IPermissionDialog permissionDialog,Context context, boolean silent, int timeout, boolean showBeforeRequest,
-                                    boolean showAfterRequest, boolean requestGmsDialog, boolean asQuickAsPossible,
-                                    boolean useLastKnownLocation, boolean withoutGms, MyLocationCallback callback) {
+    public static void getLocation(IPermissionDialog permissionDialog, Context context, boolean silent, int timeout, boolean showBeforeRequest,
+                                   boolean showAfterRequest, boolean requestGmsDialog, boolean asQuickAsPossible,
+                                   boolean useLastKnownLocation, boolean withoutGms, MyLocationCallback callback) {
 
-        if(permissionDialog ==null){
+        if (permissionDialog == null) {
             permissionDialog = MyPermissions.defaultPermissionDialog;
         }
 
@@ -145,21 +149,21 @@ public class LocationUtil {
 
         //如果谷歌服务可用,则直接申请谷歌:
         if (QuietLocationUtil.isGmsAvaiable(context) && requestGmsDialog) {
-            checkSwitchByGms(permissionDialog,context, silent, timeout, showBeforeRequest,
+            checkSwitchByGms(permissionDialog, context, silent, timeout, showBeforeRequest,
                     showAfterRequest, asQuickAsPossible, useLastKnownLocation, callback, true);
             return;
         }
         //开关打开,则去申请权限
         if (QuietLocationUtil.isLocationEnabled(locationManager)) {
-            checkPermission(permissionDialog,context, timeout, showBeforeRequest, showAfterRequest, withoutGms, callback);
+            checkPermission(permissionDialog, context, timeout, showBeforeRequest, showAfterRequest, withoutGms, callback);
             return;
         }
 
-        askGpsSwitchDialog(permissionDialog,locationManager, context, timeout, showBeforeRequest, showAfterRequest, withoutGms, callback);
+        askGpsSwitchDialog(permissionDialog, locationManager, context, timeout, showBeforeRequest, showAfterRequest, withoutGms, callback);
 
     }
 
-    private static void askGpsSwitchDialog(IPermissionDialog permissionDialog,LocationManager locationManager, Context context,
+    private static void askGpsSwitchDialog(IPermissionDialog permissionDialog, LocationManager locationManager, Context context,
                                            int timeout, boolean showBeforeRequest, boolean showAfterRequest,
                                            boolean withoutGms, MyLocationCallback callback) {
         callback.onGmsSwitchDialogShow();
@@ -183,7 +187,7 @@ public class LocationUtil {
                                     return;
                                 }
                                 callback.onGmsDialogOkClicked();
-                                checkPermission(permissionDialog,context, timeout, showBeforeRequest, showAfterRequest, withoutGms, callback);
+                                checkPermission(permissionDialog, context, timeout, showBeforeRequest, showAfterRequest, withoutGms, callback);
                             }
 
                             @Override
@@ -203,7 +207,7 @@ public class LocationUtil {
         );
     }
 
-    private static void checkSwitchByGms(IPermissionDialog permissionDialog,Context context,
+    private static void checkSwitchByGms(IPermissionDialog permissionDialog, Context context,
                                          boolean silent, int timeout, boolean showBeforeRequest,
                                          boolean showAfterRequest, boolean asQuickAsPossible,
                                          boolean useLastKnownLocation,
@@ -237,7 +241,7 @@ public class LocationUtil {
                     }
                     haveCallbacked[0] = true;
                     LogUtils.w("gms 判断状态超时,辣鸡gms: LocationServices.SettingsApi.checkLocationSettings");
-                    checkIfShowGpsSwitchDialog(permissionDialog,context, silent, timeout, showBeforeRequest,
+                    checkIfShowGpsSwitchDialog(permissionDialog, context, silent, timeout, showBeforeRequest,
                             showAfterRequest, asQuickAsPossible, useLastKnownLocation, callback, isFirstIn);
                     //getLocation(context, silent, timeout, showBeforeRequest, showAfterRequest, false,asQuickAsPossible,useLastKnownLocation ,true,callback);
                 }
@@ -253,7 +257,7 @@ public class LocationUtil {
                     }
                     haveCallbacked[0] = true;
                     if (result == null) {
-                        getLocation(permissionDialog,context, silent, timeout, showBeforeRequest,
+                        getLocation(permissionDialog, context, silent, timeout, showBeforeRequest,
                                 showAfterRequest, false, asQuickAsPossible,
                                 useLastKnownLocation, true, callback);
                         return;
@@ -267,21 +271,21 @@ public class LocationUtil {
                             if (!isFirstIn) {
                                 callback.onGmsDialogOkClicked();
                             }
-                            checkPermission(permissionDialog,context, timeout, showBeforeRequest,
+                            checkPermission(permissionDialog, context, timeout, showBeforeRequest,
                                     showAfterRequest, false, callback);
                             break;
                         case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                             //Location settings are not satisfied. Show the user a dialog to upgrade location settings
                             if (isFirstIn) {
                                 callback.onGmsSwitchDialogShow();
-                                requestGmsSwitch(permissionDialog,context, silent, timeout,
+                                requestGmsSwitch(permissionDialog, context, silent, timeout,
                                         showAfterRequest, showAfterRequest, asQuickAsPossible,
                                         useLastKnownLocation, callback, result);
                             } else {
                                 callback.onGmsDialogCancelClicked();
                                 Log.w("gms", "不同意gms弹窗,且定位开关开启,那么看是否要弹原生dialog");
                                 //miui9上,即使gms点击了同意,再查看状态时还是RESOLUTION_REQUIRED,精确位置开关被miui控制
-                                checkIfShowGpsSwitchDialog(permissionDialog,context, silent, timeout, showBeforeRequest,
+                                checkIfShowGpsSwitchDialog(permissionDialog, context, silent, timeout, showBeforeRequest,
                                         showAfterRequest, asQuickAsPossible, useLastKnownLocation, callback, isFirstIn);
                             }
                             break;
@@ -289,13 +293,13 @@ public class LocationUtil {
                             //Location settings are inadequate, and cannot be fixed here. Dialog not created.
                             //todo
                             Log.w("gms", "Error enabling location. Please try again");
-                            checkIfShowGpsSwitchDialog(permissionDialog,context, silent, timeout, showBeforeRequest,
+                            checkIfShowGpsSwitchDialog(permissionDialog, context, silent, timeout, showBeforeRequest,
                                     showAfterRequest, asQuickAsPossible, useLastKnownLocation, callback, isFirstIn);
                             break;
                         default:
                             //todo
                             Log.w("gms", "Error enabling location. Please try again2");
-                            checkIfShowGpsSwitchDialog(permissionDialog,context, silent, timeout, showBeforeRequest,
+                            checkIfShowGpsSwitchDialog(permissionDialog, context, silent, timeout, showBeforeRequest,
                                     showAfterRequest, asQuickAsPossible, useLastKnownLocation, callback, isFirstIn);
                             break;
                     }
@@ -307,31 +311,31 @@ public class LocationUtil {
                 return;
             }
             haveCallbacked[0] = true;
-            checkIfShowGpsSwitchDialog(permissionDialog,context, silent, timeout, showBeforeRequest,
+            checkIfShowGpsSwitchDialog(permissionDialog, context, silent, timeout, showBeforeRequest,
                     showAfterRequest, asQuickAsPossible, useLastKnownLocation, callback, isFirstIn);
         }
 
     }
 
-    private static void checkIfShowGpsSwitchDialog(IPermissionDialog permissionDialog,Context context, boolean silent, int timeout, boolean showBeforeRequest,
+    private static void checkIfShowGpsSwitchDialog(IPermissionDialog permissionDialog, Context context, boolean silent, int timeout, boolean showBeforeRequest,
                                                    boolean showAfterRequest, boolean asQuickAsPossible, boolean useLastKnownLocation,
                                                    MyLocationCallback callback, boolean isFirstIn) {
         LocationManager locationManager = (LocationManager) context.getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         if (LocationStateUtil.isPreciseLocationSwitchEnabled(locationManager)) {
             Log.w("gms", "不同意gms弹窗,但gps可用,那么请求原生定位");
-            getLocation(permissionDialog,context, silent, timeout, showBeforeRequest, showAfterRequest, false, asQuickAsPossible, useLastKnownLocation, true, callback);
+            getLocation(permissionDialog, context, silent, timeout, showBeforeRequest, showAfterRequest, false, asQuickAsPossible, useLastKnownLocation, true, callback);
             return;
         }
         if (QuietLocationUtil.isLocationEnabled(locationManager) && callback.configAcceptOnlyCoarseLocationPermission()) {
             Log.w("gms", "不同意gms弹窗,+gps不可用,但定位开关开启+允许模糊定位,那么绕过gms,请求原生定位");
-            getLocation(permissionDialog,context, silent, timeout, showBeforeRequest, showAfterRequest, false, asQuickAsPossible, useLastKnownLocation, true, callback);
+            getLocation(permissionDialog, context, silent, timeout, showBeforeRequest, showAfterRequest, false, asQuickAsPossible, useLastKnownLocation, true, callback);
             return;
         }
         Log.w("gms", "不同意gms弹窗,且定位开关关闭,那么再挽回一次,弹出原生定位开关引导弹窗");
-        askGpsSwitchDialog(permissionDialog,locationManager, context, timeout, showBeforeRequest, showAfterRequest, false, callback);
+        askGpsSwitchDialog(permissionDialog, locationManager, context, timeout, showBeforeRequest, showAfterRequest, false, callback);
     }
 
-    private static void requestGmsSwitch(IPermissionDialog permissionDialog,Context context, boolean silent, int timeout, boolean showBeforeRequest, boolean showAfterRequest,
+    private static void requestGmsSwitch(IPermissionDialog permissionDialog, Context context, boolean silent, int timeout, boolean showBeforeRequest, boolean showAfterRequest,
                                          boolean asQuickAsPossible, boolean useLastKnownLocation, MyLocationCallback callback, LocationSettingsResult result) {
         new GoOutOfAppForResultFragment2((FragmentActivity) ActivityUtils.getTopActivity(), null).goOutApp(new ActivityResultListener() {
             @Override
@@ -344,7 +348,7 @@ public class LocationUtil {
                             result.getStatus().startResolutionForResult(ActivityUtils.getTopActivity(), requestCode);
                         } catch (Exception e) {
                             LogUtils.w("location", "PendingIntent unable to execute request.", e);
-                            getLocation(permissionDialog,context, silent, timeout, showBeforeRequest, showAfterRequest, false, asQuickAsPossible, useLastKnownLocation, true, callback);
+                            getLocation(permissionDialog, context, silent, timeout, showBeforeRequest, showAfterRequest, false, asQuickAsPossible, useLastKnownLocation, true, callback);
                         }
                     }
                 }, 300);
@@ -357,7 +361,7 @@ public class LocationUtil {
                 ThreadUtils.getMainHandler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        checkSwitchByGms(permissionDialog,context, silent, timeout, showBeforeRequest, showAfterRequest, asQuickAsPossible, useLastKnownLocation, callback, false);
+                        checkSwitchByGms(permissionDialog, context, silent, timeout, showBeforeRequest, showAfterRequest, asQuickAsPossible, useLastKnownLocation, callback, false);
                     }
                 }, 200);
 
@@ -376,7 +380,7 @@ public class LocationUtil {
                 == ContextCompat.checkSelfPermission(Utils.getApp(), permission);
     }
 
-    private static void checkPermission(IPermissionDialog permissionDialog,Context context, int timeout, boolean showBeforeRequest, boolean showAfterRequest, boolean withoutGms, MyLocationCallback callback) {
+    private static void checkPermission(IPermissionDialog permissionDialog, Context context, int timeout, boolean showBeforeRequest, boolean showAfterRequest, boolean withoutGms, MyLocationCallback callback) {
         if (PermissionUtils.isGranted(Manifest.permission.ACCESS_FINE_LOCATION) &&
                 PermissionUtils.isGranted(Manifest.permission.ACCESS_COARSE_LOCATION)) {
             doRequestLocation(context, timeout, withoutGms, callback);
@@ -409,13 +413,13 @@ public class LocationUtil {
                     .callback(new PermissionUtils.FullCallback() {
                         @Override
                         public void onGranted(@NonNull List<String> granted) {
-                            if(isGranted(Manifest.permission.ACCESS_FINE_LOCATION)){
+                            if (isGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
                                 LogUtils.w("fine location granted");
-                            }else {
+                            } else {
                                 LogUtils.w("fine location reject");
                             }
                             if (!callback.configAcceptOnlyCoarseLocationPermission()) {
-                                if(!isGranted(Manifest.permission.ACCESS_FINE_LOCATION)){
+                                if (!isGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
                                     callback.onFailed(1, "no permission", true);
                                     return;
                                 }
@@ -448,9 +452,79 @@ public class LocationUtil {
 
         if (!callback.configJustAskPermissionAndSwitch()) {
             callback.onBeforeReallyRequest();
+            /*if(callback.configForceWifiGeo()){
+                WifiToLocationUtil.reqeustLocation(callback);
+            }else if(callback.configForceCellTowerGeo()){
+                CellTowerUtil.getLocation(callback);
+            }else if(WifiToLocationUtil.useHttpApi()){
+                LogUtils.w("network provider不可用,gms不可用,大概率是百富的pos机,直接采用谷歌的api 请求方式");
+                //WifiToLocationUtil.reqeustLocation(callback);
+                CellTowerUtil.getLocation(callback);
+            }else {
+                new QuietLocationUtil().getLocation(context, timeout, withoutGms, callback);
+            }*/
             new QuietLocationUtil().getLocation(context, timeout, withoutGms, callback);
         } else {
             callback.onSuccess(null, "permission granted");
         }
     }
+
+    //检查MockSetting选项是否打开
+    public static boolean isMockSettingsON(Context context) { // returns true if mock location enabled, false if not enabled.
+        if (Settings.Secure.getString(context.getContentResolver(),
+                Settings.Secure.ALLOW_MOCK_LOCATION).equals("0"))
+            return false;
+        else return true;
+    }
+
+
+    /**
+     * 检查设备中是否有其他应用程序，这些应用程序正在使用android.permission.ACCESS_MOCK_LOCATION (位置欺骗应用程序)
+     * 如果有,就在定位前调用;
+     * locationManager.removeTestProvider(LocationManager.GPS_PROVIDER);
+     * @param context
+     * @return
+     */
+    public static boolean areThereMockPermissionApps(Context context) {
+        int count = 0;
+        PackageManager pm = context.getPackageManager();
+        List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+        for (ApplicationInfo applicationInfo : packages) {
+            try {
+                PackageInfo packageInfo = pm.getPackageInfo(applicationInfo.packageName, PackageManager.GET_PERMISSIONS);
+                // Get Permissions
+                String[] requestedPermissions = packageInfo.requestedPermissions;
+                if (requestedPermissions != null) {
+                    for (int i = 0; i < requestedPermissions.length; i++) {
+                        if (requestedPermissions[i].equals("android.permission.ACCESS_MOCK_LOCATION")
+                                && !applicationInfo.packageName.equals(context.getPackageName())) {
+                            count++;
+                        }
+                    }
+                }
+            } catch (PackageManager.NameNotFoundException e) {
+                Log.e("Got exception ", e.getMessage());
+            }
+        }
+        if (count > 0) return true;
+        return false;
+    }
+
+    /**
+     * 移除模拟定位,确保别人配置了模拟定位也无用,能正常使用真正的定位
+     * 但测试发现没有什么用
+     * //SecurityException: com..mypermissiondemo from uid 10448 not allowed to perform MOCK_LOCATION
+     * 需要声明权限: ACCESS_MOCK_LOCATION, 但声明了还要在开发者模式中选择模拟定位应用,这样就不对了,变成模拟定位的提供者了
+     * @param locationManager
+     * @param provider
+     */
+    public static void removeMockProvider(LocationManager locationManager,String provider){
+        try {
+            locationManager.removeTestProvider(provider);
+        }catch (Throwable throwable){
+            LogUtils.w(throwable);
+        }
+    }
+
+
 }

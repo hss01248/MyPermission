@@ -4,7 +4,11 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.location.GnssClock;
+import android.location.GnssMeasurement;
+import android.location.GnssMeasurementsEvent;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.os.Build;
@@ -33,10 +37,13 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.hss01248.location.sim.WifiAndBaseStationUtil;
+import com.hss01248.location.wifi.WifiToLocationUtil;
 import com.hss01248.permission.DefaultPermissionDialog;
 
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -44,6 +51,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 
 /**
@@ -161,9 +170,14 @@ public class QuietLocationUtil {
                 }*/
                 try {
                     boolean canUseNetwork = !finalListener1.configNoNetworkProvider() && !finalListener1.configForceUseOnlyGpsProvider();
+
+                    //canUseNetwork = false;
+
                     if(canUseNetwork){
                         requestByType(LocationManager.NETWORK_PROVIDER, locationManager, map, countSet, finalListener1,startFromBeginning);
                     }
+                    requestByGoogleMapGeoApi("googleMapGeoApi",map, countSet, finalListener1,startFromBeginning);
+
                     requestByType(LocationManager.GPS_PROVIDER, locationManager, map, countSet, finalListener1,startFromBeginning);
                     if(canUseNetwork){
                         requestByType(LocationManager.PASSIVE_PROVIDER, locationManager, map, countSet, finalListener1,startFromBeginning);
@@ -212,6 +226,8 @@ public class QuietLocationUtil {
         }
         requestGPS(finalContext,locationManager, finalListener1);*/
     }
+
+
 
 
     /**
@@ -499,14 +515,52 @@ public class QuietLocationUtil {
 
     }
 
-    static boolean isGmsAvaiable(Context context) {
+   public static boolean isGmsAvaiable(Context context) {
         return GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS;
         /*;
         return client.;*/
     }
 
+
+    private void requestByGoogleMapGeoApi(String provider,List<Location> map, Set<String> countSet,
+                                          MyLocationCallback listener, long startFromBeginning) {
+
+
+        if(!WifiAndBaseStationUtil.useHttpApi()){
+            return;
+        }
+
+        //todo 建立额外的缓存: 比如缓存时效为一天
+
+        countSet.add(provider);
+        LogUtils.d("start request " + provider);
+        listener.onEachLocationStart(provider);
+        long start = System.currentTimeMillis();
+        WifiAndBaseStationUtil.requestLocationSilent(new MyLocationCallback() {
+            @Override
+            public void onSuccess(Location location, String msg) {
+                LogUtils.i("onLocationChanged", location,location.getTime(), provider, "耗时(ms):",
+                        (System.currentTimeMillis() - start),"距最初耗时(ms)",System.currentTimeMillis() - startFromBeginning);
+                if(location != null){
+                    LocationSync.putToCache(location,provider,false,System.currentTimeMillis() - start,System.currentTimeMillis() - startFromBeginning);
+                    listener.onEachLocationChanged(location,provider,System.currentTimeMillis() - start,System.currentTimeMillis() - startFromBeginning);
+                }
+                countSet.remove(provider);
+                onEnd(location, map, countSet, listener);
+            }
+
+            @Override
+            public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
+                countSet.remove(provider);
+                onEnd(null, map, countSet, listener);
+            }
+        });
+
+    }
+
     @SuppressLint("MissingPermission")
-    private void requestByType(String provider, LocationManager locationManager, List<Location> map, Set<String> countSet, MyLocationCallback listener, long startFromBeginning) {
+    private void requestByType(String provider, LocationManager locationManager, List<Location> map,
+                               Set<String> countSet, MyLocationCallback listener, long startFromBeginning) {
         //不要相信系统的LocationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))的返回值，被改过的系统中isProviderEnabled用于判断GPS还是可以的，判断其他定位方式就算了。
         //作者：一步三回头
         //链接：https://juejin.cn/post/7016937919533285407。
@@ -526,8 +580,31 @@ public class QuietLocationUtil {
                     LocationSync.putToCache(lastKnownLocation,provider,true,System.currentTimeMillis() - start,System.currentTimeMillis() - startFromBeginning);
                 }
                // }
+                //todo 原始数据计算
+                /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+                        && LocationManager.GPS_PROVIDER.equals(provider)) {
+                    locationManager.registerGnssMeasurementsCallback(
+                            new GnssMeasurementsEvent.Callback() {
+                                @Override
+                                public void onGnssMeasurementsReceived(GnssMeasurementsEvent eventArgs) {
+                                    super.onGnssMeasurementsReceived(eventArgs);
+                                    GnssClock clock = eventArgs.getClock();
+                                    LogUtils.d(clock);
+                                    Collection<GnssMeasurement> measurements = eventArgs.getMeasurements();
+                                    for(GnssMeasurement measurement : measurements){
+                                        LogUtils.d(measurement);
+                                    }
+                                }
 
-                locationManager.requestSingleUpdate(provider, new android.location.LocationListener() {
+                                @Override
+                                public void onStatusChanged(int status) {
+                                    super.onStatusChanged(status);
+                                }
+                            },handler);
+                }*/
+
+
+                locationManager.requestSingleUpdate(provider, new LocationListener() {
                     @Override
                     public void onLocationChanged(@NonNull Location location) {
                         LogUtils.i("onLocationChanged", location,location.getTime(), provider, "耗时(ms):",

@@ -61,7 +61,8 @@ public class MapUtil {
     }
 
     public static void showMapChooseDialog(double lat,double lon){
-        CharSequence[] maps = {"百度地图(一键回来)","高德地图(切换任务栏回来)","谷歌地图(国内有偏移)"};
+        CharSequence[] maps = {"百度地图(一键回来)","高德地图(切换任务栏回来)"
+                ,"谷歌地图web(国内有偏移)","谷歌地图app(国内有偏移)"};
         AlertDialog dialog = new AlertDialog.Builder(ActivityUtils.getTopActivity())
                 .setTitle("选择在一个地图上显示经纬度")
                 .setSingleChoiceItems(maps, 0, new DialogInterface.OnClickListener() {
@@ -72,8 +73,10 @@ public class MapUtil {
                             can =  openBaiduMap(lat, lon);
                         }else if(which ==1){
                             can = openAmap(lat, lon);
-                        }else {
+                        }else if(which ==2){
                             can = openGoogleMap(lat, lon);
+                        }else if(which ==3){
+                            can = openGoogleMapApp(lat, lon);
                         }
                         if(can){
                             dialog.dismiss();
@@ -180,7 +183,7 @@ public class MapUtil {
      */
     public  static  boolean openGoogleMap(double lat,double lon){
         try {
-        Uri uri = Uri.parse("https://www.google.com/maps/search/?api=1&query="+ URLEncoder.encode(lat+","+lon));
+        Uri uri = Uri.parse("https://www.google.com/maps/search/?gl=CN&api=1&query="+ URLEncoder.encode(lat+","+lon));
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(uri);
         ActivityUtils.getTopActivity().startActivity(intent);
@@ -190,6 +193,23 @@ public class MapUtil {
         ToastUtils.showLong(throwable.getMessage());
         return false;
     }
+    }
+
+    public static boolean openGoogleMapApp(double latitude,double longitude){
+        try {
+            //Uri gmmIntentUri = Uri.parse("geo:"+lat+","+lon);
+            // 创建一个标记位置的URI
+            Uri locationUri = Uri.parse("geo:" + latitude + "," + longitude + "?q=" + latitude + "," + longitude + "(" + Uri.encode("定位点") + ")");
+            Intent mapIntent = new Intent(Intent.ACTION_VIEW, locationUri);
+            mapIntent.setPackage("com.google.android.apps.maps");
+            ActivityUtils.getTopActivity().startActivity(mapIntent);
+            return true;
+        }catch (Throwable throwable){
+            LogUtils.w(throwable);
+            ToastUtils.showLong(throwable.getMessage());
+            return false;
+        }
+
     }
 
 }

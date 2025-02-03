@@ -3,6 +3,7 @@ package com.hss01248.permission.ext;
 import android.Manifest;
 import android.app.Activity;
 import android.os.Build;
+import android.os.Environment;
 
 import androidx.annotation.NonNull;
 
@@ -20,27 +21,53 @@ import java.util.List;
  * @Version 1.0
  */
 public class StoragePermission {
+
+    public static boolean haveReadPermission(){
+        boolean canReadExt = false;
+        //纯粹的读取权限,这样判断:
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S_V2) {
+            canReadExt = Environment.isExternalStorageManager();
+        }else {
+            canReadExt = PermissionUtils.isGranted(Manifest.permission.READ_EXTERNAL_STORAGE);
+        }
+        return canReadExt;
+    }
+
+    public static boolean haveWritePermission(){
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
+                || (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q && Environment.isExternalStorageLegacy())){
+            return PermissionUtils.isGranted(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }else{
+            /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                return  Environment.isExternalStorageManager();
+            }*/
+            return  Environment.isExternalStorageManager();
+        }
+    }
     public static void askWritePermission(IExtPermissionCallback callback){
         Activity activity = ActivityUtils.getTopActivity();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            //return  Environment.isExternalStorageManager();
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
+                || (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q
+                && Environment.isExternalStorageLegacy())) {
+            MyPermissions.requestByMostEffort(false, true,
+                    new PermissionUtils.FullCallback() {
+                        @Override
+                        public void onGranted(@NonNull List<String> granted) {
+                            callback.onGranted("storage");
+                        }
+
+                        @Override
+                        public void onDenied(@NonNull List<String> deniedForever,
+                                             @NonNull List<String> denied) {
+                            callback.onDenied("storage");
+                        }
+                    }, Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    Manifest.permission.READ_EXTERNAL_STORAGE);
+        }else{
             MyPermissionsExt.askPermission(activity, new StorageManagerPermissionImpl(),
                     new IExtPermissionCallback() {
                         @Override
                         public void onGranted(String name) {
-                            //callback.onGranted("storage");
-                            /*MyPermissionsExt.askPermission(activity, new ManageMediaPermission(),
-                                    new IExtPermissionCallback() {
-                                        @Override
-                                        public void onGranted(String name) {
-                                            callback.onGranted("storage");
-                                        }
-
-                                        @Override
-                                        public void onDenied(String name) {
-                                            callback.onDenied("storage");
-                                        }
-                                    });*/
                             MyPermissions.requestByMostEffort(false, true,
                                     new PermissionUtils.FullCallback() {
                                         @Override
@@ -63,22 +90,8 @@ public class StoragePermission {
                             callback.onDenied("storage");
                         }
                     });
-            return;
         }
-        MyPermissions.requestByMostEffort(false, true,
-                new PermissionUtils.FullCallback() {
-                    @Override
-                    public void onGranted(@NonNull List<String> granted) {
-                        callback.onGranted("storage");
-                    }
 
-                    @Override
-                    public void onDenied(@NonNull List<String> deniedForever,
-                                         @NonNull List<String> denied) {
-                        callback.onDenied("storage");
-                    }
-                }, Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                Manifest.permission.READ_EXTERNAL_STORAGE);
 
     }
 }

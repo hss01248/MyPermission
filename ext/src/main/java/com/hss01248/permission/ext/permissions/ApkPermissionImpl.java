@@ -3,16 +3,12 @@ package com.hss01248.permission.ext.permissions;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
 
-import com.blankj.utilcode.util.AppUtils;
-import com.hss01248.openuri.OpenUri;
+
 import com.hss01248.permission.ext.ExtHelper;
 import com.hss01248.permission.ext.IExtPermission;
-
-import java.io.File;
 
 /**
  * @Despciption todo

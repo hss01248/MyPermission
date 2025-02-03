@@ -16,15 +16,21 @@ import android.content.pm.PackageManager;
 import android.content.pm.PermissionInfo;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.location.GnssStatus;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.blankj.utilcode.util.ActivityUtils;
@@ -32,6 +38,7 @@ import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.PermissionUtils;
 import com.blankj.utilcode.util.ScreenUtils;
+import com.blankj.utilcode.util.SizeUtils;
 import com.blankj.utilcode.util.ThreadUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.blankj.utilcode.util.Utils;
@@ -39,6 +46,7 @@ import com.google.gson.GsonBuilder;
 import com.hss01248.basewebview.BaseWebviewActivity;
 import com.hss01248.bus.AndroidBus;
 import com.hss01248.bus.ContextBusObserver;
+import com.hss01248.location.GpsSatelliteActivity;
 import com.hss01248.location.LocationInfo;
 import com.hss01248.location.LocationStateInfo;
 import com.hss01248.location.LocationStateUtil;
@@ -48,6 +56,12 @@ import com.hss01248.location.MapUtil;
 import com.hss01248.location.MyLocationCallback;
 import com.hss01248.location.MyLocationFastCallback;
 import com.hss01248.location.QuietLocationUtil;
+import com.hss01248.location.sim.CellTowerUtil;
+import com.hss01248.location.sim.WifiAndBaseStationUtil;
+import com.hss01248.location.wifi.WifiCommonCallback;
+import com.hss01248.location.wifi.WifiInfoForList;
+import com.hss01248.location.wifi.WifiListUtil;
+import com.hss01248.location.wifi.WifiToLocationUtil;
 import com.hss01248.permission.IPermissionDialog;
 import com.hss01248.permission.IPermissionDialogBtnClickListener;
 import com.hss01248.permission.MyPermissions;
@@ -61,9 +75,12 @@ import com.hss01248.permission.ext.permissions.NotificationPermission;
 import com.hss01248.permission.ext.permissions.StorageManagerPermissionImpl;
 import com.hss01248.permission.ext.permissions.UsageAccessPermissionImpl;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.TreeMap;
 
 import io.reactivex.functions.Consumer;
 
@@ -412,35 +429,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void gpsOnly(View view) {
-        android.location.LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            long start = System.currentTimeMillis();
-                locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, new LocationListener() {
-                    @Override
-                    public void onLocationChanged(@NonNull Location location) {
-                        //ToastUtils.showLong( "cost(s):"+(System.currentTimeMillis() - start)/1000+", location:" + location);
-                        LogUtils.i( location,"cost(s):"+(System.currentTimeMillis() - start)/1000,
-                                "old:"+(System.currentTimeMillis() - location.getTime()));
-                        showFormatedLocationInfoInDialog(location);
-                    }
-
-                    @Override
-                    public void onProviderDisabled(@NonNull String provider) {
-                        LocationListener.super.onProviderDisabled(provider);
-                        LogUtils.w("onProviderDisabled",provider);
-                    }
-
-                    @Override
-                    public void onStatusChanged(String provider, int status, Bundle extras) {
-                        LocationListener.super.onStatusChanged(provider, status, extras);
-                        LogUtils.w("onStatusChanged",provider,status,extras);
-                    }
-                }, Looper.getMainLooper());
-        }else {
-            ToastUtils.showShort("no permission");
-        }
+        GpsSatelliteActivity.start();
 
     }
 
@@ -608,5 +597,130 @@ public class MainActivity extends AppCompatActivity {
                         ToastUtils.showShort("已经拒绝:"+name);
                     }
                 });
+    }
+
+    public void wifiListLocation(View view) {
+        WifiToLocationUtil.reqeustLocation( new MyLocationCallback() {
+            @Override
+            public void onSuccess(Location location, String msg) {
+                LogUtils.d(location,msg);
+                showFormatedLocationInfoInDialog(location);
+            }
+
+            @Override
+            public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
+                LogUtils.w(type,msg);
+                ToastUtils.showShort(msg);
+            }
+        });
+    }
+
+    public void cellTowerLocation(View view) {
+        CellTowerUtil.getLocation(new MyLocationCallback() {
+            @Override
+            public void onSuccess(Location location, String msg) {
+                LogUtils.d(location,msg);
+                showFormatedLocationInfoInDialog(location);
+            }
+
+            @Override
+            public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
+                LogUtils.w(type,msg);
+                ToastUtils.showShort(msg);
+            }
+        });
+    }
+
+    public void cellTowerAndWifiLocation(View view) {
+        WifiAndBaseStationUtil.requestLocationSilent(new MyLocationCallback() {
+            @Override
+            public void onSuccess(Location location, String msg) {
+                LogUtils.d(location,msg);
+                showFormatedLocationInfoInDialog(location);
+            }
+
+            @Override
+            public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
+                LogUtils.w(type,msg);
+                ToastUtils.showShort(msg);
+            }
+        });
+    }
+
+    public void showBuildInfo(View view) {
+        Map map = new TreeMap();
+        Field[] fields = Build.class.getDeclaredFields();
+        for (Field field : fields) {
+            try {
+                field.setAccessible(true);
+                Object object = field.get(null);
+                if(object instanceof String[]){
+                    String[] arr = (String[]) object;
+                    map.put(field.getName(), Arrays.toString(arr));
+                }else{
+                    map.put(field.getName(), object+"");
+                }
+
+            } catch (Exception e) {
+                map.put("exception", e.getMessage());
+                //e.printStackTrace();
+            }
+        }
+        showInDialog("Build",map);
+    }
+
+    public void showSettingsInfo(View view) {
+        Map map = new TreeMap();
+        Field[] fields = Settings.System.class.getDeclaredFields();
+        for (Field field : fields) {
+            try {
+                field.setAccessible(true);
+                Object object = field.get(null);
+                if(object instanceof String[]){
+                    String[] arr = (String[]) object;
+                    map.put(field.getName(), Arrays.toString(arr));
+                }else{
+                    map.put(field.getName(), object+"");
+                }
+
+            } catch (Exception e) {
+                map.put("exception", e.getMessage());
+                //e.printStackTrace();
+            }
+        }
+        showInDialog("Settings.System",map);
+    }
+
+    private void showInDialog(String title,Map map) {
+        TextView textView = new TextView(this);
+        textView.setText(new GsonBuilder().setPrettyPrinting().create().toJson(map));
+        ScrollView scrollView = new ScrollView(this);
+        scrollView.addView(textView);
+        int padding = SizeUtils.dp2px(5);
+        textView.setPadding(padding,padding,padding,padding);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setView(scrollView)
+                .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                }).create();
+
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog0) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    dialog.getWindow().setBackgroundBlurRadius(20);
+                }
+                dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.WHITE));
+                WindowManager.LayoutParams attributes = dialog.getWindow().getAttributes();
+                attributes.width = ScreenUtils.getScreenWidth();
+                dialog.getWindow().setAttributes(attributes);
+            }
+        });
+        dialog.show();
     }
 }

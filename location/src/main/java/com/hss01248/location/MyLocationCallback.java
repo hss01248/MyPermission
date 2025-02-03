@@ -82,6 +82,15 @@ public interface MyLocationCallback {
         return true;
     }
 
+
+    /**
+     * 强制也使用GoogleGeoApi作为一种定位补充手段
+     * @return
+     */
+    default boolean configForceAlsoUseGoogleGeoApi(){
+        return false;
+    }
+
     /**
      * 暂未实现逆geo解析
      * @return

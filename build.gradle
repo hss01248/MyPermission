@@ -1,13 +1,14 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-    apply from: 'https://raw.githubusercontent.com/hss01248/flipperUtil/dev/remote3.gradle'
-    apply from: 'https://raw.githubusercontent.com/hss01248/flipperUtil/dev/deps/uploadAllByMavenPublish.gradle'
+    apply from: 'https://raw.githubusercontent.com/hss01248/flipperUtil/gradle7_5/remote3.gradle'
+    //apply from: 'https://raw.githubusercontent.com/hss01248/flipperUtil/gradle7_5/deps/uploadAllByMavenPublish.gradle'
+    //apply from: 'uploadAllByMavenPublish.gradle'
     ext {
 // 快照版需要在版本号后面加-SNAPSHOT
         //groupId='com.xxx.yyy.mylib'
-        groupId='com.github.hss01248.MyPermission'
-        versionCode = '2.1.9'
-        isPublisToLocal=false
+        //groupId='com.github.hss01248.MyPermission'
+        versionCode = '2.1.9-local'
+        isPublisToLocal=true
     }
 
 

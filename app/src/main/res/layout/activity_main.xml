@@ -14,7 +14,18 @@
 
        app:alignItems="stretch"
        app:alignContent="stretch">
-
+      <Button
+          android:layout_width="wrap_content"
+          android:text="Build info"
+          android:textAllCaps="false"
+          android:onClick="showBuildInfo"
+          android:layout_height="wrap_content"/>
+      <Button
+          android:layout_width="wrap_content"
+          android:text="settings info"
+          android:textAllCaps="false"
+          android:onClick="showSettingsInfo"
+          android:layout_height="wrap_content"/>
       <Button
           android:layout_width="wrap_content"
           android:text="权限是否声明在manifest里"
@@ -87,6 +98,8 @@
           android:text="获取定位-locationUtil-fast模式(自带2min缓存,可覆写)+不允许模糊定位\n LocationUtil.getLocation(xx,xxx,..., new new MyLocationFastCallback() {})"
           android:onClick="getLocationFast"
           android:textAllCaps="false"
+          android:textColor="@color/white"
+          android:backgroundTint="#ff00ff"
           android:layout_height="wrap_content"/>
       <Button
           android:layout_width="wrap_content"
@@ -137,14 +150,36 @@
 
       <Button
           android:layout_width="wrap_content"
-          android:text="单独请求gps"
+          android:text="单独请求gps,以及监测gps卫星状态"
           android:onClick="gpsOnly"
+          android:backgroundTint="#ff00ff"
           android:layout_height="wrap_content"/>
+
 
       <Button
           android:layout_width="wrap_content"
           android:text="单独请求融合卫星定位"
           android:onClick="fusedOnly"
+          android:layout_height="wrap_content"/>
+      <Button
+          android:layout_width="wrap_content"
+          android:text="wifiList+google geo api 定位"
+          android:onClick="wifiListLocation"
+          android:backgroundTint="#ff00ff"
+          android:layout_height="wrap_content"/>
+
+      <Button
+          android:layout_width="wrap_content"
+          android:text="基站+google geo api 定位"
+          android:onClick="cellTowerLocation"
+          android:backgroundTint="#ff00ff"
+          android:layout_height="wrap_content"/>
+
+      <Button
+          android:layout_width="wrap_content"
+          android:text="基站+wifi->google geo api 定位"
+          android:onClick="cellTowerAndWifiLocation"
+          android:backgroundTint="#ff00ff"
           android:layout_height="wrap_content"/>
       <Button
           android:layout_width="wrap_content"
