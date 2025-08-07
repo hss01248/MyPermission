@@ -1,0 +1,46 @@
+buildscript{
+
+     repositories {
+        mavenLocal()
+        maven {//google()
+             url  'https://dl.google.com/dl/android/maven2/'
+        }
+        maven {//mavenCentral()
+             url  'https://repo.maven.apache.org/maven2/'
+        }
+        maven {
+             url  'https://jitpack.io'
+        }
+        maven {
+             url  'https://maven.aliyun.com/repository/jcenter'
+        }
+        maven {
+             url  'https://nexus.hss01248.tech/repository/maven-releases/'
+        }
+}
+
+//list all plugin classPath:
+dependencies {
+     classpath "com.android.tools.build:gradle:7.1.2"
+     classpath "com.didiglobal.booster:booster-gradle-plugin:4.16.2"
+     classpath "io.github.didi.dokit:dokitx-plugin:3.7.11"
+     classpath "io.github.wurensen:gradle-android-plugin-aspectjx:3.3.2"
+  }
+}
+
+
+//当前工程应用的插件信息:
+// [class:class org.gradle.api.plugins.HelpTasksPlugin]
+// [class:class org.gradle.buildinit.plugins.BuildInitPlugin]
+// [class:class org.gradle.buildinit.plugins.WrapperPlugin]
+// [class:class com.android.build.gradle.internal.plugins.VersionCheckPlugin]
+// [class:class org.gradle.language.base.plugins.LifecycleBasePlugin]
+// [class:class org.gradle.api.plugins.BasePlugin]
+// [class:class org.gradle.api.plugins.JvmEcosystemPlugin]
+// [class:class org.gradle.api.plugins.ReportingBasePlugin]
+// [class:class org.gradle.api.plugins.JavaBasePlugin$Inject, javaToolchainQueryService:org.gradle.jvm.toolchain.internal.JavaToolchainQueryService@78c9330a, taskThatOwnsThisObject:null, modelIdentityDisplayName:null]
+// [class:class com.android.build.gradle.api.AndroidBasePlugin]
+// [extension:extension 'android', projectType:0, class:class com.android.build.gradle.internal.plugins.AppPlugin, packagePublished:false, analyticsPluginType:APPLICATION, projectTypeV2:APPLICATION, variantInputModel:com.android.build.gradle.internal.variant.LegacyVariantInputManager@a37b62f, variantManager:com.android.build.gradle.internal.VariantManager@1bba9aa5]
+// [extension:extension 'android', class:class com.android.build.gradle.AppPlugin]
+// [class:class com.hujiang.gradle.plugin.android.aspectjx.AJXPlugin]
+// [class:class com.dorongold.gradle.tasktree.TaskTreePlugin]
