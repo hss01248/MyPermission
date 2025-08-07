@@ -5,4 +5,11 @@
     <string name="location_msg_gps">Untuk meningkatkan ketepatan lokasi dan memberi perkhidmatan yang lebih baik, sila buka GPS?</string>
     <string name="location_msg_permission">Sila izinkan untuk mendapatkan maklumat lokasi anda?</string>
     <string name="location_tip">Tips:</string>
+
+    <string name="location_error_no_permission">tiada kebenaran. sila berikan kebenaran untuk mendapatkan lokasi</string>
+    <string name="location_error_switch_off">suis lokasi dimatikan. sila hidupkan suis lokasi</string>
+    <string name="location_error_timeout">lokasi masa tamat tempoh, sila cuba lagi</string>
+    <string name="location_error_timeout_and_api_failed">lokasi masa tamat tempoh dan API gagal, sila cuba lagi kemudian</string>
+    <string name="location_error_location_manager_null">pengurus lokasi adalah null, sila mulakan semula aplikasi dan cuba lagi</string>
+    <string name="location_error_unknown">beberapa ralat berlaku, sila cuba lagi kemudian</string>
 </resources>

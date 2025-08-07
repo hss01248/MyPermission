@@ -111,18 +111,18 @@ public class QuietLocationUtil {
             listener = new WrappedLocationCallback(listener0);
         }
         if (noPermission(context)) {
-            listener.onFailed(1, "no permission");
+            listener.onFailed(LocationErrorCode.NO_PERMISSION, LocationErrorCode.getErrorMsg(LocationErrorCode.NO_PERMISSION));
             return;
         }
         LocationManager locationManager = (LocationManager) context.getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         if (locationManager == null) {
-            listener.onFailed(6, "locationManager is null");
+            listener.onFailed(LocationErrorCode.LOCATION_MANAGER_NULL, LocationErrorCode.getErrorMsg(LocationErrorCode.LOCATION_MANAGER_NULL));
             return;
         }
         boolean locationEnabled = isLocationEnabled(locationManager);
 
         if (!locationEnabled) {
-            listener.onFailed(2, "location switch off");
+            listener.onFailed(LocationErrorCode.LOCATION_SWITCH_OFF, LocationErrorCode.getErrorMsg(LocationErrorCode.LOCATION_SWITCH_OFF));
             return;
         }
 
@@ -700,11 +700,10 @@ public class QuietLocationUtil {
             listener.onSuccess(location, "from real_time sys api");
         } else {
             if(isTimeout){
-                listener.onFailed(88, msg);
+                listener.onFailed(LocationErrorCode.TIMEOUT, LocationErrorCode.getErrorMsg(LocationErrorCode.TIMEOUT));
             }else {
-                listener.onFailed(77, "no location get when api request end");
+                listener.onFailed(LocationErrorCode.LOCATION_MANAGER_TIMEOUT_AND_API_FAILED, LocationErrorCode.getErrorMsg(LocationErrorCode.LOCATION_MANAGER_TIMEOUT_AND_API_FAILED));
             }
-
         }
         if (!isTimeout) {
             LogUtils.i("正常结束,去掉调那些timeoutRunnable");

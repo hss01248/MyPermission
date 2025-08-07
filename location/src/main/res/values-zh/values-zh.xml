@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="location_cancel">取消</string>
+    <string name="location_ok">确定</string>
+    <string name="location_msg_gps">为提高定位准确性并更好地为您服务，请开启 GPS 并提供精确位置</string>
+    <string name="location_msg_permission">请给予我定位权限</string>
+    <string name="location_tip">提示</string>
+    <string name="location_timeout_msg">超时</string>
+    <string name="location_error_no_permission">无权限。请给予我定位权限</string>
+    <string name="location_error_switch_off">定位开关已关闭。请打开定位开关</string>
+    <string name="location_error_timeout">定位超时，请重试</string>
+    <string name="location_error_timeout_and_api_failed">定位超时且 API请求 失败，请稍后重试</string>
+    <string name="location_error_location_manager_null">定位管理器为空，请重启应用并重试</string>
+    <string name="location_error_unknown">发生一些错误，请稍后重试</string>
+</resources>

@@ -6,4 +6,11 @@
     <string name="location_msg_permission">Please give me the permission to locate</string>
     <string name="location_tip">Tips</string>
     <string name="location_timeout_msg">timeout</string>
+
+    <string name="location_error_no_permission">no permission. please give me the permission to locate</string>
+    <string name="location_error_switch_off">location switch off. please turn on the location switch</string>
+    <string name="location_error_timeout">location timeout, please try again</string>
+    <string name="location_error_timeout_and_api_failed">location timeout and api failed, please try again later</string>
+    <string name="location_error_location_manager_null">location manager is null, please restart the app and try again</string>
+    <string name="location_error_unknown">some error happened, please try again later</string>
 </resources>

@@ -183,7 +183,7 @@ public class LocationUtil {
                             public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
                                 if (!QuietLocationUtil.isLocationEnabled(locationManager)) {
                                     callback.onGmsDialogCancelClicked();
-                                    callback.onFailed(2, "location switch off-2", true);
+                                    callback.onFailed(LocationErrorCode.LOCATION_SWITCH_OFF, LocationErrorCode.getErrorMsg(LocationErrorCode.LOCATION_SWITCH_OFF)+"-2", true);
                                     return;
                                 }
                                 callback.onGmsDialogOkClicked();
@@ -201,7 +201,7 @@ public class LocationUtil {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         callback.onGmsDialogCancelClicked();
-                        callback.onFailed(2, "location switch off", true);
+                        callback.onFailed(LocationErrorCode.LOCATION_SWITCH_OFF, LocationErrorCode.getErrorMsg(LocationErrorCode.LOCATION_SWITCH_OFF), true);
                     }
                 }
         );
@@ -420,7 +420,7 @@ public class LocationUtil {
                             }
                             if (!callback.configAcceptOnlyCoarseLocationPermission()) {
                                 if (!isGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                                    callback.onFailed(1, "no permission", true);
+                                    callback.onFailed(LocationErrorCode.NO_PERMISSION, LocationErrorCode.getErrorMsg(LocationErrorCode.NO_PERMISSION), true);
                                     return;
                                 }
                             }
@@ -438,10 +438,10 @@ public class LocationUtil {
                                     //只拒绝了fine location权限,没有拒绝模糊定位权限-android12
                                     doRequestLocation(context, timeout, withoutGms, callback);
                                 } else {
-                                    callback.onFailed(1, "no permission", true);
+                                    callback.onFailed(LocationErrorCode.NO_PERMISSION, LocationErrorCode.getErrorMsg(LocationErrorCode.NO_PERMISSION), true);
                                 }
                             } else {
-                                callback.onFailed(1, "no permission", true);
+                                callback.onFailed(LocationErrorCode.NO_PERMISSION, LocationErrorCode.getErrorMsg(LocationErrorCode.NO_PERMISSION), true);
                             }
                         }
                     });

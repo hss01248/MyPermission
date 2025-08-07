@@ -6,4 +6,11 @@
     <string name="location_msg_permission">Izinkan kami untuk mendapatkan posisi Anda</string>
     <string name="location_tip">Tips</string>
     <string name="location_timeout_msg">waktu habis</string>
+
+    <string name="location_error_no_permission">tidak ada izin. silakan berikan izin untuk lokasi</string>
+    <string name="location_error_switch_off">saklar lokasi dimatikan. silakan nyalakan saklar lokasi</string>
+    <string name="location_error_timeout">lokasi timeout, silakan coba lagi</string>
+    <string name="location_error_timeout_and_api_failed">lokasi timeout dan API gagal, silakan coba lagi nanti</string>
+    <string name="location_error_location_manager_null">manajer lokasi bernilai null, silakan restart aplikasi dan coba lagi</string>
+    <string name="location_error_unknown">terjadi beberapa kesalahan, silakan coba lagi nanti</string>
 </resources>

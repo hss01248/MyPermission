@@ -5,4 +5,11 @@
     <string name="location_msg_gps">Để nâng cao độ chính xác khi định vị và phục vụ bạn tốt hơn, vui lòng mở GPS?</string>
     <string name="location_msg_permission">Cho phép chúng tôi lấy thông tin định vị của bạn?</string>
     <string name="location_tip">Lời nhắc:</string>
+
+    <string name="location_error_no_permission">không có quyền. vui lòng cấp quyền xác định vị trí</string>
+    <string name="location_error_switch_off">công tắc xác định vị trí đã tắt. vui lòng bật công tắc xác định vị trí</string>
+    <string name="location_error_timeout">xác định vị trí hết thời gian chờ, vui lòng thử lại</string>
+    <string name="location_error_timeout_and_api_failed">xác định vị trí hết thời gian chờ và API thất bại, vui lòng thử lại sau</string>
+    <string name="location_error_location_manager_null">quản lý vị trí là null, vui lòng khởi động lại ứng dụng và thử lại</string>
+    <string name="location_error_unknown">đã xảy ra một số lỗi, vui lòng thử lại sau</string>
 </resources>
