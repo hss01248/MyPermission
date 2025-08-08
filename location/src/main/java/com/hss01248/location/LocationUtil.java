@@ -73,6 +73,16 @@ public class LocationUtil {
 
     private static ILocationMetric locationMetric;
 
+    public static long getUseCacheInTimeOfMills() {
+        return useCacheInTimeOfMills;
+    }
+
+    public static void setGlobalUseCacheInTimeOfMills(long useCacheInTimeOfMills) {
+        LocationUtil.useCacheInTimeOfMills = useCacheInTimeOfMills;
+    }
+
+    private static long useCacheInTimeOfMills = 120000;//2min
+
 
     public static void getLocationSilent(long timeoutMills, MyLocationCallback callback) {
         new QuietLocationUtil().getLocation(Utils.getApp(), (int) timeoutMills, callback);

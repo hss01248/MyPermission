@@ -54,14 +54,14 @@ public interface MyLocationCallback {
 
     /**
      * 缓存有效时间:
-     * 默认一年,约等于永久 , 每次都可以单独配置
+     * 默认2min,以用于实时获取 , 每次都可以单独配置
      * 逻辑:  实时定位失败/超时后,从缓存读取,如果System.currentTimeMills-缓存定位里的time < useCacheInTimeOfMills,
      * 则使用该缓存,否则不使用该缓存
      *
      * @return
      */
     default long useCacheInTimeOfMills(){
-       return 365*24*60*60*1000L;
+       return LocationUtil.getUseCacheInTimeOfMills();
     }
 
 
