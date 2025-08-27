@@ -1,5 +1,6 @@
 package com.hss01248.location;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Location;
@@ -12,10 +13,8 @@ import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.ThreadUtils;
 import com.blankj.utilcode.util.ToastUtils;
-import com.blankj.utilcode.util.Utils;
 import com.google.gson.GsonBuilder;
 
-import java.io.File;
 import java.net.URLEncoder;
 
 /**
@@ -33,6 +32,30 @@ public class MapUtil {
      static final String DOWNLOAD_BAIDU_MAP = "http://map.baidu.com/zt/client/index/"; // 百度地图下载地址
 
 
+    /**
+     * 打开地图应用并定位到指定经纬度
+     * @param latitude 纬度
+     * @param longitude 经度
+     * @param label 位置标签/名称
+     */
+    public static void openMap( double latitude, double longitude, String label) {
+        // 创建geo协议的Uri，格式为"geo:纬度,经度?label=标签"
+        Uri uri = Uri.parse("geo:" + latitude + "," + longitude + "?q=" + latitude + "," + longitude + "(" + label + ")");
+
+        // 创建Intent
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+
+        // 检查是否有应用可以处理该Intent
+        if (intent.resolveActivity(ActivityUtils.getTopActivity().getPackageManager()) != null) {
+            // 启动Activity，系统会显示应用选择器
+            ActivityUtils.getTopActivity().startActivity(Intent.createChooser(intent, "选择地图应用"));
+        }else {
+            ToastUtils.showLong("目前用web版百度地图打开");
+            openWebGoogleMap(latitude, longitude);
+            //openBaiduMapWeb(latitude,longitude);
+
+        }
+    }
 
 
     public static void showFormatedLocationInfoInDialog(Location location){
@@ -48,7 +71,8 @@ public class MapUtil {
                         .setPositiveButton("跳到地图", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                showMapChooseDialog(location.getLatitude(),location.getLongitude());
+                                //showMapChooseDialog(location.getLatitude(),location.getLongitude());
+                                openMap(location.getLatitude(),location.getLongitude(),"xxtitle");
                             }
                         })
                         .setNegativeButton("取消", null)
@@ -74,7 +98,7 @@ public class MapUtil {
                         }else if(which ==1){
                             can = openAmap(lat, lon);
                         }else if(which ==2){
-                            can = openGoogleMap(lat, lon);
+                            can = openWebGoogleMap(lat, lon);
                         }else if(which ==3){
                             can = openGoogleMapApp(lat, lon);
                         }
@@ -181,7 +205,7 @@ public class MapUtil {
      * @param lon
      * @return
      */
-    public  static  boolean openGoogleMap(double lat,double lon){
+    public  static  boolean openWebGoogleMap(double lat, double lon){
         try {
         Uri uri = Uri.parse("https://www.google.com/maps/search/?gl=CN&api=1&query="+ URLEncoder.encode(lat+","+lon));
         Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -193,6 +217,41 @@ public class MapUtil {
         ToastUtils.showLong(throwable.getMessage());
         return false;
     }
+    }
+    /**
+     * 使用浏览器打开百度地图Web版并定位到指定经纬度
+     * @param context 上下文
+     * @param latitude 纬度
+     * @param longitude 经度
+     * @param label 地点标签（可选）
+     */
+    public static void openBaiduMapWeb(Context context, double latitude, double longitude, String label) {
+        // 构建百度地图Web版的URL
+        // 百度地图Web版的定位格式为：http://api.map.baidu.com/marker?location=纬度,经度&title=标题&content=内容&output=html
+        StringBuilder urlBuilder = new StringBuilder();
+        urlBuilder.append("http://api.map.baidu.com/marker?");
+        urlBuilder.append("location=").append(latitude).append(",").append(longitude);
+
+        if (label != null && !label.isEmpty()) {
+            urlBuilder.append("&title=").append(label);
+        }
+
+        urlBuilder.append("&output=html");
+
+        // 创建Intent，指定动作是查看网页
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        // 设置Uri
+        intent.setData(Uri.parse(urlBuilder.toString()));
+
+        // 检查是否有应用可以处理该Intent
+        if (intent.resolveActivity(context.getPackageManager()) != null) {
+            context.startActivity(intent);
+        }
+    }
+
+    // 重载方法，不指定标签
+    public static void openBaiduMapWeb( double latitude, double longitude) {
+        openBaiduMapWeb(ActivityUtils.getTopActivity(), latitude, longitude, null);
     }
 
     public static boolean openGoogleMapApp(double latitude,double longitude){
