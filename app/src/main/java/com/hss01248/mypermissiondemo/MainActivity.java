@@ -43,7 +43,6 @@ import com.blankj.utilcode.util.ThreadUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.blankj.utilcode.util.Utils;
 import com.google.gson.GsonBuilder;
-import com.hss01248.basewebview.BaseWebviewActivity;
 import com.hss01248.bus.AndroidBus;
 import com.hss01248.bus.ContextBusObserver;
 import com.hss01248.location.GpsSatelliteActivity;

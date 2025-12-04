@@ -2,12 +2,16 @@ package com.hss01248.location.sim;
 
 
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.Signature;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.SystemClock;
 import android.text.TextUtils;
 
+import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.GsonUtils;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.SPStaticUtils;
@@ -25,6 +29,9 @@ import com.hss01248.location.wifi.WifiListUtil;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -47,6 +54,7 @@ public class WifiAndBaseStationUtil {
 
     //一天内,使用缓存,不调用api
     public static long cacheTime = 24*60*60*1000L;
+    //public static long cacheTime = 60*1000L;
 
      public static String xxx = "xxx";
 
@@ -178,7 +186,7 @@ public class WifiAndBaseStationUtil {
 
     public static void requestApi(GeoParam param,MyLocationCallback callback){
         String url="https://www.googleapis.com/geolocation/v1/geolocate?key="+ xxx;
-
+        String refererUrl = "https://ec-mall.akulaku.com";
         param.considerIp = false;
         MediaType JSON = MediaType.get("application/json; charset=utf-8");
         OkHttpClient client = new OkHttpClient.Builder()
@@ -188,6 +196,12 @@ public class WifiAndBaseStationUtil {
         RequestBody body = RequestBody.create(JSON,new GsonBuilder().create().toJson(param));
         Request request = new Request.Builder()
                 .url(url)
+                //.header("X-Android-Package", AppUtils.getAppPackageName())
+                //.header("X-Android-Cert", getSha1Signature(Utils.getApp())+"")
+                //Requests from this Android client application com.xxx.debug are blocked.
+                //.header("User-Agent", System.getProperty("http.agent")+"")
+                //.header("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36")
+                .addHeader("Referer", refererUrl)
                 .post(body)
                 .build();
         client.newCall(request)
@@ -227,5 +241,33 @@ public class WifiAndBaseStationUtil {
                         }
                     }
                 });
+    }
+
+    public static String getSha1Signature(Context context) {
+        try {
+            PackageInfo info = context.getPackageManager().getPackageInfo(
+                    context.getPackageName(),
+                    PackageManager.GET_SIGNATURES
+            );
+
+            for (Signature signature : info.signatures) {
+                MessageDigest md = MessageDigest.getInstance("SHA-1");
+                md.update(signature.toByteArray());
+                byte[] digest = md.digest();
+
+                // 将字节转换为十六进制字符串 (例如: "A1:B2:C3...")
+                StringBuilder hexString = new StringBuilder();
+                for (int i = 0; i < digest.length; i++) {
+                    if (i != 0) hexString.append(":");
+                    String appendString = Integer.toHexString(0xFF & digest[i]).toUpperCase();
+                    if (appendString.length() == 1) hexString.append("0");
+                    hexString.append(appendString);
+                }
+                return hexString.toString();
+            }
+        } catch (PackageManager.NameNotFoundException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
