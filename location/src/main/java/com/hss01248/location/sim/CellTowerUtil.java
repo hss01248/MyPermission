@@ -58,10 +58,11 @@ public class CellTowerUtil {
     }
 
     public static void getLocation(MyLocationCallback callback) {
+        long start = System.currentTimeMillis();
         getCellTowerInfo(new WifiCommonCallback<GeoParam>() {
             @Override
             public void onSuccess(GeoParam param) {
-                WifiAndBaseStationUtil.requestApi(param, callback);
+                WifiAndBaseStationUtil.requestApi(param, callback,start);
             }
 
             @Override

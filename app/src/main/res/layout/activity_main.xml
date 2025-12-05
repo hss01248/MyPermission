@@ -109,6 +109,12 @@
           android:layout_height="wrap_content"/>
       <Button
           android:layout_width="wrap_content"
+          android:text="获取定位-locationUtil-仅gps"
+          android:onClick="getLocationOnlyGps"
+          android:textAllCaps="false"
+          android:layout_height="wrap_content"/>
+      <Button
+          android:layout_width="wrap_content"
           android:text="获取定位-locationManager"
           android:onClick="getLocationByLocationManager"
           android:textAllCaps="false"

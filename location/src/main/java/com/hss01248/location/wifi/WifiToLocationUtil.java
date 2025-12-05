@@ -42,11 +42,12 @@ public class WifiToLocationUtil {
 
 
     public static void reqeustLocation(MyLocationCallback callback){
+        long start = System.currentTimeMillis();
         WifiListUtil.getList(Utils.getApp(), false, true,new WifiCommonCallback<List<WifiInfoForList>>() {
             @Override
             public void onSuccess(List<WifiInfoForList> wifiInfoForLists) {
                 LogUtils.d(wifiInfoForLists);
-                reqeustGoogleApi(wifiInfoForLists,callback);
+                reqeustGoogleApi(wifiInfoForLists,callback,start);
             }
 
             @Override
@@ -62,7 +63,7 @@ public class WifiToLocationUtil {
      * @param wifiInfoForLists
      * @param callback
      */
-    private static void reqeustGoogleApi(List<WifiInfoForList> wifiInfoForLists,MyLocationCallback callback) {
+    private static void reqeustGoogleApi(List<WifiInfoForList> wifiInfoForLists,MyLocationCallback callback,long start) {
        /* if(wifiInfoForLists.size() > 6){
             wifiInfoForLists = wifiInfoForLists.subList(0,7);
         }*/
@@ -80,7 +81,7 @@ public class WifiToLocationUtil {
         param.considerIp = false;
         param.wifiAccessPoints = wifiAccessPoints;
 
-        WifiAndBaseStationUtil.requestApi(param,callback);
+        WifiAndBaseStationUtil.requestApi(param,callback,start);
 
     }
 

@@ -8,6 +8,7 @@ import android.content.pm.Signature;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.SystemClock;
 import android.text.TextUtils;
 
@@ -54,9 +55,10 @@ public class WifiAndBaseStationUtil {
 
     //一天内,使用缓存,不调用api
     public static long cacheTime = 24*60*60*1000L;
-    //public static long cacheTime = 60*1000L;
+    //public static long cacheTime = 1000L;
 
      public static String xxx = "xxx";
+    public static String refererUrl = "https://xxxx.com";
 
      public static boolean forceAlsoUseHttpApi = "PAX".equalsIgnoreCase(Build.MANUFACTURER);
 
@@ -116,37 +118,38 @@ public class WifiAndBaseStationUtil {
         
         
 
+        long start = System.currentTimeMillis();
         CellTowerUtil.loadInfo(new WifiCommonCallback<GeoParam>() {
             @Override
             public void onSuccess(GeoParam param0) {
-                requestWifi(param0,false,callback);
+                requestWifi(param0,false,callback,start);
             }
 
             @Override
             public void onFail(String code, String msg, Throwable throwable) {
                 LogUtils.w(code,msg,throwable);
-                requestWifi(null,false,callback);
+                requestWifi(null,false,callback,start);
             }
         });
     }
 
     public static void requestLocation(MyLocationCallback callback) {
-
+        long start = System.currentTimeMillis();
         CellTowerUtil.getCellTowerInfo(new WifiCommonCallback<GeoParam>() {
             @Override
             public void onSuccess(GeoParam param0) {
-                requestWifi(param0,true,callback);
+                requestWifi(param0,true,callback,start);
             }
 
             @Override
             public void onFail(String code, String msg, Throwable throwable) {
                 LogUtils.w(code,msg,throwable);
-                requestWifi(null,true,callback);
+                requestWifi(null,true,callback,start);
             }
         });
     }
 
-    private static void requestWifi(GeoParam param0,boolean requestPermission, MyLocationCallback callback) {
+    private static void requestWifi(GeoParam param0,boolean requestPermission, MyLocationCallback callback,long start) {
 
 
         WifiListUtil.getList(Utils.getApp(), false, requestPermission,new WifiCommonCallback<List<WifiInfoForList>>() {
@@ -165,7 +168,7 @@ public class WifiAndBaseStationUtil {
                     param = new GeoParam();
                 }
                 param.wifiAccessPoints = wifiAccessPoints;
-                requestApi(param,callback);
+                requestApi(param,callback,start);
             }
 
 
@@ -176,7 +179,7 @@ public class WifiAndBaseStationUtil {
                 if(param0 == null){
                     callback.onFailed(6,"wifi and cell tower both not avaiable");
                 }else {
-                    requestApi(param0,callback);
+                    requestApi(param0,callback,start);
                 }
             }
         });
@@ -184,9 +187,9 @@ public class WifiAndBaseStationUtil {
 
 
 
-    public static void requestApi(GeoParam param,MyLocationCallback callback){
+    public static void requestApi(GeoParam param,MyLocationCallback callback,long start){
+        long start2 = System.currentTimeMillis();
         String url="https://www.googleapis.com/geolocation/v1/geolocate?key="+ xxx;
-        String refererUrl = "https://ec-mall.akulaku.com";
         param.considerIp = false;
         MediaType JSON = MediaType.get("application/json; charset=utf-8");
         OkHttpClient client = new OkHttpClient.Builder()
@@ -232,8 +235,21 @@ public class WifiAndBaseStationUtil {
                             JSONObject location1 = jsonObject.getJSONObject("location");
                             location.setLatitude(location1.optDouble("lat"));
                             location.setLongitude(location1.optDouble("lng"));
-                            location.setTime(System.currentTimeMillis());
-                            location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
+                            location.setTime(start);
+                            long cost = System.currentTimeMillis() - start;
+                            long offset = System.currentTimeMillis() - SystemClock.elapsedRealtime();
+                            long targetElapsedRealtimeMs = start - offset;
+                            long targetElapsedRealtimeNanos = targetElapsedRealtimeMs * 1000000L;
+                            location.setElapsedRealtimeNanos(targetElapsedRealtimeNanos);
+
+                            Bundle bundle = new Bundle();
+                            bundle.putLong("timeCost",System.currentTimeMillis()-start2);
+                            bundle.putLong("costFromBegin",cost);
+                            bundle.putLong("millsOldWhenSaved",cost);
+                            bundle.putBoolean("hasFineLocationPermission", true);
+                            bundle.putString("calledMethod","google geo api");
+                            location.setExtras(bundle);
+
                             callback.onSuccess(location,"from google geo api");
                             writeLocation(location);
                         } catch (Exception e) {

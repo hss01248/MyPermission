@@ -632,6 +632,12 @@ public class MainActivity extends AppCompatActivity {
 
     public void cellTowerAndWifiLocation(View view) {
         WifiAndBaseStationUtil.requestLocationSilent(new MyLocationCallback() {
+
+            @Override
+            public boolean configShowLoadingDialog() {
+                return true;
+            }
+
             @Override
             public void onSuccess(Location location, String msg) {
                 LogUtils.d(location,msg);
@@ -721,5 +727,33 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         dialog.show();
+    }
+
+    public void getLocationOnlyGps(View view) {
+        //gps: 5%的人大于25s, 50%的人大于5.8s
+        //network: 5%的人大于2s, 50%的人大于285ms
+        LocationUtil.getLocation(this, false, 30000, false, true,
+                new MyLocationCallback() {
+                    @Override
+                    public boolean configShowLoadingDialog() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean configForceUseOnlyGpsProvider() {
+                        return true;
+                    }
+
+                    @Override
+                    public void onSuccess(Location location, String msg) {
+                        showFormatedLocationInfoInDialog(location);
+
+                    }
+
+                    @Override
+                    public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
+                        ToastUtils.showShort(msg);
+                    }
+                });
     }
 }
