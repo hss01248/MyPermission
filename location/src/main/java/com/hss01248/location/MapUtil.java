@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Location;
 import android.net.Uri;
+import android.text.TextUtils;
 
 import androidx.appcompat.app.AlertDialog;
 
@@ -34,13 +35,30 @@ public class MapUtil {
 
     /**
      * 打开地图应用并定位到指定经纬度
+     *
+     * 在 Android 中使用 geo 协议跳转 Google Maps 并同时携带经纬度和自定义地址名称（标签），最关键的格式是：
+     *
+     * geo:latitude,longitude?q=latitude,longitude(LabelName)
+     *
+     * 如果只传坐标，地图会显示坐标点；如果只传地址，可能会定位不准。上面这种格式强制地图在指定坐标插上大头针，并将括号内的文字作为地名显示。
+     *
+     * URI 格式解析
+     * geo:lat,lng: 这是基础定位，告诉地图大致中心在哪里。
+     *
+     * ?q=: 这是查询参数。
+     *
+     * lat,lng(Label): 这是最核心的技巧。
+     *
+     * Google Maps 解析器看到 q 参数里有坐标，会优先把大头针插在这个坐标上。
+     *
+     * 括号 (...) 里的内容会被解析为该坐标点的显示名称 (Label)。如果不加这个，地图上显示的可能只是冷冰冰的“39.9087, 116.3975”。
      * @param latitude 纬度
      * @param longitude 经度
      * @param label 位置标签/名称
      */
     public static void openMap( double latitude, double longitude, String label) {
         // 创建geo协议的Uri，格式为"geo:纬度,经度?label=标签"
-        Uri uri = Uri.parse("geo:" + latitude + "," + longitude + "?q=" + latitude + "," + longitude + "(" + label + ")");
+        Uri uri = Uri.parse("geo:" + latitude + "," + longitude + "?q=" + latitude + "," + longitude + "(" + label + ")&z=17");
 
         // 创建Intent
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
@@ -51,7 +69,7 @@ public class MapUtil {
             ActivityUtils.getTopActivity().startActivity(Intent.createChooser(intent, "选择地图应用"));
         }else {
             ToastUtils.showLong("目前用web版百度地图打开");
-            openWebGoogleMap(latitude, longitude);
+            openWebGoogleMap(latitude, longitude,label);
             //openBaiduMapWeb(latitude,longitude);
 
         }
@@ -98,9 +116,9 @@ public class MapUtil {
                         }else if(which ==1){
                             can = openAmap(lat, lon);
                         }else if(which ==2){
-                            can = openWebGoogleMap(lat, lon);
+                            can = openWebGoogleMap(lat, lon,"");
                         }else if(which ==3){
-                            can = openGoogleMapApp(lat, lon);
+                            can = openGoogleMapApp(lat, lon,"");
                         }
                         if(can){
                             dialog.dismiss();
@@ -201,15 +219,20 @@ public class MapUtil {
      * intent无效,只能用于web. 而且这个url能直接调起谷歌地图
      * 但是谷歌地图在国内会有偏移
      * https://www.google.com/maps/search/?api=1&query=47.5951518%2C-122.3316393
-     * @param lat
-     * @param lon
      * @return
      */
-    public  static  boolean openWebGoogleMap(double lat, double lon){
+    public  static  boolean openWebGoogleMap(double latitude, double longitude,String address){
         try {
-        Uri uri = Uri.parse("https://www.google.com/maps/search/?gl=CN&api=1&query="+ URLEncoder.encode(lat+","+lon));
+        //Uri uri = Uri.parse("https://www.google.com/maps/search/?gl=CN&api=1&query="+ URLEncoder.encode(lat+","+lon));
+            //上面的是搜索,但这里需要直接定位api
+            String googleMapsUrl = "https://maps.google.com/maps?q="+latitude + "," + longitude;
+            if(!TextUtils.isEmpty(address)){
+                googleMapsUrl = googleMapsUrl +"("+Uri.encode(address)+")";
+            }
+            googleMapsUrl = googleMapsUrl + "&z=17";
+            LogUtils.d(googleMapsUrl);
         Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setData(uri);
+        intent.setData(Uri.parse(googleMapsUrl));
         ActivityUtils.getTopActivity().startActivity(intent);
         return true;
     }catch (Throwable throwable){
@@ -254,11 +277,11 @@ public class MapUtil {
         openBaiduMapWeb(ActivityUtils.getTopActivity(), latitude, longitude, null);
     }
 
-    public static boolean openGoogleMapApp(double latitude,double longitude){
+    public static boolean openGoogleMapApp(double latitude,double longitude,String address){
         try {
             //Uri gmmIntentUri = Uri.parse("geo:"+lat+","+lon);
             // 创建一个标记位置的URI
-            Uri locationUri = Uri.parse("geo:" + latitude + "," + longitude + "?q=" + latitude + "," + longitude + "(" + Uri.encode("定位点") + ")");
+            Uri locationUri = Uri.parse("geo:" + latitude + "," + longitude + "?q=" + latitude + "," + longitude + "(" + Uri.encode(address) + ")");
             Intent mapIntent = new Intent(Intent.ACTION_VIEW, locationUri);
             mapIntent.setPackage("com.google.android.apps.maps");
             ActivityUtils.getTopActivity().startActivity(mapIntent);
