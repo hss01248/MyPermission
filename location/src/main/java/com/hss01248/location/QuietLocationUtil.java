@@ -159,7 +159,8 @@ public class QuietLocationUtil {
                 timeoutRun = new Runnable() {
                     @Override
                     public void run() {
-                        callback(map, timeOut/1000 + "s "+ DefaultPermissionDialog.getString(R.string.location_timeout_msg), true, finalListener1);
+                        callback(map, DefaultPermissionDialog.getString(R.string.location_timeout_msg).replace("15",timeOut/1000+""),
+                                true, finalListener1);
                     }
                 };
                 handler.postDelayed(timeoutRun, timeOut);
