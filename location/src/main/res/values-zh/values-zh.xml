@@ -5,7 +5,7 @@
     <string name="location_msg_gps">为提高定位准确性并更好地为您服务，请开启 GPS 并提供精确位置</string>
     <string name="location_msg_permission">请给予我定位权限</string>
     <string name="location_tip">提示</string>
-    <string name="location_timeout_msg">超时</string>
+    <string name="location_timeout_msg">定位超时（15s），请移至开阔地带重试.</string>
     <string name="location_error_no_permission">无权限。请给予我定位权限</string>
     <string name="location_error_switch_off">定位开关已关闭。请打开定位开关</string>
     <string name="location_error_timeout">定位超时，请重试</string>
