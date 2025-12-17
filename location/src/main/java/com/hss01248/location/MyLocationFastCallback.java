@@ -85,6 +85,7 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
         }
     }
 
+    long lastShowToastTime;
     @Override
     public void onEachLocationChanged(Location location, String provider) {
         MyLocationCallback.super.onEachLocationChanged(location, provider);
@@ -99,7 +100,10 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
             if(LocationSync.acceptFakeLocation){
                 LogUtils.w("from real_time sys api, but fake location,will return fail in release app",location);
                 if(AppUtils.isAppDebug()){
-                    ToastUtils.showLong("from real_time sys api, but fake location,will return fail in release app");
+                    if(System.currentTimeMillis() - lastShowToastTime > 30000){
+                        lastShowToastTime = System.currentTimeMillis();
+                        ToastUtils.showLong("from real_time sys api, but fake location,will return fail in release app");
+                    }
                 }
                 onSuccessFast(location,"from real_time sys api, but fake location");
             }else {
