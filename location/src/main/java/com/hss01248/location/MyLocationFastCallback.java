@@ -98,6 +98,9 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
         if(LocationSync.isFakeLocation(location) ){
             if(LocationSync.acceptFakeLocation){
                 LogUtils.w("from real_time sys api, but fake location,will return fail in release app",location);
+                if(AppUtils.isAppDebug()){
+                    ToastUtils.showLong("from real_time sys api, but fake location,will return fail in release app");
+                }
                 onSuccessFast(location,"from real_time sys api, but fake location");
             }else {
                 onFinalFail(LocationErrorCode.FAKE_LOCATION, LocationErrorCode.getErrorMsg(LocationErrorCode.FAKE_LOCATION),false);
