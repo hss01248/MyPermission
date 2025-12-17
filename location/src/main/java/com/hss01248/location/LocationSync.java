@@ -56,7 +56,7 @@ public class LocationSync {
     private static final String PARAMS_LAT = "latitudexx";
     private static final String PARAMS_LONG = "longitudexx";
 
-    public   static  boolean acceptFakeLocation = false;
+    public   static  boolean acceptFakeLocation = AppUtils.isAppDebug();
 
     private static  final List<LocationInfo> cachedLocations = new CopyOnWriteArrayList<>();
     //PriorityBlockingQueue
