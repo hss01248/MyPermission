@@ -698,7 +698,18 @@ public class QuietLocationUtil {
         hasEnd = true;
         Location location = getMostAcurLocation(map);
         if (location != null) {
-            listener.onSuccess(location, "from real_time sys api");
+            //listener.onSuccess(location, "from real_time sys api");
+            if(LocationSync.isFakeLocation(location) ){
+                if(LocationSync.acceptFakeLocation){
+                    LogUtils.w("from real_time sys api, but fake location,will return fail in release app",location);
+                    listener.onSuccess(location,"from real_time sys api, but fake location");
+                }else {
+                    listener.onFailed(LocationErrorCode.FAKE_LOCATION,
+                            LocationErrorCode.getErrorMsg(LocationErrorCode.FAKE_LOCATION),false);
+                }
+            }else {
+                listener.onSuccess(location,"from real_time sys api");
+            }
         } else {
             if(isTimeout){
                 listener.onFailed(LocationErrorCode.TIMEOUT, LocationErrorCode.getErrorMsg(LocationErrorCode.TIMEOUT));
