@@ -85,7 +85,7 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
         }
     }
 
-    long lastShowToastTime;
+  public static long lastShowToastTime;
     @Override
     public void onEachLocationChanged(Location location, String provider) {
         MyLocationCallback.super.onEachLocationChanged(location, provider);

@@ -23,8 +23,10 @@ import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.location.LocationManagerCompat;
 
+import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.StringUtils;
+import com.blankj.utilcode.util.ToastUtils;
 import com.blankj.utilcode.util.Utils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -702,6 +704,12 @@ public class QuietLocationUtil {
             if(LocationSync.isFakeLocation(location) ){
                 if(LocationSync.acceptFakeLocation){
                     LogUtils.w("from real_time sys api, but fake location,will return fail in release app",location);
+                    if(AppUtils.isAppDebug()){
+                        if(System.currentTimeMillis() - MyLocationFastCallback.lastShowToastTime > 30000){
+                            MyLocationFastCallback.lastShowToastTime = System.currentTimeMillis();
+                            ToastUtils.showLong("from real_time sys api, but fake location,will return fail in release app");
+                        }
+                    }
                     listener.onSuccess(location,"from real_time sys api, but fake location");
                 }else {
                     listener.onFailed(LocationErrorCode.FAKE_LOCATION,
