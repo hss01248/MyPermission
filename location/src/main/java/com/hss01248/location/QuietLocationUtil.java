@@ -703,7 +703,8 @@ public class QuietLocationUtil {
             if(isTimeout){
                 listener.onFailed(LocationErrorCode.TIMEOUT, LocationErrorCode.getErrorMsg(LocationErrorCode.TIMEOUT));
             }else {
-                listener.onFailed(LocationErrorCode.LOCATION_MANAGER_TIMEOUT_AND_API_FAILED, LocationErrorCode.getErrorMsg(LocationErrorCode.LOCATION_MANAGER_TIMEOUT_AND_API_FAILED));
+                listener.onFailed(LocationErrorCode.LOCATION_MANAGER_TIMEOUT_AND_API_FAILED,
+                        LocationErrorCode.getErrorMsg(LocationErrorCode.LOCATION_MANAGER_TIMEOUT_AND_API_FAILED));
             }
         }
         if (!isTimeout) {

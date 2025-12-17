@@ -161,7 +161,8 @@ public class WrappedLocationCallback implements MyLocationCallback{
         }
         //要排除没有权限和没有打开开关导致的失败,此时不要读缓存,而应该直接失败
         if(type == LocationErrorCode.LOCATION_SWITCH_OFF
-                || type == LocationErrorCode.NO_PERMISSION){
+                || type == LocationErrorCode.NO_PERMISSION
+        || type == LocationErrorCode.FAKE_LOCATION){
             dismissDialog();
             callback.onFailed(type, msg, isFailBeforeReallyRequest);
             return;

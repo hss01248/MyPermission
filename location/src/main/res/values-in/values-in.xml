@@ -13,4 +13,5 @@
     <string name="location_error_timeout_and_api_failed">lokasi timeout dan API gagal, silakan coba lagi nanti</string>
     <string name="location_error_location_manager_null">manajer lokasi bernilai null, silakan restart aplikasi dan coba lagi</string>
     <string name="location_error_unknown">terjadi beberapa kesalahan, silakan coba lagi nanti</string>
+    <string name="location_error_fake">Jangan gunakan lokasi mock: tolong matikan aplikasi lokasi simulasi di Mode Pengembang, kemudian lakukan lokasi ulang.</string>
 </resources>

@@ -12,4 +12,5 @@
     <string name="location_error_timeout_and_api_failed">定位超时且 API请求 失败，请稍后重试</string>
     <string name="location_error_location_manager_null">定位管理器为空，请重启应用并重试</string>
     <string name="location_error_unknown">发生一些错误，请稍后重试</string>
+    <string name="location_error_fake">请勿使用虚拟定位: 请关闭开发者模式中的模拟定位应用,然后重新定位</string>
 </resources>

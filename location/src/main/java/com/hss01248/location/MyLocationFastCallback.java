@@ -93,8 +93,15 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
         hasCallbacked = true;
         onReport(location,provider,true);
         dismissDialog();
-        onSuccessFast(location,"from real_time sys api");
-
+        if(LocationSync.isFakeLocation(location) ){
+            if(LocationSync.acceptFakeLocation){
+                onSuccessFast(location,"from real_time sys api, but fake location");
+            }else {
+                onFinalFail(LocationErrorCode.FAKE_LOCATION, LocationErrorCode.getErrorMsg(LocationErrorCode.FAKE_LOCATION),false);
+            }
+        }else {
+            onSuccessFast(location,"from real_time sys api");
+        }
     }
     public abstract void onSuccessFast(Location location,String msg);
 

@@ -18,6 +18,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 
 import com.blankj.utilcode.util.ActivityUtils;
+import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.GsonUtils;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.PermissionUtils;
@@ -55,6 +56,8 @@ public class LocationSync {
     private static final String PARAMS_LAT = "latitudexx";
     private static final String PARAMS_LONG = "longitudexx";
 
+    public   static  boolean acceptFakeLocation = AppUtils.isAppDebug();
+
     private static  final List<LocationInfo> cachedLocations = new CopyOnWriteArrayList<>();
     //PriorityBlockingQueue
 
@@ -75,7 +78,12 @@ public class LocationSync {
         long start = System.currentTimeMillis();
         try {
             printLocationInfo(location);
+
             LocationInfo info = toLocationInfo(location);
+            if(info.isFromMockProvider && !acceptFakeLocation){
+                LogUtils.w("location","fake location,ignore");
+                return;
+            }
 
             info.timeCost = timeCost;
             info.costFromBegin = costFromBegin;
@@ -142,6 +150,21 @@ public class LocationSync {
             }
         }
 
+    }
+
+    public static boolean isFakeLocation(Location location) {
+        if(location == null){
+            return false;
+        }
+        boolean fake =  location.isFromMockProvider();
+        if(fake){
+            return true;
+        }
+        Bundle bundle = location.getExtras();
+        if(bundle != null){
+            fake = bundle.getBoolean("isFromMockProvider",false);
+        }
+        return fake;
     }
 
     private static void printLocationInfo(Location location) {

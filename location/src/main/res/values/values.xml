@@ -13,4 +13,5 @@
     <string name="location_error_timeout_and_api_failed">location timeout and api failed, please try again later</string>
     <string name="location_error_location_manager_null">location manager is null, please restart the app and try again</string>
     <string name="location_error_unknown">some error happened, please try again later</string>
+    <string name="location_error_fake">Do not use mock location: please close the mock location app in Developer Mode and then re-locate.</string>
 </resources>
