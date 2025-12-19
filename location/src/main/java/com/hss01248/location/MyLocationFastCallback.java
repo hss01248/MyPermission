@@ -71,7 +71,7 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
         hasCallbacked = true;
         onReport(location,msg,true);
         dismissDialog();
-        onSuccessFast(location,msg);
+        onSuccessFastWrapper(location,msg);
     }
 
     private void onReport(Location location, String msg, boolean success) {
@@ -105,14 +105,23 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
                         ToastUtils.showLong("from real_time sys api, but fake location,will return fail in release app");
                     }
                 }
-                onSuccessFast(location,"from real_time sys api, but fake location");
+                onSuccessFastWrapper(location,"from real_time sys api, but fake location");
             }else {
                 onFinalFail(LocationErrorCode.FAKE_LOCATION, LocationErrorCode.getErrorMsg(LocationErrorCode.FAKE_LOCATION),false);
             }
         }else {
-            onSuccessFast(location,"from real_time sys api");
+            onSuccessFastWrapper(location,"from real_time sys api");
         }
     }
+    protected   void onSuccessFastWrapper(Location location,String msg){
+        try{
+            onSuccessFast(location,msg);
+        }catch (Throwable throwable){
+            LogUtils.w(throwable);
+            onFinalFail(1,"error occour in success:"+throwable.getMessage(),false);
+        }
+    }
+
     public abstract void onSuccessFast(Location location,String msg);
 
     public abstract void onFinalFail(int type,String msg, boolean isFailBeforeReallyRequest);
@@ -123,19 +132,24 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
      */
     @Override
     public long useCacheInTimeOfMills() {
-        return 2*60*1000;
+        return 90*1000;
     }
 
     @Override
     public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
-        if(hasCallbacked){
+        if(hasCallbacked ){
             LogUtils.w("location","已经回调过-onFailed",msg);
             return;
         }
         hasCallbacked = true;
         onReport(null,msg,false);
         dismissDialog();
-        onFinalFail(type, msg,isFailBeforeReallyRequest);
+        try{
+            onFinalFail(type, msg,isFailBeforeReallyRequest);
+        }catch (Throwable throwable){
+            LogUtils.w(throwable);
+        }
+
         /*LocationInfo fullLocationInfo = LocationSync.getFullLocationInfo();
         if(fullLocationInfo == null){
             onFinalFail(type, msg,isFailBeforeReallyRequest);
