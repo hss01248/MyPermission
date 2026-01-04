@@ -92,6 +92,10 @@ public class LocationUtil {
         LocationUtil.getLocation(Utils.getApp(), false, (int) timeoutMills, false, true, callback);
     }
 
+    public static void getLocationAccurate(long minTimeMills, long timeoutMills, MyLocationAccurateCallback callback) {
+        LocationUtil.getLocation(Utils.getApp(), false, (int) timeoutMills, false, true, callback);
+    }
+
     /**
      * 默认版 拒绝权限后有一次挽回行为
      *

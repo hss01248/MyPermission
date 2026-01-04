@@ -54,6 +54,7 @@ import com.hss01248.location.LocationUtil;
 import com.hss01248.location.MapUtil;
 import com.hss01248.location.MyLocationCallback;
 import com.hss01248.location.MyLocationFastCallback;
+import com.hss01248.location.MyLocationAccurateCallback;
 import com.hss01248.location.QuietLocationUtil;
 import com.hss01248.location.sim.CellTowerUtil;
 import com.hss01248.location.sim.WifiAndBaseStationUtil;
@@ -101,7 +102,8 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onDenied(@NonNull List<String> deniedForever, @NonNull List<String> denied) {
-                ToastUtils.showShort("onDenied:" + Arrays.toString(deniedForever.toArray()) + "\n" + Arrays.toString(denied.toArray()));
+                ToastUtils.showShort("onDenied:" + Arrays.toString(deniedForever.toArray()) + "\n"
+                        + Arrays.toString(denied.toArray()));
             }
         }, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_CONTACTS, Manifest.permission.CALL_PHONE);
     }
@@ -115,40 +117,46 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onDenied(@NonNull List<String> deniedForever, @NonNull List<String> denied) {
-                ToastUtils.showShort("onDenied:" + Arrays.toString(deniedForever.toArray()) + "\n" + Arrays.toString(denied.toArray()));
+                ToastUtils.showShort("onDenied:" + Arrays.toString(deniedForever.toArray()) + "\n"
+                        + Arrays.toString(denied.toArray()));
             }
         }, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_CONTACTS, Manifest.permission.CALL_PHONE);
     }
 
     public void afterDenied(View view) {
-        ///MyPermissions.setDefaultAlertDialog();
+        /// MyPermissions.setDefaultAlertDialog();
         MyPermissions.create()
                 .setAfterPermissionMsg("after msg")
                 .setGuideToSettingMsg("guide to settings")
                 .setAfterDialogTitle("permission request")
-                .setPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
-                        Manifest.permission.CAMERA, Manifest.permission.CALL_PHONE})
+                .setPermissions(new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.CAMERA, Manifest.permission.CALL_PHONE })
                 .setShowAfterRequest(true)
                 .setShowBeforeRequest(false)
-/*                .setDialog(new IPermissionDialog() {
-                    @Override
-                    public void show(boolean isGuideToSetting, @Nullable String title,
-                                     @Nullable String afterPermissionMsg, @Nullable String guideToSettingMsg,
-                                     List<String> permissions, IPermissionDialogBtnClickListener listener) {
-
-                    }
-                })*/
+                /*
+                 * .setDialog(new IPermissionDialog() {
+                 * 
+                 * @Override
+                 * public void show(boolean isGuideToSetting, @Nullable String title,
+                 * 
+                 * @Nullable String afterPermissionMsg, @Nullable String guideToSettingMsg,
+                 * List<String> permissions, IPermissionDialogBtnClickListener listener) {
+                 * 
+                 * }
+                 * })
+                 */
                 .callback(new PermissionUtils.FullCallback() {
-            @Override
-            public void onGranted(@NonNull List<String> granted) {
-                ToastUtils.showShort("onGranted:" + Arrays.toString(granted.toArray()));
-            }
+                    @Override
+                    public void onGranted(@NonNull List<String> granted) {
+                        ToastUtils.showShort("onGranted:" + Arrays.toString(granted.toArray()));
+                    }
 
-            @Override
-            public void onDenied(@NonNull List<String> deniedForever, @NonNull List<String> denied) {
-                ToastUtils.showShort("onDenied:" + Arrays.toString(deniedForever.toArray()) + "\n" + Arrays.toString(denied.toArray()));
-            }
-        });
+                    @Override
+                    public void onDenied(@NonNull List<String> deniedForever, @NonNull List<String> denied) {
+                        ToastUtils.showShort("onDenied:" + Arrays.toString(deniedForever.toArray()) + "\n"
+                                + Arrays.toString(denied.toArray()));
+                    }
+                });
     }
 
     public void both(View view) {
@@ -160,47 +168,50 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onDenied(@NonNull List<String> deniedForever, @NonNull List<String> denied) {
-                ToastUtils.showShort("onDenied:" + Arrays.toString(deniedForever.toArray()) + "\n" + Arrays.toString(denied.toArray()));
+                ToastUtils.showShort("onDenied:" + Arrays.toString(deniedForever.toArray()) + "\n"
+                        + Arrays.toString(denied.toArray()));
             }
-        }, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.READ_CONTACTS, Manifest.permission.CALL_PHONE);
+        }, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.READ_CONTACTS,
+                Manifest.permission.CALL_PHONE);
     }
 
     public void getLocation(View view) {
-        LocationUtil.getLocation(view.getContext(), false, 10000, false, false, LogProxy.getProxy(new MyLocationCallback() {
+        LocationUtil.getLocation(view.getContext(), false, 10000, false, false,
+                LogProxy.getProxy(new MyLocationCallback() {
 
-            @Override
-            public void onSuccess(Location location, String msg) {
-               // ToastUtils.showLong("success," + msg + ", location:" + location);
-                LogUtils.i(msg, location);
-                showFormatedLocationInfoInDialog(location);
-            }
+                    @Override
+                    public void onSuccess(Location location, String msg) {
+                        // ToastUtils.showLong("success," + msg + ", location:" + location);
+                        LogUtils.i(msg, location);
+                        showFormatedLocationInfoInDialog(location);
+                    }
 
-            @Override
-            public boolean configShowLoadingDialog() {
-                return true;
-            }
+                    @Override
+                    public boolean configShowLoadingDialog() {
+                        return true;
+                    }
 
-            @Override
-            public boolean configUseSpCache() {
-                return false;
-            }
+                    @Override
+                    public boolean configUseSpCache() {
+                        return false;
+                    }
 
-            @Override
-            public boolean configUseSystemLastKnownLocation() {
-                return true;
-            }
+                    @Override
+                    public boolean configUseSystemLastKnownLocation() {
+                        return true;
+                    }
 
-            @Override
-            public void onGmsSwitchDialogShow() {
-                MyLocationCallback.super.onGmsSwitchDialogShow();
-            }
+                    @Override
+                    public void onGmsSwitchDialogShow() {
+                        MyLocationCallback.super.onGmsSwitchDialogShow();
+                    }
 
-            @Override
-            public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
-                ToastUtils.showLong(type + "," + msg);
-                LogUtils.w(msg, type);
-            }
-        }));
+                    @Override
+                    public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
+                        ToastUtils.showLong(type + "," + msg);
+                        LogUtils.w(msg, type);
+                    }
+                }));
     }
 
     public void multiPermission(View view) {
@@ -211,13 +222,13 @@ public class MainActivity extends AppCompatActivity {
         MyPermissionsExt.askPermission(this, permission, new IExtPermissionCallback() {
             @Override
             public void onGranted(String name) {
-                LogUtils.i("onGranted",permission.toString());
+                LogUtils.i("onGranted", permission.toString());
                 ToastUtils.showShort("onGranted " + name);
             }
 
             @Override
             public void onDenied(String name) {
-                LogUtils.w("onGranted",permission.toString());
+                LogUtils.w("onGranted", permission.toString());
                 ToastUtils.showShort("onDenied " + name);
             }
         });
@@ -227,15 +238,17 @@ public class MainActivity extends AppCompatActivity {
         boolean stateInManifest = MyPermissions.isStateInManifest(Manifest.permission.READ_SMS);
         ToastUtils.showLong("sms是否声明在manifest里:" + stateInManifest);
 
-        /*boolean stateInManifest2 = MyPermissions.isStateInManifest(Manifest.permission.READ_EXTERNAL_STORAGE);
-        ToastUtils.showLong("READ_EXTERNAL_STORAGE是否声明在manifest里:"+stateInManifest2);*/
+        /*
+         * boolean stateInManifest2 =
+         * MyPermissions.isStateInManifest(Manifest.permission.READ_EXTERNAL_STORAGE);
+         * ToastUtils.showLong("READ_EXTERNAL_STORAGE是否声明在manifest里:"+stateInManifest2);
+         */
     }
 
     public void askExtPermissions(View view) {
 
         ask(new ApkPermissionImpl());
     }
-
 
     public void askNotification(View view) {
         ask(new NotificationPermission());
@@ -254,48 +267,54 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getLocationByLocationManager(View view) {
-        /*LocationConfiguration awesomeConfiguration = new LocationConfiguration.Builder()
-                .keepTracking(false)
-                .askForPermission(new PermissionConfiguration.Builder()
-                        .permissionProvider(new YourCustomPermissionProvider())
-                        .rationaleMessage("Gimme the permission!")
-                        .rationaleDialogProvider(new YourCustomDialogProvider())
-                        .requiredPermissions(new String[] { permission.ACCESS_FINE_LOCATION })
-                        .build())
-                .useGooglePlayServices(new GooglePlayServicesConfiguration.Builder()
-                        .locationRequest(YOUR_CUSTOM_LOCATION_REQUEST_OBJECT)
-                        .fallbackToDefault(true)
-                        .askForGooglePlayServices(false)
-                        .askForSettingsApi(true)
-                        .failOnConnectionSuspended(true)
-                        .failOnSettingsApiSuspended(false)
-                        .ignoreLastKnowLocation(false)
-                        .setWaitPeriod(20 * 1000)
-                        .build())
-                .useDefaultProviders(new DefaultProviderConfiguration.Builder()
-                        .requiredTimeInterval(5 * 60 * 1000)
-                        .requiredDistanceInterval(0)
-                        .acceptableAccuracy(5.0f)
-                        .acceptableTimePeriod(5 * 60 * 1000)
-                        .gpsMessage("Turn on GPS?")
-                        .gpsDialogProvider(new YourCustomDialogProvider())
-                        .setWaitPeriod(ProviderType.GPS, 20 * 1000)
-                        .setWaitPeriod(ProviderType.NETWORK, 20 * 1000)
-                        .build())
-                .build();
-
-        LocationManager awesomeLocationManager = new LocationManager.Builder(getApplicationContext())
-                .activity(activityInstance) // Only required to ask permission and/or GoogleApi - SettingsApi
-                .fragment(fragmentInstance) // Only required to ask permission and/or GoogleApi - SettingsApi
-                .configuration(awesomeConfiguration)
-                .locationProvider(new YourCustomLocationProvider())
-                .notify(new LocationListener() {  })
-                .build();
-        awesomeLocationManager.get();*/
+        /*
+         * LocationConfiguration awesomeConfiguration = new
+         * LocationConfiguration.Builder()
+         * .keepTracking(false)
+         * .askForPermission(new PermissionConfiguration.Builder()
+         * .permissionProvider(new YourCustomPermissionProvider())
+         * .rationaleMessage("Gimme the permission!")
+         * .rationaleDialogProvider(new YourCustomDialogProvider())
+         * .requiredPermissions(new String[] { permission.ACCESS_FINE_LOCATION })
+         * .build())
+         * .useGooglePlayServices(new GooglePlayServicesConfiguration.Builder()
+         * .locationRequest(YOUR_CUSTOM_LOCATION_REQUEST_OBJECT)
+         * .fallbackToDefault(true)
+         * .askForGooglePlayServices(false)
+         * .askForSettingsApi(true)
+         * .failOnConnectionSuspended(true)
+         * .failOnSettingsApiSuspended(false)
+         * .ignoreLastKnowLocation(false)
+         * .setWaitPeriod(20 * 1000)
+         * .build())
+         * .useDefaultProviders(new DefaultProviderConfiguration.Builder()
+         * .requiredTimeInterval(5 * 60 * 1000)
+         * .requiredDistanceInterval(0)
+         * .acceptableAccuracy(5.0f)
+         * .acceptableTimePeriod(5 * 60 * 1000)
+         * .gpsMessage("Turn on GPS?")
+         * .gpsDialogProvider(new YourCustomDialogProvider())
+         * .setWaitPeriod(ProviderType.GPS, 20 * 1000)
+         * .setWaitPeriod(ProviderType.NETWORK, 20 * 1000)
+         * .build())
+         * .build();
+         * 
+         * LocationManager awesomeLocationManager = new
+         * LocationManager.Builder(getApplicationContext())
+         * .activity(activityInstance) // Only required to ask permission and/or
+         * GoogleApi - SettingsApi
+         * .fragment(fragmentInstance) // Only required to ask permission and/or
+         * GoogleApi - SettingsApi
+         * .configuration(awesomeConfiguration)
+         * .locationProvider(new YourCustomLocationProvider())
+         * .notify(new LocationListener() { })
+         * .build();
+         * awesomeLocationManager.get();
+         */
     }
 
     public void getLocationFast(View view) {
-        LocationUtil.getLocationFast( 15000,
+        LocationUtil.getLocationFast(15000,
                 new MyLocationFastCallback() {
                     @Override
                     public boolean configAcceptOnlyCoarseLocationPermission() {
@@ -309,7 +328,40 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onSuccessFast(Location location, String msg) {
-                        //ToastUtils.showLong("success," + msg + ", location:" + location);
+                        // ToastUtils.showLong("success," + msg + ", location:" + location);
+                        LogUtils.i(msg, location);
+                        showFormatedLocationInfoInDialog(location);
+                    }
+
+                    @Override
+                    public void onFinalFail(int type, String msg, boolean isFailBeforeReallyRequest) {
+                        ToastUtils.showLong(type + "," + msg);
+                        LogUtils.w(msg, type);
+                    }
+                });
+    }
+
+    public void getLocationAccurate(View view) {
+        LocationUtil.getLocationAccurate(3000, 15000,
+                new MyLocationAccurateCallback(3000) {
+
+                    @Override
+                    public boolean configAcceptOnlyCoarseLocationPermission() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean configForceUseOnlyGpsProvider() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean configShowLoadingDialog() {
+                        return true;
+                    }
+
+                    @Override
+                    public void onSuccessAccurate(Location location, String msg) {
                         LogUtils.i(msg, location);
                         showFormatedLocationInfoInDialog(location);
                     }
@@ -384,16 +436,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
     }
 
     public void getLocationSilent(View view) {
 
-
-       LocationUtil.getLocationSilent( 10000, new MyLocationCallback() {
+        LocationUtil.getLocationSilent(10000, new MyLocationCallback() {
             @Override
             public void onSuccess(Location location, String msg) {
-                //ToastUtils.showLong("success," + msg + ", location:" + location);
+                // ToastUtils.showLong("success," + msg + ", location:" + location);
                 LogUtils.i(msg, location);
                 showFormatedLocationInfoInDialog(location);
             }
@@ -414,8 +464,8 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 getLocationFast(null);
             }
-        },2000);
-        //ui跟着数据的更新而刷新: 利用Android bus
+        }, 2000);
+        // ui跟着数据的更新而刷新: 利用Android bus
         AndroidBus.observerByTag("location", new ContextBusObserver<List<LocationInfo>>(this) {
             @Override
             protected void doObserverReally(List<LocationInfo> obj) {
@@ -425,8 +475,6 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-
-
     public void gpsOnly(View view) {
         GpsSatelliteActivity.start();
 
@@ -434,53 +482,53 @@ public class MainActivity extends AppCompatActivity {
 
     public void fusedOnly(View view) {
         android.location.LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this,
+                        Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             long start = System.currentTimeMillis();
             locationManager.requestSingleUpdate("fused", new LocationListener() {
                 @Override
                 public void onLocationChanged(@NonNull Location location) {
-                    //ToastUtils.showLong( "cost(s):"+(System.currentTimeMillis() - start)/1000+", location:" + location);
-                    LogUtils.i( location,"cost(ms):"+(System.currentTimeMillis() - start),
-                            "old:"+(System.currentTimeMillis() - location.getTime()));
+                    // ToastUtils.showLong( "cost(s):"+(System.currentTimeMillis() - start)/1000+",
+                    // location:" + location);
+                    LogUtils.i(location, "cost(ms):" + (System.currentTimeMillis() - start),
+                            "old:" + (System.currentTimeMillis() - location.getTime()));
                     showFormatedLocationInfoInDialog(location);
                 }
 
                 @Override
                 public void onProviderDisabled(@NonNull String provider) {
                     LocationListener.super.onProviderDisabled(provider);
-                    LogUtils.w("onProviderDisabled",provider);
+                    LogUtils.w("onProviderDisabled", provider);
                 }
 
                 @Override
                 public void onStatusChanged(String provider, int status, Bundle extras) {
                     LocationListener.super.onStatusChanged(provider, status, extras);
-                    LogUtils.w("onStatusChanged",provider,status,extras);
+                    LogUtils.w("onStatusChanged", provider, status, extras);
                 }
             }, Looper.getMainLooper());
-        }else {
+        } else {
             ToastUtils.showShort("no permission");
         }
     }
 
     public void showLocationInmap(View view) {
         LocationInfo info = LocationSync.getFullLocationInfo();
-        if(info ==null){
+        if (info == null) {
             ToastUtils.showShort("没有缓存数据");
             return;
         }
-      MapUtil.showMapChooseDialog(info.lattidude,info.longtitude);
+        MapUtil.showMapChooseDialog(info.lattidude, info.longtitude);
     }
 
-
-
-    public  void showFormatedLocationInfoInDialog(Location location){
+    public void showFormatedLocationInfoInDialog(Location location) {
         MapUtil.showFormatedLocationInfoInDialog(location);
     }
 
     public void coarseLocationOnly(View view) {
-        LocationUtil.getLocationFast( 15000,
+        LocationUtil.getLocationFast(15000,
                 new MyLocationFastCallback() {
 
                     @Override
@@ -495,7 +543,7 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onSuccessFast(Location location, String msg) {
-                        //ToastUtils.showLong("success," + msg + ", location:" + location);
+                        // ToastUtils.showLong("success," + msg + ", location:" + location);
                         LogUtils.i(msg, location);
                         showFormatedLocationInfoInDialog(location);
                     }
@@ -509,7 +557,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onlySwitch(View view) {
-        LocationUtil.getLocation(this,false, 10000, false, false, new MyLocationCallback() {
+        LocationUtil.getLocation(this, false, 10000, false, false, new MyLocationCallback() {
             @Override
             public boolean configJustAskPermissionAndSwitch() {
                 return true;
@@ -531,7 +579,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void quickLocationNoAfterDialog(View view) {
-        //MyPermissions.setCanAcceptOnlyCoarseLocationPermission(true);
+        // MyPermissions.setCanAcceptOnlyCoarseLocationPermission(true);
         LocationUtil.getLocation(this, false, 10000, false, false, new MyLocationCallback() {
             @Override
             public void onSuccess(Location location, String msg) {
@@ -558,7 +606,7 @@ public class MainActivity extends AppCompatActivity {
                         AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
                                 .setTitle("定位状态")
                                 .setMessage(json)
-                                .setPositiveButton("ok",null)
+                                .setPositiveButton("ok", null)
                                 .create();
                         dialog.show();
                     }
@@ -566,21 +614,20 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
-
-
     }
 
     public void isLocationEnabled1(View view) {
-        LogUtils.w("isEnabled: "+ QuietLocationUtil.isLocationEnabled((LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE)));
+        LogUtils.w("isEnabled: " + QuietLocationUtil.isLocationEnabled(
+                (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE)));
     }
 
     public void isLocationEnabled2(View view) {
-        LogUtils.w("isEnabled2: "+ QuietLocationUtil.isLocationEnabled2((LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE)));
+        LogUtils.w("isEnabled2: " + QuietLocationUtil.isLocationEnabled2(
+                (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE)));
     }
 
     public void isLocationEnabled3(View view) {
-        LogUtils.w("isEnabled3: "+ QuietLocationUtil.isLocationEnabled3());
+        LogUtils.w("isEnabled3: " + QuietLocationUtil.isLocationEnabled3());
     }
 
     public void askManageMedia(View view) {
@@ -588,27 +635,27 @@ public class MainActivity extends AppCompatActivity {
                 new IExtPermissionCallback() {
                     @Override
                     public void onGranted(String name) {
-                        ToastUtils.showShort("已经允许:"+name);
+                        ToastUtils.showShort("已经允许:" + name);
                     }
 
                     @Override
                     public void onDenied(String name) {
-                        ToastUtils.showShort("已经拒绝:"+name);
+                        ToastUtils.showShort("已经拒绝:" + name);
                     }
                 });
     }
 
     public void wifiListLocation(View view) {
-        WifiToLocationUtil.reqeustLocation( new MyLocationCallback() {
+        WifiToLocationUtil.reqeustLocation(new MyLocationCallback() {
             @Override
             public void onSuccess(Location location, String msg) {
-                LogUtils.d(location,msg);
+                LogUtils.d(location, msg);
                 showFormatedLocationInfoInDialog(location);
             }
 
             @Override
             public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
-                LogUtils.w(type,msg);
+                LogUtils.w(type, msg);
                 ToastUtils.showShort(msg);
             }
         });
@@ -618,13 +665,13 @@ public class MainActivity extends AppCompatActivity {
         CellTowerUtil.getLocation(new MyLocationCallback() {
             @Override
             public void onSuccess(Location location, String msg) {
-                LogUtils.d(location,msg);
+                LogUtils.d(location, msg);
                 showFormatedLocationInfoInDialog(location);
             }
 
             @Override
             public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
-                LogUtils.w(type,msg);
+                LogUtils.w(type, msg);
                 ToastUtils.showShort(msg);
             }
         });
@@ -640,13 +687,13 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onSuccess(Location location, String msg) {
-                LogUtils.d(location,msg);
+                LogUtils.d(location, msg);
                 showFormatedLocationInfoInDialog(location);
             }
 
             @Override
             public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
-                LogUtils.w(type,msg);
+                LogUtils.w(type, msg);
                 ToastUtils.showShort(msg);
             }
         });
@@ -659,19 +706,19 @@ public class MainActivity extends AppCompatActivity {
             try {
                 field.setAccessible(true);
                 Object object = field.get(null);
-                if(object instanceof String[]){
+                if (object instanceof String[]) {
                     String[] arr = (String[]) object;
                     map.put(field.getName(), Arrays.toString(arr));
-                }else{
-                    map.put(field.getName(), object+"");
+                } else {
+                    map.put(field.getName(), object + "");
                 }
 
             } catch (Exception e) {
                 map.put("exception", e.getMessage());
-                //e.printStackTrace();
+                // e.printStackTrace();
             }
         }
-        showInDialog("Build",map);
+        showInDialog("Build", map);
     }
 
     public void showSettingsInfo(View view) {
@@ -681,28 +728,28 @@ public class MainActivity extends AppCompatActivity {
             try {
                 field.setAccessible(true);
                 Object object = field.get(null);
-                if(object instanceof String[]){
+                if (object instanceof String[]) {
                     String[] arr = (String[]) object;
                     map.put(field.getName(), Arrays.toString(arr));
-                }else{
-                    map.put(field.getName(), object+"");
+                } else {
+                    map.put(field.getName(), object + "");
                 }
 
             } catch (Exception e) {
                 map.put("exception", e.getMessage());
-                //e.printStackTrace();
+                // e.printStackTrace();
             }
         }
-        showInDialog("Settings.System",map);
+        showInDialog("Settings.System", map);
     }
 
-    private void showInDialog(String title,Map map) {
+    private void showInDialog(String title, Map map) {
         TextView textView = new TextView(this);
         textView.setText(new GsonBuilder().setPrettyPrinting().create().toJson(map));
         ScrollView scrollView = new ScrollView(this);
         scrollView.addView(textView);
         int padding = SizeUtils.dp2px(5);
-        textView.setPadding(padding,padding,padding,padding);
+        textView.setPadding(padding, padding, padding, padding);
 
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle(title)
@@ -730,8 +777,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getLocationOnlyGps(View view) {
-        //gps: 5%的人大于25s, 50%的人大于5.8s
-        //network: 5%的人大于2s, 50%的人大于285ms
+        // gps: 5%的人大于25s, 50%的人大于5.8s
+        // network: 5%的人大于2s, 50%的人大于285ms
         LocationUtil.getLocation(this, false, 30000, false, true,
                 new MyLocationCallback() {
                     @Override

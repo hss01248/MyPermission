@@ -103,6 +103,14 @@
           android:layout_height="wrap_content"/>
       <Button
           android:layout_width="wrap_content"
+          android:text="获取定位-locationUtil-至少定位3s模式(带2min缓存,可覆写)\n LocationUtil.getLocationAccurate(3000, 15000, new MyLocationAccurateCallback(3000) {})"
+          android:onClick="getLocationAccurate"
+          android:textAllCaps="false"
+          android:textColor="@color/white"
+          android:backgroundTint="#ff00ff"
+          android:layout_height="wrap_content"/>
+      <Button
+          android:layout_width="wrap_content"
           android:text="获取定位-locationUtil-silent模式(自带一年缓存,可覆写)\n new QuietLocationUtil().getLocation"
           android:onClick="getLocationSilent"
           android:textAllCaps="false"
