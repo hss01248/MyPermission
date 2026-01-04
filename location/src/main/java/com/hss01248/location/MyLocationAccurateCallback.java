@@ -153,9 +153,6 @@ public abstract class MyLocationAccurateCallback implements MyLocationCallback {
     }
 
     void dismissDialog() {
-        if (dialog == null) {
-            return;
-        }
         ThreadUtils.getMainHandler().postDelayed(new Runnable() {
             @Override
             public void run() {
