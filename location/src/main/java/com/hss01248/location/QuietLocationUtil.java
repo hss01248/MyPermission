@@ -405,7 +405,7 @@ public class QuietLocationUtil {
                                     LocationSync.putToCache(location, "gms", false, System.currentTimeMillis() - start,
                                             System.currentTimeMillis() - startFromBeginning);
 
-                                    long maxTime = 30000;
+                                    long maxTime = 60000;
                                     if (System.currentTimeMillis() - location.getTime() < maxTime) {
                                         listener.onEachLocationChanged(location, "gms",
                                                 System.currentTimeMillis() - start,
