@@ -132,7 +132,7 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
      */
     @Override
     public long useCacheInTimeOfMills() {
-        return 90*1000;
+        return 60*1000;
     }
 
     @Override

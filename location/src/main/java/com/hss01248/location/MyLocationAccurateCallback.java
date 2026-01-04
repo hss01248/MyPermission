@@ -166,7 +166,7 @@ public abstract class MyLocationAccurateCallback implements MyLocationCallback {
 
     @Override
     public long useCacheInTimeOfMills() {
-        return 90 * 1000; // 90s内缓存有效，同FastCallback
+        return 60 * 1000; // 90s内缓存有效，同FastCallback
     }
 
     public abstract void onSuccessAccurate(Location location, String msg);

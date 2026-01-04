@@ -387,7 +387,7 @@ public class QuietLocationUtil {
 
             CurrentLocationRequest locationRequest = new CurrentLocationRequest.Builder()
                     .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
-                    .setMaxUpdateAgeMillis(60000) // 允许一分钟内的缓存
+                    .setMaxUpdateAgeMillis(listener.useCacheInTimeOfMills()) // 允许一分钟内的缓存
                     .build();
 
             gmsTokenSource = new CancellationTokenSource();
@@ -405,7 +405,7 @@ public class QuietLocationUtil {
                                     LocationSync.putToCache(location, "gms", false, System.currentTimeMillis() - start,
                                             System.currentTimeMillis() - startFromBeginning);
 
-                                    long maxTime = 60000;
+                                    long maxTime = listener.useCacheInTimeOfMills();
                                     if (System.currentTimeMillis() - location.getTime() < maxTime) {
                                         listener.onEachLocationChanged(location, "gms",
                                                 System.currentTimeMillis() - start,
