@@ -2,6 +2,7 @@ package com.hss01248.location;
 
 import android.app.ProgressDialog;
 import android.location.Location;
+import android.location.LocationManager;
 
 import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.LogUtils;
@@ -85,6 +86,14 @@ public abstract class MyLocationAccurateCallback implements MyLocationCallback {
         if (LocationSync.isFakeLocation(location) && !LocationSync.acceptFakeLocation) {
             return;
         }
+        if(location !=null){
+            if(LocationManager.FUSED_PROVIDER.equals(location.getProvider())
+            || LocationManager.GPS_PROVIDER.equals(location.getProvider())){
+                LogUtils.w("已经是FUSED_PROVIDER或GPS_PROVIDER,立刻返回",location);
+                doCallbackSuccess(location, msg);
+                return;
+            }
+        }
 
         // 更新最准确的定位
         if (bestLocation == null || location.getAccuracy() < bestLocation.getAccuracy()) {
@@ -104,7 +113,6 @@ public abstract class MyLocationAccurateCallback implements MyLocationCallback {
             return;
         }
         hasCallbacked = true;
-
         dismissDialog();
         try {
             onSuccessAccurate(location, msg);
@@ -148,7 +156,7 @@ public abstract class MyLocationAccurateCallback implements MyLocationCallback {
         if (dialog == null) {
             return;
         }
-        ThreadUtils.getMainHandler().post(new Runnable() {
+        ThreadUtils.getMainHandler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 if (dialog != null) {
@@ -156,7 +164,7 @@ public abstract class MyLocationAccurateCallback implements MyLocationCallback {
                     dialog = null;
                 }
             }
-        });
+        },1000);
     }
 
     @Override

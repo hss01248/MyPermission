@@ -342,7 +342,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getLocationAccurate(View view) {
-        LocationUtil.getLocationAccurate(3000, 15000,
+        LocationUtil.getLocationAccurate(15000,
                 new MyLocationAccurateCallback(3000) {
 
                     @Override

@@ -92,7 +92,7 @@ public class LocationUtil {
         LocationUtil.getLocation(Utils.getApp(), false, (int) timeoutMills, false, true, callback);
     }
 
-    public static void getLocationAccurate(long minTimeMills, long timeoutMills, MyLocationAccurateCallback callback) {
+    public static void getLocationAccurate(long timeoutMills, MyLocationAccurateCallback callback) {
         LocationUtil.getLocation(Utils.getApp(), false, (int) timeoutMills, false, true, callback);
     }
 
