@@ -55,24 +55,26 @@ public class LocationSync {
     private static final String PARAMS_LOCATION = "locationxx";
     private static final String PARAMS_LAT = "latitudexx";
     private static final String PARAMS_LONG = "longitudexx";
+    private static final int maxCacheCount = 10;
 
-    public   static  boolean acceptFakeLocation = AppUtils.isAppDebug();
+    public static boolean acceptFakeLocation = AppUtils.isAppDebug();
+    public static long maxFreshTimeMsForBestLocation = 45000;
 
-    private static  final List<LocationInfo> cachedLocations = new CopyOnWriteArrayList<>();
-    //PriorityBlockingQueue
+    private static final List<LocationInfo> cachedLocations = new CopyOnWriteArrayList<>();
+    // PriorityBlockingQueue
 
     public static void putToCache(Location location, String startProviderName,
                                   boolean isFromLastKnowLocation,
                                   long timeCost,
-                                  @Nullable LocationProvider provider){
-        putToCache(location,startProviderName,isFromLastKnowLocation,timeCost,-1);
+                                  @Nullable LocationProvider provider) {
+        putToCache(location, startProviderName, isFromLastKnowLocation, timeCost, -1);
     }
 
     public static void putToCache(Location location, String startProviderName,
                                   boolean isFromLastKnowLocation,
                                   long timeCost,
-                                 long costFromBegin){
-        if(location == null){
+                                  long costFromBegin) {
+        if (location == null) {
             return;
         }
         long start = System.currentTimeMillis();
@@ -80,102 +82,103 @@ public class LocationSync {
             printLocationInfo(location);
 
             LocationInfo info = toLocationInfo(location);
-            if(info.isFromMockProvider && !acceptFakeLocation){
-                LogUtils.w("location","fake location,ignore");
+            if (info.isFromMockProvider && !acceptFakeLocation) {
+                LogUtils.w("location", "fake location,ignore");
                 return;
             }
 
             info.timeCost = timeCost;
             info.costFromBegin = costFromBegin;
-            if(!isFromLastKnowLocation){
+            if (!isFromLastKnowLocation) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                    info.millsOldWhenSaved = (SystemClock.elapsedRealtimeNanos() - info.elapsedRealtimeNanos)/1000000;
+                    info.millsOldWhenSaved = (SystemClock.elapsedRealtimeNanos() - info.elapsedRealtimeNanos) / 1000000;
                 }
             }
 
-            //location.getSpeedAccuracyMetersPerSecond()
-            if(isFromLastKnowLocation){
-                info.calledMethod = startProviderName+"-lastKnowLocation";
-            }else {
+            // location.getSpeedAccuracyMetersPerSecond()
+            if (isFromLastKnowLocation) {
+                info.calledMethod = startProviderName + "-lastKnowLocation";
+            } else {
                 info.calledMethod = startProviderName;
             }
             info.hasFineLocationPermission = PermissionUtils.isGranted(Manifest.permission.ACCESS_FINE_LOCATION);
-
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                 info.isFromMockProvider = location.isFromMockProvider();
             }
             saveExtraToLocation(location, info);
 
-            ///Location[gps 23******,114****** hAcc=33 et=+86d23h14m3s610ms alt=0.0 vel=0.0 bear=0.0
+            /// Location[gps 23******,114****** hAcc=33 et=+86d23h14m3s610ms alt=0.0 vel=0.0
+            /// bear=0.0
             // vAcc=??? sAcc=??? bAcc=??? {Bundle[{timeCost=656,
             // hasFineLocationPermission=true, satellites=0, costFromBegin=659, maxCn0=0,
-            // QUICKGPS=true, millsOldWhenSaved=64, isFromMockProvider=false, calledMethod=gps,
+            // QUICKGPS=true, millsOldWhenSaved=64, isFromMockProvider=false,
+            /// calledMethod=gps,
             // SourceType=128, meanCn0=0}]}]
 
-            //if(provider != null){
-                // info.providerInfo = new ProviderInfo();
-                // info.providerInfo.initByProvider(provider);
-           // }
+            // if(provider != null){
+            // info.providerInfo = new ProviderInfo();
+            // info.providerInfo.initByProvider(provider);
+            // }
             boolean shouldSave = sortBeforeAdd(info, cachedLocations);
-            if(!shouldSave){
+            if (!shouldSave) {
                 return;
             }
-            //AndroidBus.postByTag("location",cachedLocations);
+            // AndroidBus.postByTag("location",cachedLocations);
             try {
-                if(LogUtils.getConfig().isLogSwitch()){
-                    if(location.getExtras() != null){
+                if (LogUtils.getConfig().isLogSwitch()) {
+                    if (location.getExtras() != null) {
                         LogUtils.i(location.getExtras());
-                        //Bundle { timeCost=744, hasFineLocationPermission=true, satellites=0, //卫星数量
+                        // Bundle { timeCost=744, hasFineLocationPermission=true, satellites=0, //卫星数量
                         // costFromBegin=874, maxCn0=0, QUICKGPS=true, millsOldWhenSaved=61,
                         // isFromMockProvider=false, calledMethod=gps, SourceType=128, meanCn0=0 }
                     }
-                    String json = new GsonBuilder().serializeNulls().setPrettyPrinting().create().toJson(cachedLocations);
+                    String json = new GsonBuilder().serializeNulls().setPrettyPrinting().create()
+                            .toJson(cachedLocations);
                     LogUtils.json(json);
 
                 }
 
                 saveAsync();
-            }catch (Throwable throwable){
+            } catch (Throwable throwable) {
                 LogUtils.w(throwable);
             }
 
-
-        }catch (Throwable throwable){
+        } catch (Throwable throwable) {
             LogUtils.w(throwable);
-        }finally {
-            if(LogUtils.getConfig().isLogSwitch()){
-                //2-10ms
-                LogUtils.i("location","put to cache cost(ms):"+ (System.currentTimeMillis() - start));
+        } finally {
+            if (LogUtils.getConfig().isLogSwitch()) {
+                // 2-10ms
+                LogUtils.i("location", "put to cache cost(ms):" + (System.currentTimeMillis() - start));
             }
         }
 
     }
 
     public static boolean isFakeLocation(Location location) {
-        if(location == null){
+        if (location == null) {
             return false;
         }
-        boolean fake =  location.isFromMockProvider();
-        if(fake){
+        boolean fake = location.isFromMockProvider();
+        if (fake) {
             return true;
         }
         Bundle bundle = location.getExtras();
-        if(bundle != null){
-            fake = bundle.getBoolean("isFromMockProvider",false);
+        if (bundle != null) {
+            fake = bundle.getBoolean("isFromMockProvider", false);
         }
         return fake;
     }
 
     private static void printLocationInfo(Location location) {
-       // LogUtils.i(location.getExtras());
+        // LogUtils.i(location.getExtras());
     }
 
-    public static String getFormatedLocationInfos(){
-        return   new GsonBuilder().serializeNulls().setPrettyPrinting().create().toJson(cachedLocations);
+    public static String getFormatedLocationInfos() {
+        return new GsonBuilder().serializeNulls().setPrettyPrinting().create().toJson(cachedLocations);
     }
 
-    public static AlertDialog showFormatedLocationInfosInDialog(){
+    public static AlertDialog showFormatedLocationInfosInDialog() {
         String infos = LocationSync.getFormatedLocationInfos();
 
         AlertDialog dialog = new AlertDialog.Builder(ActivityUtils.getTopActivity())
@@ -198,7 +201,7 @@ public class LocationSync {
 
     private static void saveExtraToLocation(Location location, LocationInfo info) {
         Bundle bundle = location.getExtras();
-        if(bundle == null){
+        if (bundle == null) {
             bundle = new Bundle();
             bundle.putString("calledMethod", info.calledMethod);
             bundle.putBoolean("isFromMockProvider", info.isFromMockProvider);
@@ -207,7 +210,7 @@ public class LocationSync {
             bundle.putLong("costFromBegin", info.costFromBegin);
             bundle.putBoolean("hasFineLocationPermission", info.hasFineLocationPermission);
             location.setExtras(bundle);
-        }else {
+        } else {
             bundle.putString("calledMethod", info.calledMethod);
             bundle.putBoolean("isFromMockProvider", info.isFromMockProvider);
             bundle.putLong("millsOldWhenSaved", info.millsOldWhenSaved);
@@ -219,19 +222,20 @@ public class LocationSync {
 
     /**
      * 模拟PriorityBlockingQueue
+     *
      * @param info
      * @param cachedLocations
      */
-    private static  boolean sortBeforeAdd(LocationInfo info, List<LocationInfo> cachedLocations) {
-        synchronized (LocationSync.class){
+    private static boolean sortBeforeAdd(LocationInfo info, List<LocationInfo> cachedLocations) {
+        synchronized (LocationSync.class) {
             try {
-                if(cachedLocations.contains(info)){
-                    LogUtils.w("经纬度和时间相同,同一条数据,不添加到list:",info);
+                if (cachedLocations.contains(info)) {
+                    LogUtils.w("经纬度和时间相同,同一条数据,不添加到list:", info);
                     return false;
                 }
-                if(cachedLocations.size() == 8){
-                    if(cachedLocations.get(cachedLocations.size()-1).timeStamp > info.timeStamp){
-                        LogUtils.w("数据太老,不添加到list:",info);
+                if (cachedLocations.size() == maxCacheCount) {
+                    if (cachedLocations.get(cachedLocations.size() - 1).timeStamp > info.timeStamp) {
+                        LogUtils.w("数据太老,不添加到list:", info);
                         return false;
                     }
                 }
@@ -243,20 +247,20 @@ public class LocationSync {
                         return (int) (o2.timeStamp - o1.timeStamp);
                     }
                 });
-                if(locationInfos2.size() > 8){
-                    List<LocationInfo> list = locationInfos2.subList(0, 8);
+                if (locationInfos2.size() > maxCacheCount) {
+                    List<LocationInfo> list = locationInfos2.subList(0, maxCacheCount);
                     cachedLocations.clear();
                     cachedLocations.addAll(list);
-                    //ConcurrentModificationException
-                }else {
+                    // ConcurrentModificationException
+                } else {
                     cachedLocations.clear();
                     cachedLocations.addAll(locationInfos2);
                 }
                 LocationInfo fullLocationInfo = getFullLocationInfo();
-                if(fullLocationInfo != null){
-                    save(fullLocationInfo.lattidude,fullLocationInfo.longtitude);
+                if (fullLocationInfo != null) {
+                    save(fullLocationInfo.lattidude, fullLocationInfo.longtitude);
                 }
-            }catch (Throwable throwable){
+            } catch (Throwable throwable) {
                 LogUtils.e(throwable);
             }
             return true;
@@ -271,7 +275,7 @@ public class LocationSync {
                     return (int) (o2.timeStamp - o1.timeStamp);
                 }
             });
-        }catch (Throwable throwable){
+        } catch (Throwable throwable) {
             LogUtils.w(throwable);
         }
 
@@ -281,27 +285,29 @@ public class LocationSync {
 
         try {
             List<LocationInfo> list = new ArrayList<>(cachedLocations);
-            //这里内部会遍历
+            // 这里内部会遍历
             String json = GsonUtils.toJson(list);
-            //LogUtils.json(json);
+            // LogUtils.json(json);
             locationCache.saveLocations(json);
-        }catch (Throwable throwable){
-            throwable.printStackTrace();
+        } catch (Throwable throwable) {
+            LogUtils.w(throwable);
         }
 
     }
+
     static boolean hasAsync = false;
     static ILocationCache locationCache = new DefaultLocationCache();
+
     @Deprecated
-    public static void initAsync(){
+    public static void initAsync() {
 
     }
 
-    public static void initAsync(ILocationCache locationCache2){
-        if(hasAsync){
+    public static void initAsync(ILocationCache locationCache2) {
+        if (hasAsync) {
             return;
         }
-        if(locationCache2 != null){
+        if (locationCache2 != null) {
             locationCache = locationCache2;
         }
 
@@ -309,11 +315,12 @@ public class LocationSync {
             @Override
             public Object doInBackground() throws Throwable {
                 String str = locationCache.getLocationJasonArrStr();
-                if(TextUtils.isEmpty(str)){
+                if (TextUtils.isEmpty(str)) {
                     return null;
                 }
-                List<LocationInfo> list = GsonUtils.fromJson(str,new TypeToken<List<LocationInfo>>(){}.getType());
-                if(list != null && !list.isEmpty()){
+                List<LocationInfo> list = GsonUtils.fromJson(str, new TypeToken<List<LocationInfo>>() {
+                }.getType());
+                if (list != null && !list.isEmpty()) {
                     cachedLocations.clear();
                     cachedLocations.addAll(list);
                     sort();
@@ -327,28 +334,46 @@ public class LocationSync {
             }
         });
 
-
     }
 
-    public static LocationInfo getFullLocationInfo(){
-        if(cachedLocations.isEmpty()){
-            //发起一次定位:
-            //requestOnce();
+    public static LocationInfo getFullLocationInfo() {
+        if (cachedLocations.isEmpty()) {
             return null;
         }
         try {
-            return cachedLocations.get(0);
-        }catch (Throwable throwable){
-            LogUtils.e(throwable);
-            synchronized (LocationSync.class){
-                try {
-                    return cachedLocations.get(0);
-                }catch (Throwable throwable2){
-                    LogUtils.e(throwable);
+            long now = System.currentTimeMillis();
+            LocationInfo bestLocation = null;
+            float minAccuracy = Float.MAX_VALUE;
+
+            // 遍历缓存，寻找在 maxFreshTimeMsForBestLocation 窗口内精度最高（accuracy 最小）的定位
+            for (LocationInfo info : cachedLocations) {
+                if (now - info.timeStamp <= maxFreshTimeMsForBestLocation) {
+                    // 如果精度未设置或为0，跳过（或者视具体业务逻辑而定，这里逻辑上 accuracy 越小越准）
+                    if (info.accuracy > 0 && info.accuracy < minAccuracy) {
+                        minAccuracy = info.accuracy;
+                        bestLocation = info;
+                    }
                 }
             }
-        }
 
+            // 如果找到了窗口内的最佳定位，则返回
+            if (bestLocation != null) {
+                LogUtils.d("找到45s内最准确的定位:", bestLocation);
+                return bestLocation;
+            }
+            LogUtils.d("没有找到45s内最准确的定位,返回最近一个定位:", cachedLocations.get(0));
+            // 如果窗口内没找到（比如都太老了），则返回最新的那个（即列表第一个，因为 sortBeforeAdd 保证了按时间倒序排序）
+            return cachedLocations.get(0);
+        } catch (Throwable throwable) {
+            LogUtils.e(throwable);
+            try {
+                if (!cachedLocations.isEmpty()) {
+                    return cachedLocations.get(0);
+                }
+            } catch (Throwable t) {
+                LogUtils.e(t);
+            }
+        }
         return null;
     }
 
@@ -377,15 +402,15 @@ public class LocationSync {
         });
     }
 
-    public static Location getLocation3(){
+    public static Location getLocation3() {
         LocationInfo info = getFullLocationInfo();
-        if(info == null){
+        if (info == null) {
             return null;
         }
         return toAndroidLocation(info);
     }
 
-    public static Location toAndroidLocation(LocationInfo info){
+    public static Location toAndroidLocation(LocationInfo info) {
         Location location = new Location(info.realProvider);
         location.setAltitude(info.altitude);
         location.setTime(info.timeStamp);
@@ -401,15 +426,15 @@ public class LocationSync {
         return location;
     }
 
-    public static LocationInfo toLocationInfo(Location location){
-        if(location == null){
+    public static LocationInfo toLocationInfo(Location location) {
+        if (location == null) {
             return null;
         }
         LocationInfo info = new LocationInfo();
         info.lattidude = location.getLatitude();
         info.longtitude = location.getLongitude();
         info.timeStamp = location.getTime();
-        if(LogUtils.getConfig().isLogSwitch()){
+        if (LogUtils.getConfig().isLogSwitch()) {
             info.timeStampStr = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(info.timeStamp));
         }
         info.locale = Locale.getDefault().getCountry();
@@ -426,14 +451,14 @@ public class LocationSync {
         }
 
         Bundle bundle = location.getExtras();
-        if(bundle != null){
+        if (bundle != null) {
             info.calledMethod = bundle.getString("calledMethod", "");
             info.millsOldWhenSaved = bundle.getLong("millsOldWhenSaved", -1);
             info.timeCost = bundle.getLong("timeCost", 0);
             info.costFromBegin = bundle.getLong("costFromBegin", -1);
             info.hasFineLocationPermission = bundle.getBoolean("hasFineLocationPermission");
-            if(!info.isFromMockProvider){
-                if(bundle.getBoolean("isFromMockProvider",false)){
+            if (!info.isFromMockProvider) {
+                if (bundle.getBoolean("isFromMockProvider", false)) {
                     info.isFromMockProvider = true;
                 }
             }
@@ -441,65 +466,67 @@ public class LocationSync {
         return info;
     }
 
-
     /**
      * 保存定位得到的经纬度
      *
-     * @param mLatitude 纬度
+     * @param mLatitude  纬度
      * @param mLongitude 经度
      */
     @Deprecated
     public static void save(double mLatitude, double mLongitude) {
-        //LogUtils.i(TAG, "设置:" + mLatitude + ", " + mLongitude);
-        //put(PARAMS_LAT, String.valueOf(mLatitude));
-        //put(PARAMS_LONG, String.valueOf(mLongitude));
+        // LogUtils.i(TAG, "设置:" + mLatitude + ", " + mLongitude);
+        // put(PARAMS_LAT, String.valueOf(mLatitude));
+        // put(PARAMS_LONG, String.valueOf(mLongitude));
     }
 
-
-    /**获取经度*/
-    public static double getLongitude(){
+    /**
+     * 获取经度
+     */
+    public static double getLongitude() {
         LocationInfo location2 = getFullLocationInfo();
-        if(location2 == null){
+        if (location2 == null) {
             return 0;
         }
         return location2.longtitude;
     }
 
-    /**建议直接使用getFullLocationInfo*/
+    /**
+     * 建议直接使用getFullLocationInfo
+     */
     @Deprecated
-    public static double getLatitude(){
+    public static double getLatitude() {
         LocationInfo location2 = getFullLocationInfo();
-        if(location2 == null){
+        if (location2 == null) {
             return 0;
         }
-       return location2.lattidude;
+        return location2.lattidude;
 
     }
 
     private static void put(String key, String valueOf) {
-        Utils.getApp().getSharedPreferences("locationutil", Context.MODE_PRIVATE).edit().putString(key,valueOf).apply();
+        Utils.getApp().getSharedPreferences("locationutil", Context.MODE_PRIVATE).edit().putString(key, valueOf)
+                .apply();
     }
 
     private static String getString(String key) {
-        return Utils.getApp().getSharedPreferences("locationutil",Context.MODE_PRIVATE).getString(key,"");
+        return Utils.getApp().getSharedPreferences("locationutil", Context.MODE_PRIVATE).getString(key, "");
     }
 
     /**
-     *将定位获取到的address放在内存中
+     * 将定位获取到的address放在内存中
      *
      * @param mAddress mAddress
      */
-    public static void saveAddress(Address mAddress){
-        ADDRESS_MAP.put(PARAMS_ADDRESS,mAddress);
+    public static void saveAddress(Address mAddress) {
+        ADDRESS_MAP.put(PARAMS_ADDRESS, mAddress);
     }
-
 
     /**
      * 从内存中获取adress信息
      *
      * @return Address
      */
-    public static Address getAddress(){
+    public static Address getAddress() {
         return ADDRESS_MAP.get(PARAMS_ADDRESS);
     }
 
@@ -509,18 +536,18 @@ public class LocationSync {
      * @param mLocation mLocation
      */
     @Deprecated
-    public static void saveLocation(Location mLocation){
+    public static void saveLocation(Location mLocation) {
 
     }
-
 
     /**
      * 从内存中获取 Location 信息
      * 建议直接使用getFullLocationInfo
+     *
      * @return Location
      */
     @Deprecated
-    public static Location getLocation(){
+    public static Location getLocation() {
         return getLocation3();
     }
 }
