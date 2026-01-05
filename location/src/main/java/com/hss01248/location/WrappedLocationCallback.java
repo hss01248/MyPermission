@@ -99,6 +99,9 @@ public class WrappedLocationCallback implements MyLocationCallback{
            if(callback instanceof MyLocationFastCallback){
                return;
            }
+           if(callback instanceof MyLocationAccurateCallback){
+               return;
+           }
            ThreadUtils.getMainHandler().post(new Runnable() {
                @Override
                public void run() {

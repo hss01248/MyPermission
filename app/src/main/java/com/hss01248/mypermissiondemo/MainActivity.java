@@ -325,6 +325,10 @@ public class MainActivity extends AppCompatActivity {
                     public boolean configForceUseOnlyGpsProvider() {
                         return false;
                     }
+                    @Override
+                    public boolean configShowLoadingDialog() {
+                        return true;
+                    }
 
                     @Override
                     public void onSuccessFast(Location location, String msg) {

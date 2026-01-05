@@ -161,7 +161,7 @@ public abstract class MyLocationAccurateCallback implements MyLocationCallback {
                     dialog = null;
                 }
             }
-        },1000);
+        },300);
     }
 
     @Override

@@ -49,17 +49,15 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
     }
 
     void dismissDialog(){
-        if(dialog == null){
-            return;
-        }
-        ThreadUtils.getMainHandler().post(new Runnable() {
+        ThreadUtils.getMainHandler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                if(dialog != null){
+                if (dialog != null) {
                     dialog.dismiss();
+                    dialog = null;
                 }
             }
-        });
+        },300);
     }
 
     @Override
