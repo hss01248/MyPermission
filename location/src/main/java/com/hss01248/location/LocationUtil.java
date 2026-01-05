@@ -320,7 +320,7 @@ public class LocationUtil {
                 }
             });
         } catch (Throwable throwable) {
-            throwable.printStackTrace();
+            LogUtils.w("gms0",throwable);
             if (haveCallbacked[0]) {
                 return;
             }

@@ -157,7 +157,7 @@ public class QuietLocationUtil {
                 try {
                     Looper.prepare();
                 } catch (Throwable throwable) {
-                    throwable.printStackTrace();
+                    LogUtils.w("Looper",throwable);
                 }
 
                 handler = new Handler(Looper.myLooper());
@@ -438,7 +438,7 @@ public class QuietLocationUtil {
 
         } catch (Throwable throwable) {
             countSet.remove("gms");
-            throwable.printStackTrace();
+            LogUtils.w("gms",throwable);
         }
     }
 
@@ -459,7 +459,7 @@ public class QuietLocationUtil {
         } catch (Throwable throwable) {
             countSet.remove("gms");
             onEnd(null, map, countSet, listener);
-            throwable.printStackTrace();
+            LogUtils.w("gms2",throwable);
         }
     }
 
@@ -597,7 +597,7 @@ public class QuietLocationUtil {
                 }, Looper.myLooper());
             } catch (Throwable throwable) {
                 countSet.remove(provider);
-                throwable.printStackTrace();
+                LogUtils.w("location",throwable,provider);
             }
         } else {
             LogUtils.w("locationManager.isProviderEnabled", provider, false, map);
