@@ -336,16 +336,16 @@ public class LocationUtil {
                                                    MyLocationCallback callback, boolean isFirstIn) {
         LocationManager locationManager = (LocationManager) context.getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         if (LocationStateUtil.isPreciseLocationSwitchEnabled(locationManager)) {
-            Log.w("gms", "不同意gms弹窗,但gps可用,那么请求原生定位");
+            LogUtils.w("gms", "不同意gms弹窗,但gps可用,那么请求原生定位");
             getLocation(permissionDialog, context, silent, timeout, showBeforeRequest, showAfterRequest, false, asQuickAsPossible, useLastKnownLocation, true, callback);
             return;
         }
         if (QuietLocationUtil.isLocationEnabled(locationManager) && callback.configAcceptOnlyCoarseLocationPermission()) {
-            Log.w("gms", "不同意gms弹窗,+gps不可用,但定位开关开启+允许模糊定位,那么绕过gms,请求原生定位");
+            LogUtils.w("gms", "不同意gms弹窗,+gps不可用,但定位开关开启+允许模糊定位,那么绕过gms,请求原生定位");
             getLocation(permissionDialog, context, silent, timeout, showBeforeRequest, showAfterRequest, false, asQuickAsPossible, useLastKnownLocation, true, callback);
             return;
         }
-        Log.w("gms", "不同意gms弹窗,且定位开关关闭,那么再挽回一次,弹出原生定位开关引导弹窗");
+        LogUtils.w("gms", "不同意gms弹窗,且定位开关关闭,那么再挽回一次,弹出原生定位开关引导弹窗");
         askGpsSwitchDialog(permissionDialog, locationManager, context, timeout, showBeforeRequest, showAfterRequest, false, callback);
     }
 
@@ -517,7 +517,7 @@ public class LocationUtil {
                     }
                 }
             } catch (PackageManager.NameNotFoundException e) {
-                Log.e("Got exception ", e.getMessage());
+                LogUtils.w("Got exception ", e);
             }
         }
         if (count > 0) return true;
