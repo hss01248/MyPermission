@@ -384,10 +384,14 @@ public class QuietLocationUtil {
             // 2. 使用 getCurrentLocation 获取当前位置 (更加现代且省电)
             LogUtils.i("start request gms via getCurrentLocation");
             long start = System.currentTimeMillis();
+            //60s->45s
+            int maxCacheTime = 30000;
+                    //Math.round(listener.useCacheInTimeOfMills()*3.0f/4);
+
 
             CurrentLocationRequest locationRequest = new CurrentLocationRequest.Builder()
                     .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
-                    .setMaxUpdateAgeMillis(listener.useCacheInTimeOfMills()) // 允许一分钟内的缓存
+                    .setMaxUpdateAgeMillis(maxCacheTime) //允许多长时间内的缓存
                     .build();
 
             gmsTokenSource = new CancellationTokenSource();
@@ -422,6 +426,7 @@ public class QuietLocationUtil {
                                                 + (System.currentTimeMillis() - location.getTime()) / 1000 + "s之前的数据");
                                     }
                                 }
+                                gmsTokenSource = null;
                             } catch (Exception e) {
                                 LogUtils.w("gms getCurrentLocation error", e);
                             } finally {
@@ -673,7 +678,8 @@ public class QuietLocationUtil {
             }
         } else {
             if (isTimeout) {
-                listener.onFailed(LocationErrorCode.TIMEOUT, LocationErrorCode.getErrorMsg(LocationErrorCode.TIMEOUT));
+                listener.onFailed(LocationErrorCode.TIMEOUT,msg);
+                //LocationErrorCode.getErrorMsg(LocationErrorCode.TIMEOUT)
             } else {
                 listener.onFailed(LocationErrorCode.LOCATION_MANAGER_TIMEOUT_AND_API_FAILED,
                         LocationErrorCode.getErrorMsg(LocationErrorCode.LOCATION_MANAGER_TIMEOUT_AND_API_FAILED));
@@ -718,7 +724,7 @@ public class QuietLocationUtil {
                 // locationManager.removeUpdates();
             }
         } catch (Throwable throwable) {
-            throwable.printStackTrace();
+            LogUtils.w(throwable);
         }
     }
 

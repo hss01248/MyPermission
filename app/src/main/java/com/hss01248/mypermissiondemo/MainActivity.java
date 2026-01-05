@@ -796,6 +796,11 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     @Override
+                    public long configTimeoutWhenOnlyGpsProvider() {
+                        return 30000;
+                    }
+
+                    @Override
                     public void onSuccess(Location location, String msg) {
                         showFormatedLocationInfoInDialog(location);
 

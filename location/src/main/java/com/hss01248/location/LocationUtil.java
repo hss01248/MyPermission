@@ -81,7 +81,7 @@ public class LocationUtil {
         LocationUtil.useCacheInTimeOfMills = useCacheInTimeOfMills;
     }
 
-    private static long useCacheInTimeOfMills = 120000;//2min
+    private static long useCacheInTimeOfMills = 60000;//2min
 
 
     public static void getLocationSilent(long timeoutMills, MyLocationCallback callback) {
