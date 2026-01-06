@@ -45,6 +45,7 @@ import com.blankj.utilcode.util.Utils;
 import com.google.gson.GsonBuilder;
 import com.hss01248.bus.AndroidBus;
 import com.hss01248.bus.ContextBusObserver;
+import com.hss01248.location.ContinueLocationUtil;
 import com.hss01248.location.GpsSatelliteActivity;
 import com.hss01248.location.LocationInfo;
 import com.hss01248.location.LocationStateInfo;
@@ -811,5 +812,27 @@ public class MainActivity extends AppCompatActivity {
                         ToastUtils.showShort(msg);
                     }
                 });
+    }
+
+    public void continuesLocating(View view) {
+        new ContinueLocationUtil().startLocation(1000, new MyLocationCallback() {
+
+            @Override
+            public void onEachLocationChanged(Location location, String provider, long costOfJustThisUpdate, long costFromUtilStart) {
+                MyLocationCallback.super.onEachLocationChanged(location, provider, costOfJustThisUpdate, costFromUtilStart);
+                LogUtils.d(location, provider, costOfJustThisUpdate, costFromUtilStart);
+            }
+
+            @Override
+            public void onSuccess(Location location, String msg) {
+
+            }
+
+            @Override
+            public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
+                LogUtils.w(type, msg);
+
+            }
+        });
     }
 }

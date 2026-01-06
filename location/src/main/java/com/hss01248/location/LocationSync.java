@@ -256,10 +256,10 @@ public class LocationSync {
                     cachedLocations.clear();
                     cachedLocations.addAll(locationInfos2);
                 }
-                LocationInfo fullLocationInfo = getFullLocationInfo();
+                /*LocationInfo fullLocationInfo = getFullLocationInfo();
                 if (fullLocationInfo != null) {
                     save(fullLocationInfo.lattidude, fullLocationInfo.longtitude);
-                }
+                }*/
             } catch (Throwable throwable) {
                 LogUtils.e(throwable);
             }
