@@ -87,8 +87,8 @@ public abstract class MyLocationAccurateCallback implements MyLocationCallback {
             return;
         }
         if(location !=null){
-            if(LocationManager.FUSED_PROVIDER.equals(location.getProvider())
-            || LocationManager.GPS_PROVIDER.equals(location.getProvider())){
+            if("fused".equals(location.getProvider())
+            || "gps".equals(location.getProvider())){
                 LogUtils.w("已经是FUSED_PROVIDER或GPS_PROVIDER,立刻返回",location);
                 doCallbackSuccess(location, msg);
                 return;
@@ -118,6 +118,7 @@ public abstract class MyLocationAccurateCallback implements MyLocationCallback {
             onSuccessAccurate(location, msg);
         } catch (Throwable throwable) {
             LogUtils.w(throwable);
+            hasCallbacked = false;
             onFinalFail(1, "error occur in success:" + throwable.getMessage(), false);
         }
     }

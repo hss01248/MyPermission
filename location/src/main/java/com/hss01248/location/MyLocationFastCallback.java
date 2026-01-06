@@ -116,6 +116,7 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
             onSuccessFast(location,msg);
         }catch (Throwable throwable){
             LogUtils.w(throwable);
+            hasCallbacked = false;
             onFinalFail(1,"error occour in success:"+throwable.getMessage(),false);
         }
     }
