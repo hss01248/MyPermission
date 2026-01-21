@@ -133,9 +133,8 @@ public class LocationSync {
                         // costFromBegin=874, maxCn0=0, QUICKGPS=true, millsOldWhenSaved=61,
                         // isFromMockProvider=false, calledMethod=gps, SourceType=128, meanCn0=0 }
                     }
-                    String json = new GsonBuilder().serializeNulls().setPrettyPrinting().create()
-                            .toJson(cachedLocations);
-                    LogUtils.json(json);
+                    //String json = new GsonBuilder().serializeNulls().setPrettyPrinting().create().toJson(cachedLocations);
+                    //LogUtils.json(json);
 
                 }
 
