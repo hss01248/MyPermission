@@ -14,6 +14,9 @@ public interface ILocationMetric {
      */
     void reportFastCallback(boolean success, Location location,String failReason,String successMsg,long cost);
 
+
+   default void reportFastAccuracyCallback(boolean success, Location location,String failReason,String successMsg,long cost){}
+
     /**
      * 上报每个单独的provider的实际定位耗时
      * @param location

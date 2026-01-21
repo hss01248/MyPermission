@@ -117,7 +117,7 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
         }catch (Throwable throwable){
             LogUtils.w(throwable);
             hasCallbacked = false;
-            onFinalFail(1,"error occour in success:"+throwable.getMessage(),false);
+            onFailed(LocationErrorCode.ERROR_IN_SUCCESS_CALLBACK,"error occur in success:"+throwable.getMessage(),false);
         }
     }
 
@@ -131,7 +131,7 @@ public abstract class MyLocationFastCallback implements MyLocationCallback{
      */
     @Override
     public long useCacheInTimeOfMills() {
-        return 60*1000;
+        return 90*1000;
     }
 
     @Override

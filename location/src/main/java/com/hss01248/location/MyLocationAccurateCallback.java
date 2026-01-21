@@ -5,8 +5,10 @@ import android.location.Location;
 import android.location.LocationManager;
 
 import com.blankj.utilcode.util.ActivityUtils;
+import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.ThreadUtils;
+import com.blankj.utilcode.util.ToastUtils;
 
 /**
  * 定位模式：设定一个最短定位时间,比如至少要定位3秒(可配置),
@@ -74,22 +76,34 @@ public abstract class MyLocationAccurateCallback implements MyLocationCallback {
     @Override
     public void onEachLocationChanged(Location location, String provider) {
         MyLocationCallback.super.onEachLocationChanged(location, provider);
-        onReport(location, "onEachLocationChanged", true);
         handleNewLocation(location, "from " + provider);
     }
-
+    public static long lastShowToastTime;
     private synchronized void handleNewLocation(Location location, String msg) {
         if (hasCallbacked) {
             return;
         }
 
-        if (LocationSync.isFakeLocation(location) && !LocationSync.acceptFakeLocation) {
-            return;
+        // fake location的处理
+        if(LocationSync.isFakeLocation(location) ){
+            LogUtils.w("from real_time sys api, but fake location,will return fail in release app",location);
+            if(LocationSync.acceptFakeLocation){
+                if(AppUtils.isAppDebug()){
+                    if(System.currentTimeMillis() - lastShowToastTime > 30000){
+                        lastShowToastTime = System.currentTimeMillis();
+                        ToastUtils.showLong("from real_time sys api, but fake location,will return fail in release app");
+                    }
+                }
+            }else {
+                onFailed(LocationErrorCode.FAKE_LOCATION, LocationErrorCode.getErrorMsg(LocationErrorCode.FAKE_LOCATION),false);
+                return;
+            }
         }
+
         if(location !=null){
             if("fused".equals(location.getProvider())
             || "gps".equals(location.getProvider())){
-                LogUtils.w("已经是FUSED_PROVIDER或GPS_PROVIDER,立刻返回",location);
+                LogUtils.i("已经是FUSED_PROVIDER或GPS_PROVIDER,立刻返回",location);
                 doCallbackSuccess(location, msg);
                 return;
             }
@@ -115,11 +129,12 @@ public abstract class MyLocationAccurateCallback implements MyLocationCallback {
         hasCallbacked = true;
         dismissDialog();
         try {
+            onReport(location, msg, true);
             onSuccessAccurate(location, msg);
         } catch (Throwable throwable) {
             LogUtils.w(throwable);
             hasCallbacked = false;
-            onFinalFail(1, "error occur in success:" + throwable.getMessage(), false);
+            onFailed(LocationErrorCode.ERROR_IN_SUCCESS_CALLBACK, "error occur in success:" + throwable.getMessage(), false);
         }
     }
 
@@ -146,7 +161,7 @@ public abstract class MyLocationAccurateCallback implements MyLocationCallback {
     private void onReport(Location location, String msg, boolean success) {
         try {
             if (LocationUtil.getLocationMetric() != null) {
-                LocationUtil.getLocationMetric().reportFastCallback(success, location, success ? "" : msg, success ? msg : "", System.currentTimeMillis() - start);
+                LocationUtil.getLocationMetric().reportFastAccuracyCallback(success, location, success ? "" : msg, success ? msg : "", System.currentTimeMillis() - start);
             }
         } catch (Throwable throwable) {
             LogUtils.w(throwable);
@@ -167,7 +182,7 @@ public abstract class MyLocationAccurateCallback implements MyLocationCallback {
 
     @Override
     public long useCacheInTimeOfMills() {
-        return 60 * 1000; // 90s内缓存有效，同FastCallback
+        return 90 * 1000; // 90s内缓存有效，同FastCallback
     }
 
     public abstract void onSuccessAccurate(Location location, String msg);

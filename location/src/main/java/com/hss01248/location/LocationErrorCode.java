@@ -11,6 +11,8 @@ public class LocationErrorCode {
     public static final int LOCATION_MANAGER_NULL = 6;
     public static final int FAKE_LOCATION = 7;
 
+    public static final int ERROR_IN_SUCCESS_CALLBACK = 8;
+
     public static String getErrorMsg(int errorCode) {
         switch (errorCode) {
             case NO_PERMISSION:
