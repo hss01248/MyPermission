@@ -422,8 +422,8 @@ public class LocationUtil {
                     .setDialog(permissionDialog)
                     .setPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
                             Manifest.permission.ACCESS_COARSE_LOCATION})
-                    .setShowAfterRequest(true)
-                    .setShowBeforeRequest(false)
+                    .setShowAfterRequest(showAfterRequest)
+                    .setShowBeforeRequest(showBeforeRequest)
                     .callback(new PermissionUtils.FullCallback() {
                         @Override
                         public void onGranted(@NonNull List<String> granted) {
