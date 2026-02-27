@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -49,8 +50,7 @@ public class LocationSync {
 
     public static final String TAG = "LocationSync";
 
-    private static final Map<String, Address> ADDRESS_MAP = new HashMap<>();
-    private static final Map<String, Location> LOCATION_MAP = new HashMap<>();
+    private static final Map<String, Address> ADDRESS_MAP = new ConcurrentHashMap<>();
     private static final String PARAMS_ADDRESS = "addressxx";
     private static final String PARAMS_LOCATION = "locationxx";
     private static final String PARAMS_LAT = "latitudexx";
@@ -64,16 +64,16 @@ public class LocationSync {
     // PriorityBlockingQueue
 
     public static void putToCache(Location location, String startProviderName,
-                                  boolean isFromLastKnowLocation,
-                                  long timeCost,
-                                  @Nullable LocationProvider provider) {
+            boolean isFromLastKnowLocation,
+            long timeCost,
+            @Nullable LocationProvider provider) {
         putToCache(location, startProviderName, isFromLastKnowLocation, timeCost, -1);
     }
 
     public static void putToCache(Location location, String startProviderName,
-                                  boolean isFromLastKnowLocation,
-                                  long timeCost,
-                                  long costFromBegin) {
+            boolean isFromLastKnowLocation,
+            long timeCost,
+            long costFromBegin) {
         if (location == null) {
             return;
         }
@@ -133,8 +133,9 @@ public class LocationSync {
                         // costFromBegin=874, maxCn0=0, QUICKGPS=true, millsOldWhenSaved=61,
                         // isFromMockProvider=false, calledMethod=gps, SourceType=128, meanCn0=0 }
                     }
-                    //String json = new GsonBuilder().serializeNulls().setPrettyPrinting().create().toJson(cachedLocations);
-                    //LogUtils.json(json);
+                    // String json = new
+                    // GsonBuilder().serializeNulls().setPrettyPrinting().create().toJson(cachedLocations);
+                    // LogUtils.json(json);
 
                 }
 
@@ -243,7 +244,7 @@ public class LocationSync {
                 Collections.sort(locationInfos2, new Comparator<LocationInfo>() {
                     @Override
                     public int compare(LocationInfo o1, LocationInfo o2) {
-                        return (int) (o2.timeStamp - o1.timeStamp);
+                        return Long.compare(o2.timeStamp, o1.timeStamp);
                     }
                 });
                 if (locationInfos2.size() > maxCacheCount) {
@@ -255,10 +256,12 @@ public class LocationSync {
                     cachedLocations.clear();
                     cachedLocations.addAll(locationInfos2);
                 }
-                /*LocationInfo fullLocationInfo = getFullLocationInfo();
-                if (fullLocationInfo != null) {
-                    save(fullLocationInfo.lattidude, fullLocationInfo.longtitude);
-                }*/
+                /*
+                 * LocationInfo fullLocationInfo = getFullLocationInfo();
+                 * if (fullLocationInfo != null) {
+                 * save(fullLocationInfo.lattidude, fullLocationInfo.longtitude);
+                 * }
+                 */
             } catch (Throwable throwable) {
                 LogUtils.e(throwable);
             }
@@ -271,7 +274,7 @@ public class LocationSync {
             Collections.sort(cachedLocations, new Comparator<LocationInfo>() {
                 @Override
                 public int compare(LocationInfo o1, LocationInfo o2) {
-                    return (int) (o2.timeStamp - o1.timeStamp);
+                    return Long.compare(o2.timeStamp, o1.timeStamp);
                 }
             });
         } catch (Throwable throwable) {
@@ -320,9 +323,11 @@ public class LocationSync {
                 List<LocationInfo> list = GsonUtils.fromJson(str, new TypeToken<List<LocationInfo>>() {
                 }.getType());
                 if (list != null && !list.isEmpty()) {
-                    cachedLocations.clear();
-                    cachedLocations.addAll(list);
-                    sort();
+                    synchronized (LocationSync.class) {
+                        cachedLocations.clear();
+                        cachedLocations.addAll(list);
+                        sort();
+                    }
                 }
                 return null;
             }
@@ -336,7 +341,8 @@ public class LocationSync {
     }
 
     public static LocationInfo getFullLocationInfo() {
-        if (cachedLocations.isEmpty()) {
+        List<LocationInfo> snapshot = new ArrayList<>(cachedLocations);
+        if (snapshot.isEmpty()) {
             return null;
         }
         try {
@@ -345,7 +351,7 @@ public class LocationSync {
             float minAccuracy = Float.MAX_VALUE;
 
             // 遍历缓存，寻找在 maxFreshTimeMsForBestLocation 窗口内精度最高（accuracy 最小）的定位
-            for (LocationInfo info : cachedLocations) {
+            for (LocationInfo info : snapshot) {
                 if (now - info.timeStamp <= maxFreshTimeMsForBestLocation) {
                     // 如果精度未设置或为0，跳过（或者视具体业务逻辑而定，这里逻辑上 accuracy 越小越准）
                     if (info.accuracy > 0 && info.accuracy < minAccuracy) {
@@ -360,18 +366,11 @@ public class LocationSync {
                 LogUtils.d("找到45s内最准确的定位:", bestLocation);
                 return bestLocation;
             }
-            LogUtils.d("没有找到45s内最准确的定位,返回最近一个定位:", cachedLocations.get(0));
+            LogUtils.d("没有找到45s内最准确的定位,返回最近一个定位:", snapshot.get(0));
             // 如果窗口内没找到（比如都太老了），则返回最新的那个（即列表第一个，因为 sortBeforeAdd 保证了按时间倒序排序）
-            return cachedLocations.get(0);
+            return snapshot.get(0);
         } catch (Throwable throwable) {
             LogUtils.e(throwable);
-            try {
-                if (!cachedLocations.isEmpty()) {
-                    return cachedLocations.get(0);
-                }
-            } catch (Throwable t) {
-                LogUtils.e(t);
-            }
         }
         return null;
     }
