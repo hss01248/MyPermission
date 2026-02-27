@@ -244,8 +244,7 @@ public class LocationSync {
                 Collections.sort(locationInfos2, new Comparator<LocationInfo>() {
                     @Override
                     public int compare(LocationInfo o1, LocationInfo o2) {
-                        return (int) (o2.timeStamp - o1.timeStamp);
-                        //return Long.compare(o2.timeStamp, o1.timeStamp);
+                        return Long.compare(o2.timeStamp, o1.timeStamp);
                     }
                 });
                 if (locationInfos2.size() > maxCacheCount) {
@@ -275,8 +274,7 @@ public class LocationSync {
             Collections.sort(cachedLocations, new Comparator<LocationInfo>() {
                 @Override
                 public int compare(LocationInfo o1, LocationInfo o2) {
-                    return (int) (o2.timeStamp - o1.timeStamp);
-                    //return Long.compare(o2.timeStamp, o1.timeStamp);
+                    return Long.compare(o2.timeStamp, o1.timeStamp);
                 }
             });
         } catch (Throwable throwable) {
