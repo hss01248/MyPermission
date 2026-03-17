@@ -159,8 +159,13 @@
           android:layout_height="wrap_content"/>
       <Button
           android:layout_width="wrap_content"
-          android:text="查看缓存定位数据"
+          android:text="查看所有缓存定位数据"
           android:onClick="showCachedLocation"
+          android:layout_height="wrap_content"/>
+      <Button
+          android:layout_width="wrap_content"
+          android:text="查看最新的一条缓存定位数据"
+          android:onClick="showCachedLocation1"
           android:layout_height="wrap_content"/>
       <Button
           android:layout_width="wrap_content"

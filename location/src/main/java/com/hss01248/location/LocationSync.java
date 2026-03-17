@@ -50,17 +50,18 @@ public class LocationSync {
 
     public static final String TAG = "LocationSync";
 
-    private static final Map<String, Address> ADDRESS_MAP = new ConcurrentHashMap<>();
+    private static volatile Address mCachedAddress;
     private static final String PARAMS_ADDRESS = "addressxx";
     private static final String PARAMS_LOCATION = "locationxx";
     private static final String PARAMS_LAT = "latitudexx";
     private static final String PARAMS_LONG = "longitudexx";
     private static final int maxCacheCount = 10;
+    private static final com.google.gson.Gson GSON = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
 
     public static boolean acceptFakeLocation = AppUtils.isAppDebug();
     public static long maxFreshTimeMsForBestLocation = 45000;
 
-    private static final List<LocationInfo> cachedLocations = new CopyOnWriteArrayList<>();
+    private static final List<LocationInfo> cachedLocations = new ArrayList<>();
     // PriorityBlockingQueue
 
     public static void putToCache(Location location, String startProviderName,
@@ -175,11 +176,32 @@ public class LocationSync {
     }
 
     public static String getFormatedLocationInfos() {
-        return new GsonBuilder().serializeNulls().setPrettyPrinting().create().toJson(cachedLocations);
+        return GSON.toJson(cachedLocations);
     }
 
     public static AlertDialog showFormatedLocationInfosInDialog() {
         String infos = LocationSync.getFormatedLocationInfos();
+
+        AlertDialog dialog = new AlertDialog.Builder(ActivityUtils.getTopActivity())
+                .setTitle("缓存的定位")
+                .setMessage(infos)
+                .setPositiveButton("ok", null)
+                .create();
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog0) {
+                dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.WHITE));
+                WindowManager.LayoutParams attributes = dialog.getWindow().getAttributes();
+                attributes.width = ScreenUtils.getScreenWidth();
+                dialog.getWindow().setAttributes(attributes);
+            }
+        });
+        dialog.show();
+        return dialog;
+    }
+
+    public static AlertDialog showLastFormatedLocationInfosInDialog() {
+        String infos = GSON.toJson(LocationSync.getFullLocationInfo());
 
         AlertDialog dialog = new AlertDialog.Builder(ActivityUtils.getTopActivity())
                 .setTitle("缓存的定位")
@@ -283,17 +305,31 @@ public class LocationSync {
 
     }
 
-    private static synchronized void saveAsync() {
+    private static void saveAsync() {
 
-        try {
-            List<LocationInfo> list = new ArrayList<>(cachedLocations);
-            // 这里内部会遍历
-            String json = GsonUtils.toJson(list);
-            // LogUtils.json(json);
-            locationCache.saveLocations(json);
-        } catch (Throwable throwable) {
-            LogUtils.w(throwable);
-        }
+        ThreadUtils.executeBySingle(new ThreadUtils.SimpleTask<Object>() {
+            @Override
+            public Object doInBackground() throws Throwable {
+                try {
+                    List<LocationInfo> list;
+                    synchronized (LocationSync.class) {
+                        list = new ArrayList<>(cachedLocations);
+                    }
+                    // 这里内部会遍历
+                    String json = GsonUtils.toJson(list);
+                    // LogUtils.json(json);
+                    locationCache.saveLocations(json);
+                } catch (Throwable throwable) {
+                    LogUtils.w(throwable);
+                }
+                return null;
+            }
+
+            @Override
+            public void onSuccess(Object result) {
+
+            }
+        });
 
     }
 
@@ -358,6 +394,8 @@ public class LocationSync {
                         minAccuracy = info.accuracy;
                         bestLocation = info;
                     }
+                } else {
+                    break;
                 }
             }
 
@@ -433,7 +471,7 @@ public class LocationSync {
         info.longtitude = location.getLongitude();
         info.timeStamp = location.getTime();
         if (LogUtils.getConfig().isLogSwitch()) {
-            info.timeStampStr = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(info.timeStamp));
+            info.timeStampStr = com.blankj.utilcode.util.TimeUtils.millis2String(info.timeStamp);
         }
         info.locale = Locale.getDefault().getCountry();
         info.altitude = location.getAltitude();
@@ -516,7 +554,7 @@ public class LocationSync {
      * @param mAddress mAddress
      */
     public static void saveAddress(Address mAddress) {
-        ADDRESS_MAP.put(PARAMS_ADDRESS, mAddress);
+        mCachedAddress = mAddress;
     }
 
     /**
@@ -525,7 +563,7 @@ public class LocationSync {
      * @return Address
      */
     public static Address getAddress() {
-        return ADDRESS_MAP.get(PARAMS_ADDRESS);
+        return mCachedAddress;
     }
 
     /**

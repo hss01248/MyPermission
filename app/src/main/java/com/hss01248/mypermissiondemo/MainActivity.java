@@ -343,6 +343,12 @@ public class MainActivity extends AppCompatActivity {
                         ToastUtils.showLong(type + "," + msg);
                         LogUtils.w(msg, type);
                     }
+
+                    @Override
+                    public void onEachLocationChanged(Location location, String provider, long costOfJustThisUpdate, long costFromUtilStart) {
+                        super.onEachLocationChanged(location, provider, costOfJustThisUpdate, costFromUtilStart);
+                        AndroidBus.postByTag("location", location);
+                    }
                 });
     }
 
@@ -834,5 +840,9 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    public void showCachedLocation1(View view) {
+        LocationSync.showLastFormatedLocationInfosInDialog();
     }
 }
