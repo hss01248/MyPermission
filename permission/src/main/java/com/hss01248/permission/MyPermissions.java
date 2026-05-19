@@ -107,6 +107,18 @@ public class MyPermissions {
             callback.onGranted(permissionsList);
             return;
         }
+        if(ActivityUtils.getTopActivity() ==null){
+            //如果app在后台,直接返回拒绝,避免崩溃
+            //获取没有允许的权限:
+            List<String> list = new ArrayList<>();
+            for (String s : permissionsList) {
+                if(!PermissionUtils.isGranted(s)){
+                    list.add(s);
+                }
+            }
+            callback.onDenied(new ArrayList<>(),list);
+            return;
+        }
         //经过了一次请求后,这两个判断才准确
         List<String> deniedForeverList = getDeniedForeverList(permissions);
         List<String> deniedTemporary = getDeniedTemporary(permissions);

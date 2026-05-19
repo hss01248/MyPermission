@@ -28,6 +28,11 @@ public class DefaultAlertDialogImpl implements IAlertDialog{
         ThreadUtils.getMainHandler().postDelayed(new Runnable() {
             @Override
             public void run() {
+                if(ActivityUtils.getTopActivity() ==null){
+                    //应用在后台
+                    negativeOnClick.onClick(null,DialogInterface.BUTTON_NEGATIVE);
+                    return;
+                }
                 AlertDialog.Builder builder = new AlertDialog.Builder(ActivityUtils.getTopActivity());
                 if(!TextUtils.isEmpty(title)){
                     builder.setTitle(title);
