@@ -31,15 +31,12 @@ import com.blankj.utilcode.util.Utils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.location.CurrentLocationRequest;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.Priority;
-import com.google.android.gms.tasks.CancellationTokenSource;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.hss01248.location.sim.WifiAndBaseStationUtil;
@@ -90,7 +87,8 @@ public class QuietLocationUtil {
     volatile Handler handler;
     Runnable timeoutRun;
     boolean hasEnd;
-    CancellationTokenSource gmsTokenSource;
+    FusedLocationProviderClient gmsFusedClient;
+    LocationCallback gmsLocationCallback;
 
     public void getLocation(Context context, MyLocationCallback listener) {
         getLocation(context, timeOut, listener);
@@ -381,65 +379,76 @@ public class QuietLocationUtil {
                 }
             });
 
-            // 2. 使用 getCurrentLocation 获取当前位置 (更加现代且省电)
-            LogUtils.i("start request gms via getCurrentLocation");
+            // 2. 使用 requestLocationUpdates 单次获取当前位置
+            LogUtils.i("start request gms via requestLocationUpdates");
             long start = System.currentTimeMillis();
-            //60s->45s
-            int maxCacheTime = 30000;
                     //Math.round(listener.useCacheInTimeOfMills()*3.0f/4);
 
+            LocationRequest locationRequest = LocationRequest.create();
+            locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+            locationRequest.setInterval(1000);
+            locationRequest.setFastestInterval(500);
+            locationRequest.setNumUpdates(1);
 
-            CurrentLocationRequest locationRequest = new CurrentLocationRequest.Builder()
-                    .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
-                    .setMaxUpdateAgeMillis(maxCacheTime) //允许多长时间内的缓存
-                    .build();
+            gmsFusedClient = fusedLocationProviderClient;
+            gmsLocationCallback = new LocationCallback() {
+                @Override
+                public void onLocationResult(@NonNull LocationResult locationResult) {
+                    try {
+                        Location location = null;
+                        if (locationResult.getLocations() != null && !locationResult.getLocations().isEmpty()) {
+                            location = locationResult.getLocations().get(0);
+                        }
+                        if (location != null) {
+                            LogUtils.i("onLocationChanged(gms)", location, location.getTime(), "耗时(ms):",
+                                    (System.currentTimeMillis() - start), "距最初耗时(ms)",
+                                    System.currentTimeMillis() - startFromBeginning);
 
-            gmsTokenSource = new CancellationTokenSource();
-            fusedLocationProviderClient.getCurrentLocation(locationRequest, gmsTokenSource.getToken())
-                    .addOnCompleteListener(new OnCompleteListener<Location>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Location> task) {
-                            try {
-                                Location location = task.getResult(ApiException.class);
-                                if (location != null) {
-                                    LogUtils.i("onLocationChanged(gms)", location, location.getTime(), "耗时(ms):",
-                                            (System.currentTimeMillis() - start), "距最初耗时(ms)",
-                                            System.currentTimeMillis() - startFromBeginning);
+                            LocationSync.putToCache(location, "gms", false, System.currentTimeMillis() - start,
+                                    System.currentTimeMillis() - startFromBeginning);
 
-                                    LocationSync.putToCache(location, "gms", false, System.currentTimeMillis() - start,
-                                            System.currentTimeMillis() - startFromBeginning);
-
-                                    long maxTime = listener.useCacheInTimeOfMills();
-                                    if (System.currentTimeMillis() - location.getTime() < maxTime) {
-                                        listener.onEachLocationChanged(location, "gms",
-                                                System.currentTimeMillis() - start,
-                                                System.currentTimeMillis() - startFromBeginning);
-                                        map.add(location);
-                                        Collections.sort(map, new Comparator<Location>() {
-                                            @Override
-                                            public int compare(Location o1, Location o2) {
-                                                return (int) (o2.getTime() - o1.getTime());
-                                            }
-                                        });
-                                    } else {
-                                        LogUtils.e("gmsLocation", "gms返回的定位超过了配置的定位有效期:"
-                                                + (System.currentTimeMillis() - location.getTime()) / 1000 + "s之前的数据");
+                            long maxTime = listener.useCacheInTimeOfMills();
+                            if (System.currentTimeMillis() - location.getTime() < maxTime) {
+                                listener.onEachLocationChanged(location, "gms",
+                                        System.currentTimeMillis() - start,
+                                        System.currentTimeMillis() - startFromBeginning);
+                                map.add(location);
+                                Collections.sort(map, new Comparator<Location>() {
+                                    @Override
+                                    public int compare(Location o1, Location o2) {
+                                        return Long.compare (o2.getTime() , o1.getTime());
                                     }
-                                }
-                                gmsTokenSource = null;
-                            } catch (Exception e) {
-                                LogUtils.w("gms getCurrentLocation error", e);
-                            } finally {
-                                countSet.remove("gms");
-                                onEnd(null, map, countSet, listener);
+                                });
+                            } else {
+                                LogUtils.e("gmsLocation", "gms返回的定位超过了配置的定位有效期:"
+                                        + (System.currentTimeMillis() - location.getTime()) / 1000 + "s之前的数据");
                             }
                         }
-                    });
+                    } catch (Exception e) {
+                        LogUtils.w("gms requestLocationUpdates error", e);
+                    } finally {
+                        cancelGmsLocationRequest();
+                        countSet.remove("gms");
+                        onEnd(null, map, countSet, listener);
+                    }
+                }
+            };
+
+            fusedLocationProviderClient.requestLocationUpdates(locationRequest, gmsLocationCallback,
+                    Looper.getMainLooper());
 
         } catch (Throwable throwable) {
             countSet.remove("gms");
             LogUtils.w("gms",throwable);
         }
+    }
+
+    private void cancelGmsLocationRequest() {
+        if (gmsFusedClient != null && gmsLocationCallback != null) {
+            gmsFusedClient.removeLocationUpdates(gmsLocationCallback);
+        }
+        gmsFusedClient = null;
+        gmsLocationCallback = null;
     }
 
     private Location getResultSafe(Task<Location> task) {
@@ -610,7 +619,7 @@ public class QuietLocationUtil {
             Collections.sort(map, new Comparator<Location>() {
                 @Override
                 public int compare(Location o1, Location o2) {
-                    return (int) (o2.getTime() - o1.getTime());
+                    return Long.compare (o2.getTime() , o1.getTime());
                 }
             });
         }
@@ -643,9 +652,7 @@ public class QuietLocationUtil {
                         @Override
                         public void run() {
                             LogUtils.w("已延时45s关闭looper2");
-                            if (gmsTokenSource != null) {
-                                gmsTokenSource.cancel();
-                            }
+                            cancelGmsLocationRequest();
                             endLooper();
                         }
                     }, 45000);
@@ -700,9 +707,7 @@ public class QuietLocationUtil {
                 @Override
                 public void run() {
                     LogUtils.w("已延时45s,立刻关闭looper2");
-                    if (gmsTokenSource != null) {
-                        gmsTokenSource.cancel();
-                    }
+                    cancelGmsLocationRequest();
                     endLooper();
                 }
             }, 45000);

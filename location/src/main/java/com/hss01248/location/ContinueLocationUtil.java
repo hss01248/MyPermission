@@ -17,7 +17,6 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.Priority;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,9 +48,10 @@ public class ContinueLocationUtil {
     @SuppressLint("MissingPermission")
     private void startGmsLocation(Context context, long interval) {
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
-        LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, interval)
-                .setMinUpdateIntervalMillis(interval / 2)
-                .build();
+        LocationRequest locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(interval);
+        locationRequest.setFastestInterval(interval / 2);
 
         gmsCallback = new LocationCallback() {
             @Override
