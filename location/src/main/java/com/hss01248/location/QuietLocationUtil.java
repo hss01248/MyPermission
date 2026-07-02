@@ -358,7 +358,7 @@ public class QuietLocationUtil {
     @SuppressLint("MissingPermission")
     private void onGmsConnected(Context context, Set<String> countSet, LocationManager locationManager,
             List<Location> map, MyLocationCallback listener, long startFromBeginning) {
-        try {
+
             listener.onEachLocationStart("gms");
             long start0 = System.currentTimeMillis();
             FusedLocationProviderClient fusedLocationProviderClient = LocationServices
@@ -394,8 +394,8 @@ public class QuietLocationUtil {
             gmsLocationCallback = new LocationCallback() {
                 @Override
                 public void onLocationResult(@NonNull LocationResult locationResult) {
+                    Location location = null;
                     try {
-                        Location location = null;
                         if (locationResult.getLocations() != null && !locationResult.getLocations().isEmpty()) {
                             location = locationResult.getLocations().get(0);
                         }
@@ -412,13 +412,6 @@ public class QuietLocationUtil {
                                 listener.onEachLocationChanged(location, "gms",
                                         System.currentTimeMillis() - start,
                                         System.currentTimeMillis() - startFromBeginning);
-                                map.add(location);
-                                Collections.sort(map, new Comparator<Location>() {
-                                    @Override
-                                    public int compare(Location o1, Location o2) {
-                                        return Long.compare (o2.getTime() , o1.getTime());
-                                    }
-                                });
                             } else {
                                 LogUtils.e("gmsLocation", "gms返回的定位超过了配置的定位有效期:"
                                         + (System.currentTimeMillis() - location.getTime()) / 1000 + "s之前的数据");
@@ -429,7 +422,7 @@ public class QuietLocationUtil {
                     } finally {
                         cancelGmsLocationRequest();
                         countSet.remove("gms");
-                        onEnd(null, map, countSet, listener);
+                        onEnd(location, map, countSet, listener);
                     }
                 }
             };
@@ -437,10 +430,6 @@ public class QuietLocationUtil {
             fusedLocationProviderClient.requestLocationUpdates(locationRequest, gmsLocationCallback,
                     Looper.getMainLooper());
 
-        } catch (Throwable throwable) {
-            countSet.remove("gms");
-            LogUtils.w("gms",throwable);
-        }
     }
 
     private void cancelGmsLocationRequest() {
@@ -613,7 +602,7 @@ public class QuietLocationUtil {
         }
     }
 
-    private void onEnd(Location location, List<Location> map, Set<String> count, MyLocationCallback listener) {
+    private synchronized void onEnd(Location location, List<Location> map, Set<String> count, MyLocationCallback listener) {
         if (location != null) {
             map.add(location);
             Collections.sort(map, new Comparator<Location>() {
