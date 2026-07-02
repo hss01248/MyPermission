@@ -4,13 +4,11 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.location.GnssClock;
-import android.location.GnssMeasurement;
-import android.location.GnssMeasurementsEvent;
+
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.location.LocationProvider;
+
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -30,7 +28,7 @@ import com.blankj.utilcode.util.ToastUtils;
 import com.blankj.utilcode.util.Utils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
@@ -40,7 +38,6 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.hss01248.location.sim.WifiAndBaseStationUtil;
-import com.hss01248.location.wifi.WifiToLocationUtil;
 import com.hss01248.permission.DefaultPermissionDialog;
 
 import java.util.ArrayList;
@@ -52,8 +49,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+
 
 /**
  * location switch off 27k
@@ -159,7 +155,7 @@ public class QuietLocationUtil {
                 }
 
                 handler = new Handler(Looper.myLooper());
-                List<Location> map = new ArrayList<>();
+                List<Location> map = Collections.synchronizedList(new ArrayList<>());
                 Set<String> countSet = new HashSet<>();
 
                 timeoutRun = new Runnable() {
@@ -353,83 +349,131 @@ public class QuietLocationUtil {
 
         return map.get(0);
     }
-
-    // https://developers.google.com/android/reference/com/google/android/gms/location/LocationRequest
+    Runnable gmsRunnable;
+    //https://developers.google.com/android/reference/com/google/android/gms/location/LocationRequest
     @SuppressLint("MissingPermission")
     private void onGmsConnected(Context context, Set<String> countSet, LocationManager locationManager,
-            List<Location> map, MyLocationCallback listener, long startFromBeginning) {
-
+                                List<Location> map, MyLocationCallback listener, long startFromBeginning) {
+        try {
             listener.onEachLocationStart("gms");
             long start0 = System.currentTimeMillis();
-            FusedLocationProviderClient fusedLocationProviderClient = LocationServices
-                    .getFusedLocationProviderClient(context);
+            FusedLocationProviderClient fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
+            gmsRunnable = new Runnable() {
 
-            // 1. 获取最后已知位置
-            fusedLocationProviderClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
                 @Override
-                public void onComplete(@NonNull Task<Location> task) {
-                    Location lastLocation1 = getResultSafe(task);
-                    if (lastLocation1 != null) {
-                        LogUtils.i("gms", "get last location:" + lastLocation1);
-                        LocationSync.putToCache(lastLocation1, "gms", true, System.currentTimeMillis() - start0,
-                                System.currentTimeMillis() - startFromBeginning);
-                    } else {
-                        LogUtils.w("gms", "get last location is null");
-                    }
-                }
-            });
-
-            // 2. 使用 requestLocationUpdates 单次获取当前位置
-            LogUtils.i("start request gms via requestLocationUpdates");
-            long start = System.currentTimeMillis();
-                    //Math.round(listener.useCacheInTimeOfMills()*3.0f/4);
-
-            LocationRequest locationRequest = LocationRequest.create();
-            locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-            locationRequest.setInterval(1000);
-            locationRequest.setFastestInterval(500);
-            locationRequest.setNumUpdates(1);
-
-            gmsFusedClient = fusedLocationProviderClient;
-            gmsLocationCallback = new LocationCallback() {
-                @Override
-                public void onLocationResult(@NonNull LocationResult locationResult) {
-                    Location location = null;
-                    try {
-                        if (locationResult.getLocations() != null && !locationResult.getLocations().isEmpty()) {
-                            location = locationResult.getLocations().get(0);
-                        }
-                        if (location != null) {
-                            LogUtils.i("onLocationChanged(gms)", location, location.getTime(), "耗时(ms):",
-                                    (System.currentTimeMillis() - start), "距最初耗时(ms)",
-                                    System.currentTimeMillis() - startFromBeginning);
-
-                            LocationSync.putToCache(location, "gms", false, System.currentTimeMillis() - start,
-                                    System.currentTimeMillis() - startFromBeginning);
-
-                            long maxTime = listener.useCacheInTimeOfMills();
-                            if (System.currentTimeMillis() - location.getTime() < maxTime) {
-                                listener.onEachLocationChanged(location, "gms",
-                                        System.currentTimeMillis() - start,
-                                        System.currentTimeMillis() - startFromBeginning);
-                            } else {
-                                LogUtils.e("gmsLocation", "gms返回的定位超过了配置的定位有效期:"
-                                        + (System.currentTimeMillis() - location.getTime()) / 1000 + "s之前的数据");
+                public void run() {
+                    fusedLocationProviderClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Location> task) {
+                            Location lastLocation1 = getResultSafe(task);
+                            //Fatal Exception: com.google.android.gms.tasks.RuntimeExecutionException
+                            //com.google.android.gms.common.api.ApiException: 8: The connection to Google Play services was lost
+                            //com.google.android.gms.tasks.zzu.getResult (zzu.java:15)
+                            //devicedata.gps.SilentLocationUtil$3$1.onComplete (SilentLocationUtil.java:265)
+                            //com.google.android.gms.tasks.zzj.run (zzj.java:4)
+                            //com.android.internal.os.ZygoteInit.main (ZygoteInit.java:873)
+                            if (lastLocation1 != null) {
+                                LogUtils.i("gms", "get last location:" + lastLocation1);
+                                //没有finelocation权限时,locationManager.getProvider(gps)会抛异常
+                                // locationManager.getProvider(lastLocation1.getProvider())
+                                LocationSync.putToCache(lastLocation1,"gms",true,System.currentTimeMillis()- start0,System.currentTimeMillis() - startFromBeginning);
+                                /*map.put(lastLocation1.getProvider(), lastLocation1);
+                                if(LocationSync.getLongitude() ==0){
+                                    LocationSync.save(lastLocation1.getLatitude(), lastLocation1.getLongitude());
+                                    LocationSync.saveLocation(lastLocation1);
+                                }*/
+                            }else {
+                                LogUtils.w("gms", "get last location:" + lastLocation1);
                             }
                         }
-                    } catch (Exception e) {
-                        LogUtils.w("gms requestLocationUpdates error", e);
-                    } finally {
-                        cancelGmsLocationRequest();
-                        countSet.remove("gms");
-                        onEnd(location, map, countSet, listener);
-                    }
+                    });
+
+                    LogUtils.i("start request gms");
+                    long start = System.currentTimeMillis();
+                    fusedLocationProviderClient.requestLocationUpdates(new LocationRequest()
+                            .setExpirationDuration(timeOut)
+                            .setNumUpdates(1)
+                            .setMaxWaitTime(timeOut), new LocationCallback() {
+                        @Override
+                        public void onLocationResult(LocationResult result) {
+
+                            if (result != null && result.getLocations() != null && !result.getLocations().isEmpty()) {
+                                List<Location> locations = result.getLocations();
+                                LogUtils.w("gmslocations",locations);
+                                LogUtils.i("onLocationChanged", locations.get(0),locations.get(0).getTime(),"gms","耗时(ms):",
+                                        (System.currentTimeMillis() - start),"距最初耗时(ms)",System.currentTimeMillis() - startFromBeginning);
+
+                                for (Location location1 : locations) {
+                                    LocationSync.putToCache(location1,"gms",false,System.currentTimeMillis() - start,System.currentTimeMillis() - startFromBeginning);
+                                }
+                                long maxTime = 30000;//listener.useCacheInTimeOfMills()
+                                for (Location location : locations) {
+                                    //gms有时会返回比较老的数据,对定位实时性要求高的业务造成干扰,所以需要判断
+                                    if(System.currentTimeMillis() - location.getTime() < maxTime){
+                                        listener.onEachLocationChanged(location,"gms",System.currentTimeMillis() - start,System.currentTimeMillis() - startFromBeginning);
+                                    }else {
+                                        LogUtils.e("gmsLocation","gms返回的定位超过了配置的定位有效期,坑爹的gms:"+(System.currentTimeMillis() - location.getTime())/1000+"s之前的数据");
+                                    }
+                                }
+                                synchronized (QuietLocationUtil.class){
+                                    for (Location location : locations) {
+                                        if(System.currentTimeMillis() - location.getTime() < maxTime){
+                                            map.add(location);
+                                            Collections.sort(map, new Comparator<Location>() {
+                                                @Override
+                                                public int compare(Location o1, Location o2) {
+                                                    return Long.compare (o2.getTime() , o1.getTime());
+                                                }
+                                            });
+                                        }
+                                    }
+                                }
+
+                                countSet.remove("gms");
+                                onEnd(null, map, countSet, listener);
+                            } else {
+                                countSet.remove("gms");
+                                onEnd(null, map, countSet, listener);
+                            }
+                        }
+
+                    }, Looper.myLooper());
                 }
             };
 
-            fusedLocationProviderClient.requestLocationUpdates(locationRequest, gmsLocationCallback,
-                    Looper.getMainLooper());
 
+            fusedLocationProviderClient.getLocationAvailability()
+                    .addOnCompleteListener(new OnCompleteListener<LocationAvailability>() {
+                                               @Override
+                                               public void onComplete(@NonNull Task<LocationAvailability> task) {
+                                                   //com.google.android.gms.common.api.ApiException: 8: The connection to Google Play services was lost
+                                                   //devicedata.gps.SilentLocationUtil$4.onComplete
+                                                   try {
+                                                       if (task.getResult() == null) {
+                                                           LogUtils.w("gms getLocationAvailability result null");
+                                                           countSet.remove("gms");
+                                                           return;
+                                                       }
+                                                       boolean locationAvailable = task.getResult().isLocationAvailable();
+                                                       if (!locationAvailable) {
+                                                           LogUtils.e("gms location not available--> 这个辣鸡api不准, " +
+                                                                   "第一次打开定位开关,但关闭谷歌定位精准度时,这个返回false,但实际可以发起定位,且能很快定位成功." +
+                                                                   "而gps和passive大概率超时,所以不要在这里拦截,不管能不能用都发起定位,反正有超时机制,不怕没有callback");
+                                                           // countSet.remove("gms");
+                                                           //return;
+                                                       }
+                                                       handler.post(gmsRunnable);
+                                                   } catch (Throwable throwable) {
+                                                       LogUtils.w("gms", throwable);
+                                                       countSet.remove("gms");
+                                                   }
+                                               }
+                                           }
+                    );
+        } catch (Throwable throwable) {
+            countSet.remove("gms");
+            LogUtils.w("gms", throwable);
+        }
     }
 
     private void cancelGmsLocationRequest() {
@@ -449,7 +493,7 @@ public class QuietLocationUtil {
         return null;
     }
 
-    private void requestGmsLocation(Context context, LocationManager locationManager, List<Location> map,
+/*    private void requestGmsLocation(Context context, LocationManager locationManager, List<Location> map,
             Set<String> countSet, MyLocationCallback listener, long startFromBeginning) {
         try {
             countSet.add("gms");
@@ -459,7 +503,49 @@ public class QuietLocationUtil {
             onEnd(null, map, countSet, listener);
             LogUtils.w("gms2",throwable);
         }
+    }*/
+private void requestGmsLocation(Context context, LocationManager locationManager, List<Location> map,
+                                Set<String> countSet, MyLocationCallback listener, long startFromBeginning) {
+    try {
+        //LocationServices.getFusedLocationProviderClient(context).getLastLocation().addOnCompleteListener()
+        GoogleApiClient client = null;
+        client = new GoogleApiClient.Builder(context)
+                .addApi(LocationServices.API)
+                .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
+                    @Override
+                    public void onConnectionFailed(@NonNull ConnectionResult onConnectionFailed) {
+                        LogUtils.w("gms", "onConnectionFailed:" + onConnectionFailed);
+                        //requestGPS(context,locationManager, map, listener);
+                        countSet.remove("gms");
+                        onEnd(null, map, countSet, listener);
+                    }
+                })
+                .build();
+
+        GoogleApiClient finalClient = client;
+        client.registerConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+            @SuppressLint("MissingPermission")
+            @Override
+            public void onConnected(@Nullable Bundle bundle) {
+                LogUtils.w("gms", "onConnected:");
+                onGmsConnected(context, countSet, locationManager, map, listener,startFromBeginning);
+                //onGmsConnected2(finalClient,context, countSet, locationManager, map, listener);
+            }
+
+            @Override
+            public void onConnectionSuspended(int i) {
+                LogUtils.w("gms", "onConnectionSuspended:" + i);
+            }
+        });
+        client.connect();
+        countSet.add("gms");
+    } catch (Throwable throwable) {
+        countSet.remove("gms");
+        onEnd(null, map, countSet, listener);
+        throwable.printStackTrace();
     }
+
+}
 
     public static boolean isGmsAvaiable(Context context) {
         return GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS;
