@@ -85,6 +85,7 @@ public class QuietLocationUtil {
     boolean hasEnd;
     FusedLocationProviderClient gmsFusedClient;
     LocationCallback gmsLocationCallback;
+    GoogleApiClient gmsApiClient;
 
     public void getLocation(Context context, MyLocationCallback listener) {
         getLocation(context, timeOut, listener);
@@ -156,7 +157,7 @@ public class QuietLocationUtil {
 
                 handler = new Handler(Looper.myLooper());
                 List<Location> map = Collections.synchronizedList(new ArrayList<>());
-                Set<String> countSet = new HashSet<>();
+                Set<String> countSet = Collections.synchronizedSet(new HashSet<>());
 
                 timeoutRun = new Runnable() {
                     @Override
@@ -195,6 +196,7 @@ public class QuietLocationUtil {
                         requestByType("fused", locationManager, map, countSet, finalListener1, startFromBeginning);
 
                         if (!withoutGms && isGmsAvaiable(finalContext)) {
+                            countSet.add("gms");
                             GmsLocationUtil.hasGmsGranted(finalContext,
                                     new GmsLocationUtil.IGmsSettingsStateCallback() {
                                         @Override
@@ -206,6 +208,13 @@ public class QuietLocationUtil {
                                         @Override
                                         public void close(String msg) {
                                             LogUtils.w("gms state wrong:" + msg);
+                                            finishGmsOnHandler(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    cancelGmsLocationRequest();
+                                                    onEnd("gms", null, map, countSet, finalListener1);
+                                                }
+                                            });
                                         }
                                     });
 
@@ -325,10 +334,43 @@ public class QuietLocationUtil {
 
     }
 
-    private Location getMostAcurLocation(List<Location> map) {
-        if (map.isEmpty()) {
-            return null;
+    private void sortLocationMap(List<Location> map) {
+        Collections.sort(map, new Comparator<Location>() {
+            @Override
+            public int compare(Location o1, Location o2) {
+                return Long.compare(o2.getTime(), o1.getTime());
+            }
+        });
+    }
+
+    private void addValidLocationsToMap(List<Location> map, List<Location> locations, long maxTime) {
+        synchronized (map) {
+            boolean added = false;
+            for (Location location : locations) {
+                if (System.currentTimeMillis() - location.getTime() < maxTime) {
+                    map.add(location);
+                    added = true;
+                }
+            }
+            if (added) {
+                sortLocationMap(map);
+            }
         }
+    }
+
+    private void finishGmsOnHandler(Runnable runnable) {
+        if (handler != null) {
+            handler.post(runnable);
+        } else {
+            runnable.run();
+        }
+    }
+
+    private Location getMostAcurLocation(List<Location> map) {
+        synchronized (map) {
+            if (map.isEmpty()) {
+                return null;
+            }
         /*
          * if (map.containsKey(LocationManager.GPS_PROVIDER) &&
          * map.get(LocationManager.GPS_PROVIDER) != null) {
@@ -347,8 +389,10 @@ public class QuietLocationUtil {
          * }
          */
 
-        return map.get(0);
+            return map.get(0);
+        }
     }
+
     Runnable gmsRunnable;
     //https://developers.google.com/android/reference/com/google/android/gms/location/LocationRequest
     @SuppressLint("MissingPermission")
@@ -358,6 +402,7 @@ public class QuietLocationUtil {
             listener.onEachLocationStart("gms");
             long start0 = System.currentTimeMillis();
             FusedLocationProviderClient fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
+            gmsFusedClient = fusedLocationProviderClient;
             gmsRunnable = new Runnable() {
 
                 @Override
@@ -390,54 +435,50 @@ public class QuietLocationUtil {
 
                     LogUtils.i("start request gms");
                     long start = System.currentTimeMillis();
-                    fusedLocationProviderClient.requestLocationUpdates(new LocationRequest()
-                            .setExpirationDuration(timeOut)
-                            .setNumUpdates(1)
-                            .setMaxWaitTime(timeOut), new LocationCallback() {
+                    gmsLocationCallback = new LocationCallback() {
                         @Override
                         public void onLocationResult(LocationResult result) {
+                            try {
+                                if (result != null && result.getLocations() != null
+                                        && !result.getLocations().isEmpty()) {
+                                    List<Location> locations = result.getLocations();
+                                    LogUtils.w("gmslocations", locations);
+                                    LogUtils.i("onLocationChanged", locations.get(0), locations.get(0).getTime(),
+                                            "gms", "耗时(ms):", (System.currentTimeMillis() - start), "距最初耗时(ms)",
+                                            System.currentTimeMillis() - startFromBeginning);
 
-                            if (result != null && result.getLocations() != null && !result.getLocations().isEmpty()) {
-                                List<Location> locations = result.getLocations();
-                                LogUtils.w("gmslocations",locations);
-                                LogUtils.i("onLocationChanged", locations.get(0),locations.get(0).getTime(),"gms","耗时(ms):",
-                                        (System.currentTimeMillis() - start),"距最初耗时(ms)",System.currentTimeMillis() - startFromBeginning);
-
-                                for (Location location1 : locations) {
-                                    LocationSync.putToCache(location1,"gms",false,System.currentTimeMillis() - start,System.currentTimeMillis() - startFromBeginning);
-                                }
-                                long maxTime = 30000;//listener.useCacheInTimeOfMills()
-                                for (Location location : locations) {
-                                    //gms有时会返回比较老的数据,对定位实时性要求高的业务造成干扰,所以需要判断
-                                    if(System.currentTimeMillis() - location.getTime() < maxTime){
-                                        listener.onEachLocationChanged(location,"gms",System.currentTimeMillis() - start,System.currentTimeMillis() - startFromBeginning);
-                                    }else {
-                                        LogUtils.e("gmsLocation","gms返回的定位超过了配置的定位有效期,坑爹的gms:"+(System.currentTimeMillis() - location.getTime())/1000+"s之前的数据");
+                                    for (Location location1 : locations) {
+                                        LocationSync.putToCache(location1, "gms", false,
+                                                System.currentTimeMillis() - start,
+                                                System.currentTimeMillis() - startFromBeginning);
                                     }
-                                }
-                                synchronized (QuietLocationUtil.class){
+                                    long maxTime = 30000;// listener.useCacheInTimeOfMills()
                                     for (Location location : locations) {
-                                        if(System.currentTimeMillis() - location.getTime() < maxTime){
-                                            map.add(location);
-                                            Collections.sort(map, new Comparator<Location>() {
-                                                @Override
-                                                public int compare(Location o1, Location o2) {
-                                                    return Long.compare (o2.getTime() , o1.getTime());
-                                                }
-                                            });
+                                        // gms有时会返回比较老的数据,对定位实时性要求高的业务造成干扰,所以需要判断
+                                        if (System.currentTimeMillis() - location.getTime() < maxTime) {
+                                            listener.onEachLocationChanged(location, "gms",
+                                                    System.currentTimeMillis() - start,
+                                                    System.currentTimeMillis() - startFromBeginning);
+                                        } else {
+                                            LogUtils.e("gmsLocation",
+                                                    "gms返回的定位超过了配置的定位有效期,坑爹的gms:"
+                                                            + (System.currentTimeMillis() - location.getTime()) / 1000
+                                                            + "s之前的数据");
                                         }
                                     }
+                                    addValidLocationsToMap(map, locations, maxTime);
                                 }
-
-                                countSet.remove("gms");
-                                onEnd(null, map, countSet, listener);
-                            } else {
-                                countSet.remove("gms");
-                                onEnd(null, map, countSet, listener);
+                            } finally {
+                                cancelGmsLocationRequest();
+                                onEnd("gms", null, map, countSet, listener);
                             }
                         }
 
-                    }, Looper.myLooper());
+                    };
+                    fusedLocationProviderClient.requestLocationUpdates(new LocationRequest()
+                            .setExpirationDuration(timeOut)
+                            .setNumUpdates(1)
+                            .setMaxWaitTime(timeOut), gmsLocationCallback, Looper.myLooper());
                 }
             };
 
@@ -451,7 +492,13 @@ public class QuietLocationUtil {
                                                    try {
                                                        if (task.getResult() == null) {
                                                            LogUtils.w("gms getLocationAvailability result null");
-                                                           countSet.remove("gms");
+                                                           finishGmsOnHandler(new Runnable() {
+                                                               @Override
+                                                               public void run() {
+                                                                   cancelGmsLocationRequest();
+                                                                   onEnd("gms", null, map, countSet, listener);
+                                                               }
+                                                           });
                                                            return;
                                                        }
                                                        boolean locationAvailable = task.getResult().isLocationAvailable();
@@ -465,14 +512,39 @@ public class QuietLocationUtil {
                                                        handler.post(gmsRunnable);
                                                    } catch (Throwable throwable) {
                                                        LogUtils.w("gms", throwable);
-                                                       countSet.remove("gms");
+                                                       finishGmsOnHandler(new Runnable() {
+                                                           @Override
+                                                           public void run() {
+                                                               cancelGmsLocationRequest();
+                                                               onEnd("gms", null, map, countSet, listener);
+                                                           }
+                                                       });
                                                    }
                                                }
                                            }
                     );
         } catch (Throwable throwable) {
-            countSet.remove("gms");
+            finishGmsOnHandler(new Runnable() {
+                @Override
+                public void run() {
+                    cancelGmsLocationRequest();
+                    onEnd("gms", null, map, countSet, listener);
+                }
+            });
             LogUtils.w("gms", throwable);
+        }
+    }
+
+    private void disconnectGmsApiClient() {
+        if (gmsApiClient != null) {
+            try {
+                if (gmsApiClient.isConnected()) {
+                    gmsApiClient.disconnect();
+                }
+            } catch (Throwable throwable) {
+                LogUtils.w("gms disconnect", throwable);
+            }
+            gmsApiClient = null;
         }
     }
 
@@ -482,6 +554,7 @@ public class QuietLocationUtil {
         }
         gmsFusedClient = null;
         gmsLocationCallback = null;
+        disconnectGmsApiClient();
     }
 
     private Location getResultSafe(Task<Location> task) {
@@ -507,29 +580,31 @@ public class QuietLocationUtil {
 private void requestGmsLocation(Context context, LocationManager locationManager, List<Location> map,
                                 Set<String> countSet, MyLocationCallback listener, long startFromBeginning) {
     try {
-        //LocationServices.getFusedLocationProviderClient(context).getLastLocation().addOnCompleteListener()
-        GoogleApiClient client = null;
-        client = new GoogleApiClient.Builder(context)
+        gmsApiClient = new GoogleApiClient.Builder(context)
                 .addApi(LocationServices.API)
                 .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
                     @Override
                     public void onConnectionFailed(@NonNull ConnectionResult onConnectionFailed) {
                         LogUtils.w("gms", "onConnectionFailed:" + onConnectionFailed);
-                        //requestGPS(context,locationManager, map, listener);
-                        countSet.remove("gms");
-                        onEnd(null, map, countSet, listener);
+                        disconnectGmsApiClient();
+                        finishGmsOnHandler(new Runnable() {
+                            @Override
+                            public void run() {
+                                cancelGmsLocationRequest();
+                                onEnd("gms", null, map, countSet, listener);
+                            }
+                        });
                     }
                 })
                 .build();
 
-        GoogleApiClient finalClient = client;
-        client.registerConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+        gmsApiClient.registerConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
             @SuppressLint("MissingPermission")
             @Override
             public void onConnected(@Nullable Bundle bundle) {
                 LogUtils.w("gms", "onConnected:");
-                onGmsConnected(context, countSet, locationManager, map, listener,startFromBeginning);
-                //onGmsConnected2(finalClient,context, countSet, locationManager, map, listener);
+                onGmsConnected(context, countSet, locationManager, map, listener, startFromBeginning);
+                disconnectGmsApiClient();
             }
 
             @Override
@@ -537,12 +612,17 @@ private void requestGmsLocation(Context context, LocationManager locationManager
                 LogUtils.w("gms", "onConnectionSuspended:" + i);
             }
         });
-        client.connect();
-        countSet.add("gms");
+        gmsApiClient.connect();
     } catch (Throwable throwable) {
-        countSet.remove("gms");
-        onEnd(null, map, countSet, listener);
-        throwable.printStackTrace();
+        disconnectGmsApiClient();
+        finishGmsOnHandler(new Runnable() {
+            @Override
+            public void run() {
+                cancelGmsLocationRequest();
+                onEnd("gms", null, map, countSet, listener);
+            }
+        });
+        LogUtils.w("gms", throwable);
     }
 
 }
@@ -580,14 +660,12 @@ private void requestGmsLocation(Context context, LocationManager locationManager
                     listener.onEachLocationChanged(location, provider, System.currentTimeMillis() - start,
                             System.currentTimeMillis() - startFromBeginning);
                 }
-                countSet.remove(provider);
-                onEnd(location, map, countSet, listener);
+                onEnd(provider, location, map, countSet, listener);
             }
 
             @Override
             public void onFailed(int type, String msg, boolean isFailBeforeReallyRequest) {
-                countSet.remove(provider);
-                onEnd(null, map, countSet, listener);
+                onEnd(provider, null, map, countSet, listener);
             }
         });
 
@@ -656,8 +734,7 @@ private void requestGmsLocation(Context context, LocationManager locationManager
                             listener.onEachLocationChanged(location, provider, System.currentTimeMillis() - start,
                                     System.currentTimeMillis() - startFromBeginning);
                         }
-                        countSet.remove(provider);
-                        onEnd(location, map, countSet, listener);
+                        onEnd(provider, location, map, countSet, listener);
                         locationManager.removeUpdates(this);
                     }
 
@@ -669,8 +746,7 @@ private void requestGmsLocation(Context context, LocationManager locationManager
                     @Override
                     public void onProviderDisabled(@NonNull String provider) {
                         LogUtils.w("onProviderDisabled", provider);
-                        countSet.remove(provider);
-                        onEnd(null, map, countSet, listener);
+                        onEnd(provider, null, map, countSet, listener);
                         locationManager.removeUpdates(this);
                     }
 
@@ -680,26 +756,31 @@ private void requestGmsLocation(Context context, LocationManager locationManager
                     }
                 }, Looper.myLooper());
             } catch (Throwable throwable) {
-                countSet.remove(provider);
-                LogUtils.w("location",throwable,provider);
+                onEnd(provider, null, map, countSet, listener);
+                LogUtils.w("location", throwable, provider);
             }
         } else {
             LogUtils.w("locationManager.isProviderEnabled", provider, false, map);
         }
     }
 
-    private synchronized void onEnd(Location location, List<Location> map, Set<String> count, MyLocationCallback listener) {
-        if (location != null) {
-            map.add(location);
-            Collections.sort(map, new Comparator<Location>() {
-                @Override
-                public int compare(Location o1, Location o2) {
-                    return Long.compare (o2.getTime() , o1.getTime());
+    private void onEnd(@Nullable String provider, @Nullable Location location, List<Location> map, Set<String> count,
+            MyLocationCallback listener) {
+        boolean shouldCallback = false;
+        synchronized (count) {
+            if (provider != null) {
+                count.remove(provider);
+            }
+            if (location != null) {
+                synchronized (map) {
+                    map.add(location);
+                    sortLocationMap(map);
                 }
-            });
+            }
+            LogUtils.d(count);
+            shouldCallback = count.isEmpty();
         }
-        LogUtils.d(count);
-        if (count.size() == 0) {
+        if (shouldCallback) {
             callback(map, "complete normal", false, listener);
         }
     }
