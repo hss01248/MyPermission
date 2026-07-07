@@ -103,6 +103,9 @@ public class QuietLocationUtil {
          * executors = Executors.newCachedThreadPool();
          * }
          */
+        if(context ==null){
+            context = Utils.getApp();
+        }
         context = context.getApplicationContext();
 
         MyLocationCallback listener = listener0;
